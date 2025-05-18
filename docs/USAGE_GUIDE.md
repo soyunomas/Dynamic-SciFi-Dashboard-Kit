@@ -655,7 +655,7 @@ setTimeout(() => {
 }, 6000);
 ```
 
-### 3.11. `HorizontalBarGaugePanel` (NUEVO)
+### 3.11. `HorizontalBarGaugePanel`
 
 Muestra un medidor de barra horizontal para representar un valor dentro de un rango.
 
