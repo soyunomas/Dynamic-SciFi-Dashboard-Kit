@@ -401,6 +401,8 @@ const actionPanel = new DynamicSciFiDashboardKit.ActionButtonsPanel('#actionsCon
 **Ejemplo de Uso:**
 ```javascript
 // HTML: <div id="actionDemo" class="panel-container"></div>
+// Necesitarás un logPanel instanciado para que este ejemplo funcione completamente.
+// const logPanel = new DynamicSciFiDashboardKit.LogDisplayPanel('#unLogPanelID');
 
 const actionPanel = new DynamicSciFiDashboardKit.ActionButtonsPanel('#actionDemo', {
     title: 'Weapon Systems',
@@ -409,7 +411,6 @@ const actionPanel = new DynamicSciFiDashboardKit.ActionButtonsPanel('#actionDemo
         { id: 'launch-torpedo', text: 'Launch Torpedo', style: 'warning', disabled: true, onClick: () => logPanel.addLog({text: 'Torpedo launched!', level: 'warn'}) }
     ]
 });
-// Suponiendo que tienes un logPanel instanciado globalmente o accesible
 
 setTimeout(() => {
     actionPanel.updateButton('launch-torpedo', { newDisabledState: false });
@@ -545,6 +546,7 @@ const gaugePanel = new DynamicSciFiDashboardKit.CircularGaugePanel('#gaugeContai
 *   `valueFontSize` (`string`): Tamaño de fuente CSS para el valor numérico. Default: `'2em'`.
 *   `labelFontSize` (`string`): Tamaño de fuente CSS para la etiqueta. Default: `'0.8em'`.
 *   `unitsFontSize` (`string`): Tamaño de fuente CSS para las unidades. Default: `'0.7em'`.
+*   `labelYOffset` (`number`): Desplazamiento vertical adicional para la etiqueta en píxeles SVG. Útil para ajustar finamente la posición de la etiqueta. Default: `5`.
 *   `arcWidth` (`number`): Ancho del arco del medidor en píxeles (SVG). Default: `12`.
 *   `gaugeRadius` (`number`): Radio del medidor en píxeles (SVG). Default: `80`.
 *   `startAngle` (`number`): Ángulo de inicio del arco en grados (0 es arriba, 90 derecha, etc.). Default: `-135`.
@@ -717,7 +719,10 @@ setTimeout(() => {
 setTimeout(() => {
     hGaugePanel.setValue(10);
     hGaugePanel.setPanelState('critical');
-    hGaugePanel.enableSparks = true; // Activar chispas en estado crítico
+    // Como enableSparks es false por defecto para este panel, si quieres que se active
+    // debes configurarlo en las opciones iniciales o modificar la instancia
+    // hGaugePanel.config.enableSparks = true; // y luego llamar a setPanelState de nuevo si es necesario
+    // o que el panel base gestione esto al cambiar el estado
 }, 6000);
 ```
 
@@ -777,4 +782,3 @@ Revisa el archivo `DynamicSciFiDashboardKit.css` para ver la lista completa de v
     <div id="miGrafico" class="panel-container" style="height: 250px;"></div>
     ```
 *   **Rendimiento:** Si tienes muchos paneles con animaciones complejas (especialmente `CanvasGraphPanel` con alta frecuencia de actualización o `IntegrityPulsePanel` con muchas barras), considera el impacto en el rendimiento en dispositivos de bajos recursos.
-
