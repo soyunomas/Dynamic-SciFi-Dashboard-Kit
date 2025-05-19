@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>DSDK - CanvasGraphPanel Examples</title>
+    <link rel="stylesheet" href="../DynamicSciFiDashboardKit.css">
+    <style>
+        body {
+            background-color: #000000;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .dashboard-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .panel-container {
+            flex: 1 1 350px; /* Base más ancha para gráficos */
+            display: flex; 
+            flex-direction: column;
+            min-height: 250px; /* Altura mínima para que el canvas sea visible y útil */
+        }
+
+        /* Aseguramos que el panel dsdk ocupe todo el alto del contenedor */
+        .panel-container > .dsdk-panel {
+            flex-grow: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-row">
+        <div id="ecgNormalPanel" class="panel-container"></div>
+        <div id="sineWarningPanel" class="panel-container"></div>
+        <div id="ecgCriticalPanel" class="panel-container"></div>
+        <div id="sineStablePanel" class="panel-container"></div>
+    </div>
+
+    <script src="../DynamicSciFiDashboardKit.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const DSDK = DynamicSciFiDashboardKit;
+
+            // Panel 1: ECG Graph - Estado Normal
+            const ecgNormal = new DSDK.CanvasGraphPanel('#ecgNormalPanel', {
+                title: 'Bio-Monitor Alpha (ECG)',
+                initialState: 'normal',
+                graphType: 'ecg',
+                enableSparks: false, 
+                enableScanlineHalo: false
+            });
+
+            // Panel 2: Sine Wave Graph - Estado Warning
+            const sineWarning = new DSDK.CanvasGraphPanel('#sineWarningPanel', {
+                title: 'Energy Fluctuations (Sine)',
+                initialState: 'warning',
+                graphType: 'sine',
+                animationSpeed: 0.07, 
+                enableSparks: true,
+                enableScanlineHalo: true
+            });
+
+            // Panel 3: ECG Graph - Estado Critical
+            const ecgCritical = new DSDK.CanvasGraphPanel('#ecgCriticalPanel', {
+                title: 'Life Signs Critical (ECG)',
+                initialState: 'critical',
+                graphType: 'ecg',
+                ecgSpikeChance: 0.15, 
+                enableSparks: true,
+                enableScanlineHalo: true,
+                scanlineOpacity: 0.15
+            });
+
+            // Panel 4: Sine Wave Graph - Estado Stable con colores personalizados (CORREGIDO)
+            const sineStable = new DSDK.CanvasGraphPanel('#sineStablePanel', {
+                title: 'Shield Harmonics (Sine - Stable)',
+                initialState: 'stable',
+                graphType: 'sine',
+                animationSpeed: 0.03, 
+                colorScheme: { // Personalizar el colorScheme
+                    normal: { stroke: '#00E5E5', lineWidth: 1.5, noiseFactor: 0.05 }, 
+                    warning: { stroke: '#FFD700', lineWidth: 1.5, noiseFactor: 0.15 },
+                    critical: { stroke: '#FF4500', lineWidth: 2, noiseFactor: 0.3 }, 
+                    stable: { stroke: '#00FF7F', lineWidth: 2, noiseFactor: 0.01 } // Verde primavera brillante para estable
+                },
+                enableSparks: false,
+                enableScanlineHalo: true,
+                scanlineStates: ['stable'], 
+                scanlineHaloColor: 'rgba(0, 255, 127, 0.1)'
+            });
+
+            // Simular cambios de estado para demostración
+            setTimeout(() => {
+                ecgNormal.setPanelState('warning');
+                ecgNormal.config.title = 'Bio-Monitor Alpha (ECG) - Elevated'; 
+                if(ecgNormal.dom.header) ecgNormal.dom.header.textContent = ecgNormal.config.title;
+            }, 8000);
+
+            setTimeout(() => {
+                sineWarning.setPanelState('critical');
+                sineWarning.config.title = 'Energy Fluctuations (Sine) - CRITICAL OVERLOAD';
+                if(sineWarning.dom.header) sineWarning.dom.header.textContent = sineWarning.config.title;
+            }, 12000);
+            
+            setTimeout(() => {
+                ecgCritical.setPanelState('stable'); 
+                ecgCritical.config.title = 'Life Signs Stabilized (ECG)';
+                if(ecgCritical.dom.header) ecgCritical.dom.header.textContent = ecgCritical.config.title;
+            }, 15000);
+        });
+    </script>
+
+</body>
+</html>

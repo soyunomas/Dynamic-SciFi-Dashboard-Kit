@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>DSDK - KeyValueListPanel Examples</title>
+    <link rel="stylesheet" href="../DynamicSciFiDashboardKit.css">
+    <style>
+        body {
+            background-color: #000000;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .dashboard-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .panel-container {
+            flex: 1 1 300px; /* Permite crecer/encoger, base de 300px */
+            display: flex; 
+            flex-direction: column;
+            min-height: 280px; /* Altura para ver varios items y scroll */
+        }
+
+        /* Aseguramos que el panel dsdk ocupe todo el alto del contenedor */
+        .panel-container > .dsdk-panel {
+            flex-grow: 1;
+        }
+
+        /* El .dsdk-panel-content ya tiene max-height: 250px y overflow:auto
+           que es bueno para listas. Podemos ajustarlo si es necesario. */
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-row">
+        <div id="configPanel" class="panel-container"></div>
+        <div id="networkPanel" class="panel-container"></div>
+        <div id="powerPanel" class="panel-container"></div>
+        <div id="sensorsPanel" class="panel-container"></div>
+    </div>
+
+    <script src="../DynamicSciFiDashboardKit.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const DSDK = DynamicSciFiDashboardKit;
+            const { DSDK_CLASSES } = DSDK; // Para fácil acceso a las clases de texto
+
+            // Panel 1: System Configuration (Estado: normal)
+            const configPanel = new DSDK.KeyValueListPanel('#configPanel', {
+                title: 'System Configuration',
+                initialState: 'normal'
+            });
+            configPanel.setItems([
+                { key: 'Hostname', value: 'SERV-ALPHA-01' },
+                { key: 'OS Version', value: 'GalacticOS 7.3.1' },
+                { key: 'Kernel', value: '5.11.0-photon' },
+                { key: 'CPU Arch', value: 'x86_64_nebula' },
+                { key: 'Uptime', value: '72d 4h 15m' },
+                { key: 'Timezone', value: 'UTC+0' },
+                { key: 'Primary DNS', value: '10.0.0.1' },
+                { key: 'Security Patch', value: 'Applied 2025-05-18' }
+            ]);
+
+            // Panel 2: Network Status (Estado: warning)
+            const networkPanel = new DSDK.KeyValueListPanel('#networkPanel', {
+                title: 'Network Status',
+                initialState: 'warning',
+                enableSparks: true
+            });
+            networkPanel.setItems([
+                { key: 'Interface', value: 'eth0' },
+                { key: 'IP Address', value: '192.168.1.100' },
+                { key: 'Gateway', value: '192.168.1.1' },
+                { key: 'Ping (Gateway)', value: '85ms', statusClass: DSDK_CLASSES.TEXT_WARNING },
+                { key: 'Packet Loss', value: '2.1%', statusClass: DSDK_CLASSES.TEXT_WARNING },
+                { key: 'Signal Strength', value: '-75dBm', statusClass: DSDK_CLASSES.TEXT_INFO },
+                { key: 'Firewall', value: 'Active (Strict)' },
+                { key: 'External Port Scan', value: 'BLOCKED', statusClass: DSDK_CLASSES.TEXT_SUCCESS }
+            ]);
+
+            // Panel 3: Power Subsystems (Estado: critical)
+            const powerPanel = new DSDK.KeyValueListPanel('#powerPanel', {
+                title: 'Power Subsystems',
+                initialState: 'critical',
+                enableSparks: true,
+                enableScanlineHalo: true
+            });
+            powerPanel.setItems([
+                { key: 'Main Reactor', value: 'OFFLINE', statusClass: DSDK_CLASSES.TEXT_DANGER },
+                { key: 'Auxiliary Power', value: 'ACTIVE (DRAINING)', statusClass: DSDK_CLASSES.TEXT_WARNING },
+                { key: 'Battery Level', value: '15%', statusClass: DSDK_CLASSES.TEXT_DANGER },
+                { key: 'Voltage Output', value: '198V (Nominal 230V)', statusClass: DSDK_CLASSES.TEXT_DANGER },
+                { key: 'Coolant Flow', value: 'CRITICAL LOW', statusClass: DSDK_CLASSES.TEXT_DANGER },
+                { key: 'System Load', value: '150% (Overload)', statusClass: DSDK_CLASSES.TEXT_DANGER },
+                { key: 'Backup Gen.', value: 'STANDBY (FAILED TEST)', statusClass: DSDK_CLASSES.TEXT_DANGER }
+            ]);
+
+            // Panel 4: Sensor Readings (Estado: stable)
+            const sensorsPanel = new DSDK.KeyValueListPanel('#sensorsPanel', {
+                title: 'Sensor Readings',
+                initialState: 'stable',
+                enableScanlineHalo: true, // Activar scanlines para 'stable'
+                scanlineStates: ['critical', 'warning', 'stable'],
+                scanlineHaloColor: 'rgba(var(--dsdk-rgb-success-color), 0.08)'
+            });
+            sensorsPanel.setItems([
+                { key: 'Core Temp.', value: '35°C', statusClass: DSDK_CLASSES.TEXT_SUCCESS },
+                { key: 'Ambient Pressure', value: '101.2 kPa', statusClass: DSDK_CLASSES.TEXT_SUCCESS },
+                { key: 'Vibration Matrix', value: '0.02g (Nominal)', statusClass: DSDK_CLASSES.TEXT_SUCCESS },
+                { key: 'Radiation Level', value: '0.45 mSv/h', statusClass: DSDK_CLASSES.TEXT_INFO },
+                { key: 'Oxygen Purity', value: '99.8%', statusClass: DSDK_CLASSES.TEXT_SUCCESS },
+                { key: 'Magnetic Field', value: '0.18 Gauss', statusClass: DSDK_CLASSES.TEXT_INFO },
+                { key: 'Gravimetric Stress', value: 'Nominal', statusClass: DSDK_CLASSES.TEXT_SUCCESS }
+            ]);
+
+            // Simular actualizaciones
+            setTimeout(() => {
+                configPanel.updateItem('Uptime', '72d 5h 02m');
+                configPanel.addItem({ key: 'Last Reboot', value: 'N/A (Stable)' });
+            }, 5000);
+
+            setTimeout(() => {
+                networkPanel.updateItem('Ping (Gateway)', '120ms', DSDK_CLASSES.TEXT_DANGER);
+                networkPanel.updateItem('Packet Loss', '5.0%', DSDK_CLASSES.TEXT_DANGER);
+                // Cambiar el estado general del panel si la situación empeora
+                // networkPanel.setPanelState('critical'); 
+            }, 7000);
+
+            setTimeout(() => {
+                powerPanel.updateItem('Battery Level', '10% - CRITICAL', DSDK_CLASSES.TEXT_DANGER);
+                if (powerPanel.currentState !== 'critical') { // Aunque ya es critical, es un buen check
+                    powerPanel.setPanelState('critical');
+                }
+            }, 8000);
+
+            setTimeout(() => {
+                sensorsPanel.updateItem('Core Temp.', '36°C', DSDK_CLASSES.TEXT_SUCCESS);
+                sensorsPanel.addItem({ key: 'External Temp.', value: '-150°C (Vacuum)', statusClass: DSDK_CLASSES.TEXT_INFO });
+            }, 6000);
+
+        });
+    </script>
+
+</body>
+</html>

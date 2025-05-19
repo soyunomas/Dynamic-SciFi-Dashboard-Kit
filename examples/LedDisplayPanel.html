@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>DSDK - LedDisplayPanel Examples</title>
+    <link rel="stylesheet" href="../DynamicSciFiDashboardKit.css">
+    <style>
+        body {
+            background-color: #000000;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .dashboard-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            width: 100%;
+            align-items: stretch; /* Para que todos los panel-container tengan la misma altura si es posible */
+        }
+
+        .panel-container {
+            flex: 1 1 250px; /* Base más pequeña, ya que el contenido es compacto */
+            display: flex; 
+            flex-direction: column;
+            min-height: 150px; /* Altura suficiente para el display LED */
+        }
+
+        /* Aseguramos que el panel dsdk ocupe todo el alto del contenedor */
+        .panel-container > .dsdk-panel {
+            flex-grow: 1;
+        }
+        /* El LedDisplayPanel no tiene cabecera por defecto, así que el .dsdk-panel-content
+           ocupa todo el espacio. El contenido interno se centra por CSS de la librería. */
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-row">
+        <div id="reactorTempPanel" class="panel-container"></div>
+        <div id="shieldChargePanel" class="panel-container"></div>
+        <div id="oxygenLevelPanel" class="panel-container"></div>
+        <div id="externalThreatsPanel" class="panel-container"></div>
+    </div>
+
+    <script src="../DynamicSciFiDashboardKit.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const DSDK = DynamicSciFiDashboardKit;
+
+            // Panel 1: Reactor Temperature (Estado: normal del panel, LED normal)
+            const reactorTemp = new DSDK.LedDisplayPanel('#reactorTempPanel', {
+                label: 'REACTOR CORE',
+                initialValue: 850,
+                units: '°C',
+                initialStatus: 'normal', // Estado del display LED
+                // Opciones del panel base
+                initialState: 'normal', // Estado del borde del panel
+                title: 'Temp. Monitor' // Título del panel (opcional para LedDisplayPanel)
+            });
+
+            // Panel 2: Shield Charge (Estado: warning del panel, LED warning)
+            const shieldCharge = new DSDK.LedDisplayPanel('#shieldChargePanel', {
+                label: 'SHIELD CAPACITY',
+                initialValue: 45,
+                units: '%',
+                initialStatus: 'warning', // LED en amarillo
+                // Opciones del panel base
+                initialState: 'warning',
+                enableSparks: true,
+                title: 'Shield Status'
+            });
+
+            // Panel 3: Oxygen Level (Estado: critical del panel, LED critical)
+            const oxygenLevel = new DSDK.LedDisplayPanel('#oxygenLevelPanel', {
+                label: 'OXYGEN LEVEL',
+                initialValue: 12, // Valor bajo
+                units: '% ATM',
+                initialStatus: 'critical', // LED en rojo y pulsante
+                // Opciones del panel base
+                initialState: 'critical',
+                enableSparks: true,
+                enableScanlineHalo: true,
+                title: 'Life Support'
+            });
+
+            // Panel 4: External Threats (Estado: stable del panel, LED normal/success)
+            const externalThreats = new DSDK.LedDisplayPanel('#externalThreatsPanel', {
+                label: 'HOSTILE TARGETS',
+                initialValue: 0, // Ninguna amenaza
+                units: '', // Sin unidades específicas
+                initialStatus: 'normal', // El LED normal es verde por defecto para valores numéricos
+                // Opciones del panel base
+                initialState: 'stable', // Panel en estado estable
+                title: 'Threat Assessment',
+                enableScanlineHalo: true,
+                scanlineStates: ['stable'] // Mostrar scanline en estable
+            });
+
+
+            // Simular actualizaciones de valores y estados
+            let temp = 850;
+            setInterval(() => {
+                temp += Math.floor(Math.random() * 10 - 5); // Pequeña fluctuación
+                temp = Math.max(700, Math.min(1200, temp)); // Limitar temperatura
+                reactorTemp.setValue(temp);
+                if (temp > 1100) {
+                    reactorTemp.setStatus('critical');
+                    reactorTemp.setPanelState('critical');
+                } else if (temp > 950) {
+                    reactorTemp.setStatus('warning');
+                    reactorTemp.setPanelState('warning');
+                } else {
+                    reactorTemp.setStatus('normal');
+                    reactorTemp.setPanelState('normal');
+                }
+            }, 3000);
+
+            let charge = 45;
+            setInterval(() => {
+                charge -= Math.floor(Math.random() * 5);
+                charge = Math.max(0, charge);
+                shieldCharge.setValue(charge);
+                if (charge < 20) {
+                    shieldCharge.setStatus('critical');
+                    shieldCharge.setPanelState('critical');
+                } else if (charge < 50) {
+                    shieldCharge.setStatus('warning');
+                    shieldCharge.setPanelState('warning');
+                } else {
+                     shieldCharge.setStatus('normal');
+                     shieldCharge.setPanelState('stable'); // Cuando se recupera
+                }
+            }, 4000);
+
+            let oxygen = 12;
+            setInterval(() => {
+                oxygen -= 1;
+                oxygen = Math.max(0, oxygen);
+                oxygenLevel.setValue(oxygen);
+                if (oxygen < 5) {
+                    oxygenLevel.setStatus('critical'); // Ya está crítico, pero para reforzar
+                    oxygenLevel.setPanelState('critical');
+                } else if (oxygen < 15 && oxygenLevel.currentLedStatus !== 'critical') {
+                    // Si no está ya en modo supercrítico, pero es bajo
+                    oxygenLevel.setStatus('critical');
+                    oxygenLevel.setPanelState('critical');
+                }
+            }, 5000);
+
+            let threats = 0;
+            setInterval(() => {
+                if (Math.random() < 0.2) { // 20% de probabilidad de nueva amenaza
+                    threats++;
+                    externalThreats.setValue(threats);
+                    externalThreats.setStatus('warning'); // Alerta al detectar
+                    externalThreats.setPanelState('warning');
+                } else if (threats > 0 && Math.random() < 0.3) { // 30% de eliminar una amenaza
+                    threats--;
+                    externalThreats.setValue(threats);
+                    if (threats === 0) {
+                        externalThreats.setStatus('normal');
+                        externalThreats.setPanelState('stable');
+                    }
+                }
+            }, 6000);
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>DSDK - HorizontalBarGaugePanel Examples</title>
+    <link rel="stylesheet" href="../DynamicSciFiDashboardKit.css">
+    <style>
+        body {
+            background-color: #000000;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .dashboard-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .panel-container {
+            flex: 1 1 300px; 
+            display: flex; 
+            flex-direction: column;
+            min-height: 120px; /* Altura suficiente para la barra, etiqueta y valor */
+            /* border: 1px solid red; */
+        }
+        
+        .panel-wrapper { /* Contenedor directo para el panel DSDK */
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            /* border: 1px solid cyan; */
+        }
+        
+        .panel-wrapper > .dsdk-panel {
+            flex-grow: 1; /* El panel DSDK llena el wrapper */
+            /* border: 1px solid yellow; */
+        }
+        /* El .dsdk-horizontal-bar-gauge-panel .dsdk-panel-content gestiona el centrado vertical. */
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-row">
+        <div class="panel-container">
+            <div class="panel-wrapper" id="mainPowerGauge"></div>
+        </div>
+        <div class="panel-container">
+            <div class="panel-wrapper" id="coolantLevelGauge"></div>
+        </div>
+        <div class="panel-container">
+            <div class="panel-wrapper" id="dataBufferGauge"></div>
+        </div>
+        <div class="panel-container">
+            <div class="panel-wrapper" id="signalStrengthGauge"></div>
+        </div>
+    </div>
+
+    <script src="../DynamicSciFiDashboardKit.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const DSDK = DynamicSciFiDashboardKit;
+
+            // Panel 1: Main Power Output (Estado Normal)
+            const mainPower = new DSDK.HorizontalBarGaugePanel('#mainPowerGauge', {
+                title: 'Main Power Output',
+                initialState: 'normal',
+                minValue: 0,
+                maxValue: 5000, // kW
+                initialValue: 3750,
+                units: ' kW',
+                label: 'Reactor Output',
+                barHeight: '20px'
+            });
+
+            // Panel 2: Coolant Level (Estado Warning)
+            const coolantLevel = new DSDK.HorizontalBarGaugePanel('#coolantLevelGauge', {
+                title: 'Coolant Reserves',
+                initialState: 'warning',
+                minValue: 0,
+                maxValue: 100,
+                initialValue: 30, // Nivel bajo
+                units: '% Full',
+                label: 'Primary Coolant Tank',
+                barHeight: '16px',
+                enableSparks: true, // Chispas para warning
+                valueTextFormat: (value, units) => `${value.toFixed(1)}${units}` // Formato con 1 decimal
+            });
+
+            // Panel 3: Data Buffer Usage (Estado Critical)
+            const dataBuffer = new DSDK.HorizontalBarGaugePanel('#dataBufferGauge', {
+                title: 'Data Buffer Usage - CRITICAL',
+                initialState: 'critical',
+                minValue: 0,
+                maxValue: 1024, // MB
+                initialValue: 980, // Casi lleno
+                units: ' MB',
+                label: 'Sensor Array Buffer',
+                barHeight: '24px', // Barra más gruesa
+                enableSparks: true,
+                enableScanlineHalo: true
+            });
+
+            // Panel 4: Signal Strength (Estado Stable, sin texto de valor)
+            const signalStrength = new DSDK.HorizontalBarGaugePanel('#signalStrengthGauge', {
+                title: 'Uplink Signal Strength',
+                initialState: 'stable',
+                minValue: -100, // dBm
+                maxValue: -30,  // dBm
+                initialValue: -45,
+                units: ' dBm',
+                label: 'Comm. Array Alpha',
+                barHeight: '18px',
+                showValueText: false, // Ocultar el texto del valor numérico
+                enableScanlineHalo: true,
+                scanlineStates: ['stable'],
+                scanlineHaloColor: 'rgba(var(--dsdk-rgb-success-color), 0.08)'
+            });
+
+
+            // Simular actualizaciones de valores
+            setInterval(() => {
+                let newPower = mainPower.currentValue + Math.floor(Math.random() * 400 - 200);
+                newPower = Math.max(mainPower.config.minValue, Math.min(mainPower.config.maxValue, newPower));
+                mainPower.setValue(newPower);
+
+                if (newPower < 1000) mainPower.setPanelState('critical');
+                else if (newPower < 2500) mainPower.setPanelState('warning');
+                else if (newPower > 4500) mainPower.setPanelState('stable'); // Óptimo
+                else mainPower.setPanelState('normal');
+            }, 3000);
+
+            setInterval(() => {
+                let newCoolant = coolantLevel.currentValue - Math.floor(Math.random() * 5);
+                newCoolant = Math.max(0, newCoolant);
+                coolantLevel.setValue(newCoolant);
+
+                if (newCoolant < 15) coolantLevel.setPanelState('critical');
+                else if (newCoolant < 40) coolantLevel.setPanelState('warning');
+                else coolantLevel.setPanelState('stable');
+            }, 2000);
+
+            setInterval(() => {
+                let newBuffer = dataBuffer.currentValue + Math.floor(Math.random() * 50 - 10); // Puede subir o bajar un poco
+                newBuffer = Math.max(0, Math.min(dataBuffer.config.maxValue, newBuffer));
+                dataBuffer.setValue(newBuffer);
+
+                if (newBuffer > 1000) dataBuffer.setPanelState('critical'); // Se mantiene crítico si está muy lleno
+                else if (newBuffer > 800 && dataBuffer.currentState !== 'critical') dataBuffer.setPanelState('warning');
+                else if (newBuffer <= 800 && dataBuffer.currentState !== 'critical') dataBuffer.setPanelState('normal');
+            }, 2500);
+            
+            setInterval(() => {
+                // Simular fluctuaciones de señal, más fuerte es menos negativo
+                let newSignal = -100 + Math.floor(Math.random() * 71); // de -100 a -30
+                signalStrength.setValue(newSignal);
+
+                if (newSignal < -85) signalStrength.setPanelState('critical');
+                else if (newSignal < -65) signalStrength.setPanelState('warning');
+                else signalStrength.setPanelState('stable');
+            }, 3500);
+
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>DSDK - StatusIndicatorLedPanel Examples</title>
+    <link rel="stylesheet" href="../DynamicSciFiDashboardKit.css">
+    <style>
+        body {
+            background-color: #000000;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .dashboard-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .panel-container {
+            flex: 1 1 280px; /* Ancho para la lista de LEDs */
+            display: flex; 
+            flex-direction: column;
+            min-height: 250px; /* Altura para varios indicadores */
+            /* border: 1px solid red; */ 
+        }
+        
+        .panel-wrapper { /* Contenedor directo para el panel DSDK */
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            /* border: 1px solid cyan; */
+        }
+        
+        .panel-wrapper > .dsdk-panel {
+            flex-grow: 1; /* El panel DSDK llena el wrapper */
+            /* border: 1px solid yellow; */
+        }
+        /* El .dsdk-status-indicator-panel .dsdk-panel-content gestiona el scroll si hay muchos items. */
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-row">
+        <div class="panel-container">
+            <div class="panel-wrapper" id="lifeSupportStatus"></div>
+        </div>
+        <div class="panel-container">
+            <div class="panel-wrapper" id="weaponSystemsStatus"></div>
+        </div>
+        <div class="panel-container">
+            <div class="panel-wrapper" id="engineDiagnostics"></div>
+        </div>
+        <div class="panel-container">
+            <div class="panel-wrapper" id="networkNodesStatus"></div>
+        </div>
+    </div>
+
+    <script src="../DynamicSciFiDashboardKit.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const DSDK = DynamicSciFiDashboardKit;
+
+            // Panel 1: Life Support Status (Estado Normal del panel)
+            const lifeSupport = new DSDK.StatusIndicatorLedPanel('#lifeSupportStatus', {
+                title: 'Life Support Systems',
+                initialState: 'normal',
+                indicators: [
+                    { id: 'oxygen', text: 'Oxygen Generation', color: 'green' },
+                    { id: 'co2_scrub', text: 'CO2 Scrubbers', color: 'green' },
+                    { id: 'water_recyc', text: 'Water Reclamation', color: 'green' },
+                    { id: 'temp_control', text: 'Temperature Control', color: 'blue' },
+                    { id: 'gravity_gen', text: 'Artificial Gravity', color: 'blue', blinking: false }
+                ]
+            });
+
+            // Panel 2: Weapon Systems Status (Estado Warning del panel)
+            const weaponSystems = new DSDK.StatusIndicatorLedPanel('#weaponSystemsStatus', {
+                title: 'Weapon Systems Online',
+                initialState: 'warning',
+                enableSparks: true,
+                indicators: [
+                    { id: 'phasers', text: 'Phaser Banks', color: 'yellow', blinking: true },
+                    { id: 'torpedo_fwd', text: 'Torpedo Bay (Forward)', color: 'green' },
+                    { id: 'torpedo_aft', text: 'Torpedo Bay (Aft)', color: 'off' },
+                    { id: 'shields_fwd', text: 'Forward Shields', color: 'yellow' },
+                    { id: 'targeting_sys', text: 'Targeting System', color: 'green' }
+                ]
+            });
+
+            // Panel 3: Engine Diagnostics (Estado Critical del panel)
+            const engineDiagnostics = new DSDK.StatusIndicatorLedPanel('#engineDiagnostics', {
+                title: 'Engine Diagnostics - CRITICAL',
+                initialState: 'critical',
+                enableSparks: true,
+                enableScanlineHalo: true,
+                indicators: [
+                    { id: 'warp_core', text: 'Warp Core Integrity', color: 'red', blinking: true },
+                    { id: 'impulse_l', text: 'Left Impulse Engine', color: 'red' },
+                    { id: 'impulse_r', text: 'Right Impulse Engine', color: 'yellow', blinking: true },
+                    { id: 'coolant_flow', text: 'Coolant Flow', color: 'red' },
+                    { id: 'dilithium_matrix', text: 'Dilithium Matrix', color: 'orange', blinking: true }
+                ]
+            });
+            // Añadir un indicador dinámicamente
+            engineDiagnostics.addIndicator({ id: 'containment_f', text: 'Containment Field', color: 'red', blinking: true });
+
+
+            // Panel 4: Network Nodes Status (Estado Stable del panel)
+            const networkNodes = new DSDK.StatusIndicatorLedPanel('#networkNodesStatus', {
+                title: 'Network Node Status',
+                initialState: 'stable',
+                enableScanlineHalo: true,
+                scanlineStates: ['stable'],
+                scanlineHaloColor: 'rgba(var(--dsdk-rgb-success-color), 0.08)',
+                indicators: [
+                    { id: 'node_alpha', text: 'Node Alpha (Bridge)', color: 'green' },
+                    { id: 'node_beta', text: 'Node Beta (Engineering)', color: 'green' },
+                    { id: 'node_gamma', text: 'Node Gamma (Medbay)', color: 'cyan' },
+                    { id: 'node_delta', text: 'Node Delta (Science Labs)', color: 'green' },
+                    { id: 'uplink_hq', text: 'HQ Uplink Status', color: 'purple' }
+                ]
+            });
+
+
+            // Simular actualizaciones
+            setInterval(() => {
+                const currentGravity = lifeSupport.getIndicator('gravity_gen');
+                if (currentGravity) {
+                    lifeSupport.updateIndicator('gravity_gen', { 
+                        blinking: !currentGravity.blinking,
+                        text: `Artificial Gravity (${!currentGravity.blinking ? "Fluctuating" : "Stable"})`
+                    });
+                }
+                if (Math.random() < 0.3) {
+                     lifeSupport.setIndicatorColor('temp_control', 'yellow');
+                } else {
+                     lifeSupport.setIndicatorColor('temp_control', 'blue');
+                }
+            }, 4000);
+
+            setInterval(() => {
+                weaponSystems.updateIndicator('torpedo_aft', { 
+                    color: (weaponSystems.getIndicator('torpedo_aft')?.color === 'off' ? 'green' : 'off'),
+                    text: `Torpedo Bay (Aft) ${weaponSystems.getIndicator('torpedo_aft')?.color === 'off' ? "Online" : "Offline"}`
+                });
+                weaponSystems.setIndicatorBlinking('phasers', Math.random() < 0.5);
+            }, 3000);
+            
+            setInterval(() => {
+                const coolant = engineDiagnostics.getIndicator('coolant_flow');
+                if (coolant && coolant.color === 'red' && Math.random() < 0.2) {
+                    engineDiagnostics.updateIndicator('coolant_flow', {color: 'orange', text: 'Coolant Flow (Low)'});
+                } else if (coolant && coolant.color === 'orange' && Math.random() < 0.1) {
+                     engineDiagnostics.updateIndicator('coolant_flow', {color: 'red', text: 'Coolant Flow (Critical)'});
+                }
+            }, 2500);
+
+            // Añadir y quitar un nodo de red
+            let tempNodeExists = false;
+            setInterval(() => {
+                if (!tempNodeExists && networkNodes.getAllIndicators().length < 7) {
+                    networkNodes.addIndicator({ id: 'node_temp_cargo', text: 'Node Temp (Cargo Bay)', color: 'yellow', blinking: true }, true);
+                    tempNodeExists = true;
+                } else if (tempNodeExists) {
+                    networkNodes.removeIndicator('node_temp_cargo');
+                    tempNodeExists = false;
+                }
+            }, 7000);
+
+        });
+    </script>
+
+</body>
+</html>

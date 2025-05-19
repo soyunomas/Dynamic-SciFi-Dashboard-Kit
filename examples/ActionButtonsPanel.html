@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>DSDK - ActionButtonsPanel Examples</title>
+    <link rel="stylesheet" href="../DynamicSciFiDashboardKit.css">
+    <style>
+        body {
+            background-color: #000000;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .dashboard-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            width: 100%;
+            align-items: flex-start; /* Para que los paneles se alineen bien si tienen diferentes alturas de contenido */
+        }
+
+        .panel-container {
+            flex: 1 1 280px; 
+            display: flex; 
+            flex-direction: column;
+            min-height: 200px; /* Espacio para varios botones */
+        }
+
+        .panel-container > .dsdk-panel {
+            flex-grow: 1;
+        }
+
+        /* El .dsdk-action-buttons-container dentro del .dsdk-panel-content gestiona el layout de los botones */
+        /* Podemos ajustar el padding del .dsdk-panel-content si fuera necesario para más espacio,
+           pero el default de 10px suele ser adecuado. */
+
+        /* Para simular un log de acciones */
+        #actionLogContainer {
+            flex: 2 1 400px; /* Un poco más grande para el log */
+            min-height: 200px;
+        }
+        #actionLog .dsdk-panel-content {
+            max-height: 300px !important; /* Más espacio para logs */
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Fila para los paneles de botones -->
+    <div class="dashboard-row">
+        <div id="navigationControls" class="panel-container"></div>
+        <div id="powerManagement" class="panel-container"></div>
+        <div id="securityActions" class="panel-container"></div>
+        <div id="commsProtocols" class="panel-container"></div>
+    </div>
+
+    <!-- Fila para un panel de log donde mostrar las acciones -->
+    <div class="dashboard-row" style="margin-top: 20px;">
+        <div id="actionLogContainer" class="panel-container">
+             <div id="actionLog"></div> <!-- Contenedor para el LogDisplayPanel -->
+        </div>
+    </div>
+
+
+    <script src="../DynamicSciFiDashboardKit.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const DSDK = DynamicSciFiDashboardKit;
+
+            // Crear un panel de log para mostrar los resultados de las acciones
+            const actionLogPanel = new DSDK.LogDisplayPanel('#actionLog', {
+                title: 'Action Log Output',
+                maxEntries: 30
+            });
+            
+            function logAction(message, level = 'info') {
+                console.log(`Action: ${message}`);
+                actionLogPanel.addLog({ text: message, level: level });
+            }
+
+            // Panel 1: Navigation Controls (Estado: normal)
+            const navControls = new DSDK.ActionButtonsPanel('#navigationControls', {
+                title: 'Navigation Controls',
+                initialState: 'normal',
+                buttons: [
+                    { id: 'nav-engage-warp', text: 'Engage Warp Drive', onClick: () => logAction('Warp Drive Engaged!', 'success') },
+                    { id: 'nav-scan-sector', text: 'Scan Sector', style: 'normal', onClick: () => logAction('Scanning current sector...') },
+                    { id: 'nav-set-course', text: 'Set Course', disabled: true, onClick: () => logAction('Course set to Alpha Centauri.') }
+                ]
+            });
+
+            // Panel 2: Power Management (Estado: warning, botones con diferentes estilos)
+            const powerMgmt = new DSDK.ActionButtonsPanel('#powerManagement', {
+                title: 'Power Management',
+                initialState: 'warning',
+                enableSparks: true,
+                buttons: [
+                    { id: 'pwr-reroute-aux', text: 'Reroute to Auxiliary', style: 'warning', onClick: () => logAction('Power rerouted to auxiliary systems.', 'warn') },
+                    { id: 'pwr-reduce-noncrit', text: 'Reduce Non-Critical', style: 'normal', onClick: () => logAction('Non-critical systems power reduced.') },
+                    { id: 'pwr-reactor-coolant', text: 'Boost Reactor Coolant', style: 'success', onClick: () => logAction('Reactor coolant flow boosted.', 'success') }
+                ]
+            });
+
+            // Panel 3: Security Actions (Estado: critical, botones de peligro)
+            const securityActions = new DSDK.ActionButtonsPanel('#securityActions', {
+                title: 'Security Protocols',
+                initialState: 'critical',
+                enableSparks: true,
+                enableScanlineHalo: true,
+                buttons: [
+                    { id: 'sec-lockdown', text: 'Initiate Lockdown', style: 'danger', onClick: () => logAction('Ship-wide lockdown initiated!', 'error') },
+                    { id: 'sec-purge-vents', text: 'Purge Ventilation', style: 'warning', disabled: true, onClick: () => logAction('Ventilation system purged.', 'warn') },
+                    { id: 'sec-self-destruct', text: 'ARM SELF-DESTRUCT', style: 'danger', onClick: () => logAction('SELF-DESTRUCT SEQUENCE ARMED. CONFIRMATION REQUIRED.', 'critical') }
+                ]
+            });
+
+            // Panel 4: Comms Protocols (Estado: stable, botones añadidos dinámicamente)
+            const commsProtocols = new DSDK.ActionButtonsPanel('#commsProtocols', {
+                title: 'Communication Protocols',
+                initialState: 'stable',
+                enableScanlineHalo: true,
+                scanlineStates: ['stable'], // Para mostrar en estado estable
+                buttons: [
+                    { id: 'comms-hail-starfleet', text: 'Hail Starfleet HQ', onClick: () => logAction('Hailing Starfleet HQ... Channel open.') }
+                ]
+            });
+            commsProtocols.addButton({
+                id: 'comms-encrypt-all',
+                text: 'Encrypt All Channels',
+                style: 'normal',
+                onClick: () => logAction('All communication channels encrypted.', 'success')
+            });
+
+
+            // Simular cambios de estado de botones
+            setTimeout(() => {
+                navControls.updateButton('nav-set-course', { newDisabledState: false });
+                logAction('Navigation computer online. Course plotting available.', 'info');
+            }, 5000);
+
+            setTimeout(() => {
+                powerMgmt.setButtonDisabled('pwr-reactor-coolant', true);
+                powerMgmt.updateButton('pwr-reroute-aux', {newText: 'AUX POWER ACTIVE'});
+                logAction('Reactor coolant at max. Boost disabled.', 'info');
+            }, 7000);
+            
+            setTimeout(() => {
+                securityActions.updateButton('sec-purge-vents', { newDisabledState: false, newStyle: 'danger' });
+                logAction('Atmospheric contamination detected. Vent purge available.', 'warn');
+            }, 9000);
+
+            setTimeout(() => {
+                if (commsProtocols.buttonsMap.has('comms-encrypt-all')) { // Verificar si existe antes de intentar remover
+                     commsProtocols.removeButton('comms-encrypt-all');
+                     logAction('Encryption cycle complete. Standard comms restored.', 'info');
+                }
+                commsProtocols.addButton({
+                    id: 'comms-distress-beacon',
+                    text: 'Activate Distress Beacon',
+                    style: 'danger',
+                    onClick: () => logAction('Distress beacon activated!', 'critical')
+                });
+            }, 12000);
+
+        });
+    </script>
+
+</body>
+</html>

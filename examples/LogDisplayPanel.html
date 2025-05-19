@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>DSDK - LogDisplayPanel Examples</title>
+    <link rel="stylesheet" href="../DynamicSciFiDashboardKit.css">
+    <style>
+        body {
+            background-color: #000000;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .dashboard-row {
+            display: flex;
+            flex-wrap: wrap; /* Para que los paneles se ajusten si no caben */
+            gap: 20px; /* Espacio entre paneles */
+            width: 100%;
+        }
+
+        .panel-container {
+            flex: 1 1 300px; /* Permite crecer y encoger, base de 300px */
+            display: flex; /* Para que el panel interno se expanda */
+            flex-direction: column;
+            min-height: 300px; /* Altura mínima para cada contenedor de panel */
+        }
+
+        /* Aseguramos que el panel dsdk ocupe todo el alto del contenedor */
+        .panel-container > .dsdk-panel {
+            flex-grow: 1;
+        }
+
+        /* El .dsdk-panel-content ya tiene un max-height y overflow:auto por defecto */
+        /* Podemos ajustarlo si es necesario, pero el default de 250px es razonable */
+        /* .dsdk-panel-content { max-height: 350px; } */
+
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-row">
+        <div id="hvacLogPanel" class="panel-container"></div>
+        <div id="accessLogPanel" class="panel-container"></div>
+        <div id="diagnosticsLogPanel" class="panel-container"></div>
+        <div id="commsLogPanel" class="panel-container"></div>
+    </div>
+
+    <script src="../DynamicSciFiDashboardKit.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const DSDK = DynamicSciFiDashboardKit;
+
+            // Panel 1: HVAC & Air Quality Log (Estado: normal)
+            const hvacLog = new DSDK.LogDisplayPanel('#hvacLogPanel', {
+                title: 'HVAC & Air Quality Log',
+                initialState: 'normal',
+                maxEntries: 25
+            });
+            hvacLog.addLog({ text: 'System boot complete. Monitoring environmental controls.', level: 'info' });
+            hvacLog.addLog({ text: 'Thermostat set to 22°C (Mode: Auto).', level: 'info' });
+            hvacLog.addLog({ text: 'Air purifier in living area activated.', level: 'success' });
+            hvacLog.addLog({ text: 'Humidity in Sector Alpha: 55% (Optimal).', level: 'info' });
+            hvacLog.addLog({ text: 'CO2 levels in study: 450 ppm (Optimal).', level: 'success' });
+
+
+            // Panel 2: Access Control & Security Log (Estado: warning)
+            const accessLog = new DSDK.LogDisplayPanel('#accessLogPanel', {
+                title: 'Access Control & Security Log',
+                initialState: 'warning',
+                enableSparks: true,
+                maxEntries: 25
+            });
+            accessLog.addLog({ text: 'User "Cmdr. Valerius" logged in from Terminal Alpha-7.', level: 'info' });
+            accessLog.addLog({ text: 'Security patrol unit 03 reported all clear in Sector Beta.', level: 'success' });
+            accessLog.addLog({ text: 'Failed login attempt for user "Unknown" from IP 172.16.254.1.', level: 'warn' });
+            accessLog.addLog({ text: 'Door to Lab 3 unlocked by Dr. Aris Thorne (Bio-scan).', level: 'success' });
+            accessLog.addLog({ text: 'Motion detected near restricted Area 51-B. Investigating.', level: 'warn' });
+            accessLog.addLog({ text: 'User "admin_guest" login attempt from external network blocked.', level: 'error' });
+            accessLog.addLog({ text: 'Firewall updated with new threat signatures.', level: 'success' });
+            accessLog.addLog({ text: 'Internal comms channel 7 encrypted successfully.', level: 'info' });
+            accessLog.addLog({ text: 'Perimeter sensor 12-Delta offline. Sending drone for diagnostics.', level: 'warn' });
+            accessLog.addLog({ text: 'Security alert: Unusual energy signature detected near Cargo Bay 2.', level: 'error' });
+            accessLog.addLog({ text: 'User "Technician04" logged out from Maintenance Terminal.', level: 'info' });
+
+
+            // Panel 3: System Diagnostics Log (Estado: critical)
+            const diagnosticsLog = new DSDK.LogDisplayPanel('#diagnosticsLogPanel', {
+                title: 'System Diagnostics Log',
+                initialState: 'critical',
+                enableSparks: true,
+                scanlineHaloStates: ['critical'],
+                enableScanlineHalo: true,
+                maxEntries: 25
+            });
+
+            diagnosticsLog.addLog({ text: 'Optical data network latency critically high in Sector Epsilon (250ms).', level: 'error' });
+            diagnosticsLog.addLog({ text: 'Coolant levels for primary reactor at 30%. Refill sequence pending.', level: 'warn' });
+            diagnosticsLog.addLog({ text: 'Backup generator online. Main power failure imminent.', level: 'critical' }); // Custom class, will look like error
+            diagnosticsLog.addLog({ text: 'ERROR: Data corruption detected in archive storage array 7.', level: 'error' });
+            diagnosticsLog.addLog({ text: 'Shield generator module 2 failing. Power at 15%.', level: 'error' });
+            diagnosticsLog.addLog({ text: 'Automated repair drone dispatched to core #3.', level: 'info' });
+            diagnosticsLog.addLog({ text: 'System integrity compromised. Recommend immediate evacuation of affected sectors.', level: 'critical' });
+
+
+            // Panel 4: Communications Uplink Log (Estado: stable)
+            const commsLog = new DSDK.LogDisplayPanel('#commsLogPanel', {
+                title: 'Communications Uplink Log',
+                initialState: 'stable',
+                scanlineHaloStates: ['stable'], // Example of scanlines on stable
+                enableScanlineHalo: true,
+                scanlineOpacity: 0.05,
+                maxEntries: 25
+            });
+            commsLog.addLog({ text: 'Uplink to Orbital Station Gamma established. Signal strength: 98%.', level: 'success' });
+            commsLog.addLog({ text: 'Receiving telemetry data from Probe Delta-IV. All nominal.', level: 'info' });
+            commsLog.addLog({ text: 'Encrypted message sent to Command Fleet. Confirmation received.', level: 'success' });
+            commsLog.addLog({ text: 'Bandwidth allocation for scientific data transfer increased.', level: 'info' });
+            commsLog.addLog({ text: 'All deep space communication arrays online and functioning optimally.', level: 'success' });
+            commsLog.addLog({ text: 'Minor solar flare interference detected. Auto-adjusting frequencies.', level: 'info' }); // Could be warn, but stable implies system handles it
+            commsLog.addLog({ text: 'Data packet "STATUS_REPORT_OMEGA" successfully transmitted.', level: 'success' });
+            commsLog.addLog({ text: 'Scheduled maintenance for antenna array C completed.', level: 'success' });
+            commsLog.addLog({ text: 'Listening for beacon from Outpost Kepler-186f.', level: 'info' });
+            commsLog.addLog({ text: 'Subspace communication channel active and clear.', level: 'success' });
+            commsLog.addLog({ text: 'Network latency to local mesh: 2ms.', level: 'success' });
+            
+        });
+    </script>
+
+</body>
+</html>

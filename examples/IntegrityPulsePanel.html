@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>DSDK - IntegrityPulsePanel Examples (Taller)</title>
+    <link rel="stylesheet" href="../DynamicSciFiDashboardKit.css">
+    <style>
+        body {
+            background-color: #000000;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .dashboard-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .panel-wrapper { 
+            flex: 1 1 300px; 
+            display: flex; /* Hacemos que .panel-wrapper sea un contenedor flex */
+            flex-direction: column; /* Sus hijos se apilarán */
+            height: 400px; /* Altura deseada para el contenedor del panel */
+            /* border: 1px dashed lime; */ /* Para depurar el tamaño del wrapper */
+        }
+
+        /* El div donde se inicializa el panel DSDK (ej: #pulsePanel5) */
+        /* Este div debe permitir que su hijo (.dsdk-panel) se expanda al 100% de su altura. */
+        .panel-wrapper > div[id^="pulsePanel"] {
+            flex-grow: 1; /* Ocupará todo el espacio vertical dentro de .panel-wrapper */
+            display: flex; /* Para que su hijo .dsdk-panel pueda usar height: 100% */
+            flex-direction: column; /* Mantener la dirección de columna */
+            /* border: 1px dashed cyan; */ /* Para depurar el tamaño del contenedor directo del panel DSDK */
+        }
+
+        /* El .dsdk-panel raíz creado por la librería */
+        /* Ya tiene display:flex y flex-direction:column por defecto en DSDK.css */
+        .panel-wrapper > div[id^="pulsePanel"] > .dsdk-panel {
+             height: 100%; /* Que tome el 100% de la altura de su padre (el div con ID) */
+             /* border: 1px dashed yellow; */ /* Para depurar el tamaño del .dsdk-panel */
+        }
+
+        /* Adicional: Si queremos que .dsdk-integrity-pulse-container sea más explícito
+           en tomar la altura disponible después del header: */
+        /*
+        .dsdk-integrity-pulse-panel .dsdk-panel-content {
+            background-color: rgba(255,0,0,0.1); 
+        }
+        .dsdk-integrity-pulse-panel .dsdk-integrity-pulse-container {
+            background-color: rgba(0,0,255,0.1);
+        }
+        */
+
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-row">
+        <div class="panel-wrapper">
+            <div id="pulsePanel5"></div>
+        </div>
+        <div class="panel-wrapper">
+            <div id="pulsePanel15"></div>
+        </div>
+        <div class="panel-wrapper">
+            <div id="pulsePanel30"></div>
+        </div>
+        <div class="panel-wrapper">
+            <div id="pulsePanel60"></div>
+        </div>
+    </div>
+
+    <script src="../DynamicSciFiDashboardKit.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const DSDK = DynamicSciFiDashboardKit;
+
+            // Panel 1: 5 Barras (Estado Normal)
+            const pulse5 = new DSDK.IntegrityPulsePanel('#pulsePanel5', {
+                title: 'Core Sync (5 Bars)',
+                initialState: 'normal',
+                barCount: 5
+            });
+
+            // Panel 2: 15 Barras (Estado Warning)
+            const pulse15 = new DSDK.IntegrityPulsePanel('#pulsePanel15', {
+                title: 'Shield Matrix (15 Bars)',
+                initialState: 'warning',
+                barCount: 15,
+                enableSparks: true
+            });
+
+            // Panel 3: 30 Barras (Estado Critical)
+            const pulse30 = new DSDK.IntegrityPulsePanel('#pulsePanel30', {
+                title: 'Containment Field (30 Bars)',
+                initialState: 'critical',
+                barCount: 30,
+                enableSparks: true,
+                enableScanlineHalo: true
+            });
+
+            // Panel 4: 60 Barras (Estado Stable)
+            const pulse60 = new DSDK.IntegrityPulsePanel('#pulsePanel60', {
+                title: 'Warp Field Stability (60 Bars)',
+                initialState: 'stable',
+                barCount: 60,
+                enableScanlineHalo: true,
+                scanlineStates: ['stable'],
+                scanlineHaloColor: 'rgba(var(--dsdk-rgb-success-color), 0.08)'
+            });
+
+            let stateCycle = ['normal', 'warning', 'critical', 'stable'];
+            let currentIndex = 0;
+
+            setInterval(() => {
+                currentIndex = (currentIndex + 1) % stateCycle.length;
+                const newState = stateCycle[currentIndex];
+
+                pulse5.setPanelState(newState);
+                pulse15.setPanelState(newState);
+                pulse30.setPanelState(newState);
+                pulse60.setPanelState(newState);
+            }, 5000);
+        });
+    </script>
+
+</body>
+</html>

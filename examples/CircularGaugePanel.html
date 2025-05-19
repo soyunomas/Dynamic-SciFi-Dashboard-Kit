@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>DSDK - CircularGaugePanel Examples</title>
+    <link rel="stylesheet" href="../DynamicSciFiDashboardKit.css">
+    <style>
+        body {
+            background-color: #000000;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .dashboard-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .panel-container {
+            flex: 1 1 280px; /* Espacio adecuado para los gauges circulares */
+            display: flex; 
+            flex-direction: column;
+            height: 320px; /* Altura suficiente para el gauge y el título */
+            /* border: 1px solid red; */ /* Para depurar */
+        }
+
+        .panel-wrapper { /* Contenedor directo para el panel DSDK */
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            /* border: 1px solid cyan; */ /* Para depurar */
+        }
+        
+        .panel-wrapper > .dsdk-panel {
+            flex-grow: 1; /* El panel DSDK llena el wrapper */
+            /* border: 1px solid yellow; */ /* Para depurar */
+        }
+
+        /* El .dsdk-circular-gauge-panel .dsdk-panel-content ya se encarga de centrar el SVG.
+           La altura del .panel-container (y por ende del .dsdk-panel) es clave. */
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-row">
+        <div class="panel-container">
+            <div class="panel-wrapper" id="engineTempGauge"></div>
+        </div>
+        <div class="panel-container">
+            <div class="panel-wrapper" id="shieldStrengthGauge"></div>
+        </div>
+        <div class="panel-container">
+            <div class="panel-wrapper" id="fuelLevelGauge"></div>
+        </div>
+        <div class="panel-container">
+            <div class="panel-wrapper" id="systemLoadGauge"></div>
+        </div>
+    </div>
+
+    <script src="../DynamicSciFiDashboardKit.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const DSDK = DynamicSciFiDashboardKit;
+
+            // Panel 1: Engine Temperature (Estado Normal)
+            const engineTemp = new DSDK.CircularGaugePanel('#engineTempGauge', {
+                title: 'Engine Core Temp.',
+                initialState: 'normal',
+                minValue: 0,
+                maxValue: 1200,
+                initialValue: 850,
+                units: '°C',
+                label: 'Main Engine',
+                arcWidth: 10,
+                gaugeRadius: 70,
+                valueFontSize: '1.8em',
+                targetValue: 950 // Temperatura óptima/límite suave
+            });
+
+            // Panel 2: Shield Strength (Estado Warning)
+            const shieldStrength = new DSDK.CircularGaugePanel('#shieldStrengthGauge', {
+                title: 'Shield Strength',
+                initialState: 'warning',
+                minValue: 0,
+                maxValue: 100,
+                initialValue: 35,
+                units: '%',
+                label: 'Forward Shields',
+                arcWidth: 14,
+                gaugeRadius: 75,
+                valueFontSize: '2em',
+                labelFontSize: '0.7em',
+                unitsFontSize: '0.6em',
+                enableSparks: true // Chispas para el estado warning
+            });
+
+            // Panel 3: Fuel Level (Estado Critical)
+            const fuelLevel = new DSDK.CircularGaugePanel('#fuelLevelGauge', {
+                title: 'Antimatter Fuel',
+                initialState: 'critical',
+                minValue: 0,
+                maxValue: 100,
+                initialValue: 8, // Nivel muy bajo
+                units: 'Units',
+                label: 'Reserve Tank',
+                arcWidth: 12,
+                gaugeRadius: 65, // Un poco más pequeño
+                valueFontSize: '1.7em',
+                enableSparks: true,
+                enableScanlineHalo: true,
+                startAngle: -120, // Ángulos un poco diferentes
+                endAngle: 120
+            });
+
+            // Panel 4: System Load (Estado Stable, sin animación inicial)
+            const systemLoad = new DSDK.CircularGaugePanel('#systemLoadGauge', {
+                title: 'CPU Load',
+                initialState: 'stable',
+                minValue: 0,
+                maxValue: 100,
+                initialValue: 25,
+                units: '%',
+                label: 'Processing Core A',
+                arcWidth: 10,
+                gaugeRadius: 70,
+                animationDuration: 0, // Sin animación al establecer valor inicial
+                enableScanlineHalo: true,
+                scanlineStates: ['stable'],
+                scanlineHaloColor: 'rgba(var(--dsdk-rgb-success-color), 0.08)'
+            });
+            // Para que la animación funcione después, la reestablecemos
+            systemLoad.config.animationDuration = 400;
+
+
+            // Simular actualizaciones de valores
+            setInterval(() => {
+                let newTemp = engineTemp.currentValue + Math.floor(Math.random() * 50 - 25);
+                newTemp = Math.max(engineTemp.config.minValue, Math.min(engineTemp.config.maxValue, newTemp));
+                engineTemp.setValue(newTemp);
+                if (newTemp > 1000) engineTemp.setPanelState('critical');
+                else if (newTemp > 900) engineTemp.setPanelState('warning');
+                else engineTemp.setPanelState('normal');
+            }, 3000);
+
+            setInterval(() => {
+                let newShield = shieldStrength.currentValue - Math.floor(Math.random() * 10);
+                newShield = Math.max(0, newShield);
+                shieldStrength.setValue(newShield);
+                 if (newShield < 20) shieldStrength.setPanelState('critical');
+                else if (newShield < 50) shieldStrength.setPanelState('warning');
+                else shieldStrength.setPanelState('stable'); // Si se recarga
+            }, 2500);
+
+            setInterval(() => {
+                let newFuel = fuelLevel.currentValue - 1;
+                newFuel = Math.max(0, newFuel);
+                fuelLevel.setValue(newFuel);
+                if (newFuel < 5 && fuelLevel.currentState !== 'critical') {
+                     fuelLevel.setPanelState('critical'); // Ya debería estarlo, pero por si acaso
+                } else if (newFuel < 15 && newFuel >=5) {
+                    fuelLevel.setPanelState('warning'); // Si hay un pequeño repunte o para la transición
+                }
+                // Si llega a 0, se queda en crítico
+            }, 4000);
+            
+            setInterval(() => {
+                let newLoad = Math.floor(Math.random() * 80) + 10; // Carga entre 10 y 90
+                systemLoad.setValue(newLoad); // Con animación (reestablecida)
+                if (newLoad > 85) systemLoad.setPanelState('critical');
+                else if (newLoad > 70) systemLoad.setPanelState('warning');
+                else systemLoad.setPanelState('stable');
+            }, 3500);
+
+        });
+    </script>
+
+</body>
+</html>

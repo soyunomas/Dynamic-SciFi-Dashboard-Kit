@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>DSDK - DynamicTextPanel Examples</title>
+    <link rel="stylesheet" href="../DynamicSciFiDashboardKit.css">
+    <style>
+        body {
+            background-color: #000000;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .dashboard-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .panel-container {
+            flex: 1 1 300px; 
+            display: flex; 
+            flex-direction: column;
+            min-height: 180px; /* Altura para que el texto tenga espacio */
+        }
+
+        .panel-container > .dsdk-panel {
+            flex-grow: 1;
+        }
+        /* DynamicTextPanel usa .dsdk-dynamic-text-container que centra el texto.
+           El .dsdk-panel-content hereda las propiedades de flex-grow. */
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-row">
+        <div id="statusBroadcastPanel" class="panel-container"></div>
+        <div id="dataStreamPanel" class="panel-container"></div>
+        <div id="alertSystemPanel" class="panel-container"></div>
+        <div id="commsChannelPanel" class="panel-container"></div>
+    </div>
+
+    <script src="../DynamicSciFiDashboardKit.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const DSDK = DynamicSciFiDashboardKit;
+            const { DSDK_CLASSES } = DSDK;
+
+            // Panel 1: Status Broadcast (Normal, texto informativo)
+            const statusBroadcast = new DSDK.DynamicTextPanel('#statusBroadcastPanel', {
+                title: 'Ship Status Broadcast',
+                initialState: 'normal',
+                initialText: 'All systems operational. Current mission: Sector surveillance.',
+                initialEffects: { textColorClass: DSDK_CLASSES.TEXT_INFO }
+            });
+
+            // Panel 2: Data Stream (Warning, texto con flicker y blur)
+            const dataStream = new DSDK.DynamicTextPanel('#dataStreamPanel', {
+                title: 'Encrypted Data Stream',
+                initialState: 'warning',
+                initialText: 'Receiving fragmented packets... Decryption key mismatch detected.',
+                initialEffects: {
+                    blur: true,
+                    flicker: true,
+                    textColorClass: DSDK_CLASSES.TEXT_WARNING
+                },
+                enableSparks: true
+            });
+
+            // Panel 3: Alert System (Critical, texto con glitch)
+            const alertSystem = new DSDK.DynamicTextPanel('#alertSystemPanel', {
+                title: 'EMERGENCY ALERT SYSTEM',
+                initialState: 'critical',
+                initialText: 'UNAUTHORIZED ACCESS DETECTED! LOCKDOWN PROTOCOL INITIATED!',
+                initialEffects: {
+                    glitch: true,
+                    textColorClass: DSDK_CLASSES.TEXT_DANGER
+                },
+                enableSparks: true,
+                enableScanlineHalo: true
+            });
+
+            // Panel 4: Communications Channel (Stable, texto simple)
+            const commsChannel = new DSDK.DynamicTextPanel('#commsChannelPanel', {
+                title: 'Secure Comms Channel 7',
+                initialState: 'stable',
+                initialText: 'Channel Open. Awaiting Transmission. Signal Strength: Optimal.',
+                initialEffects: {
+                    textColorClass: DSDK_CLASSES.TEXT_SUCCESS
+                },
+                enableScanlineHalo: true,
+                scanlineStates: ['stable'],
+                scanlineHaloColor: 'rgba(var(--dsdk-rgb-success-color), 0.08)'
+            });
+
+            // Simular actualizaciones de texto y efectos
+            setTimeout(() => {
+                statusBroadcast.setText('Course correction maneuver initiated. ETA to Waypoint Gamma: 3 hours.');
+            }, 7000);
+
+            setTimeout(() => {
+                dataStream.setText('DECRYPTION FAILED. SOURCE UNVERIFIED. POSSIBLE MALWARE.');
+                dataStream.setEffects({ blur: false, flicker: false, glitch: true, textColorClass: DSDK_CLASSES.TEXT_DANGER });
+                dataStream.setPanelState('critical'); // Escalar la situación
+            }, 10000);
+
+            setTimeout(() => {
+                alertSystem.setText('WARNING: HULL BREACH SECTOR 4. EVACUATE IMMEDIATELY!');
+                // El glitch ya está activo, quizás cambiar el color o la intensidad si fuera posible
+            }, 8000);
+            
+            const messages = [
+                "Transmission from Starbase Omega: 'Supplies en route.'",
+                "Query from Science Team: 'Requesting sensor data from Nebula X-1.'",
+                "Channel clear. Monitoring for incoming signals.",
+                "Automated message: 'System diagnostic check complete. All nominal.'"
+            ];
+            let msgIndex = 0;
+            setInterval(() => {
+                commsChannel.setText(messages[msgIndex]);
+                msgIndex = (msgIndex + 1) % messages.length;
+                if (messages[msgIndex].includes("Query")) {
+                    commsChannel.setEffects({ textColorClass: DSDK_CLASSES.TEXT_INFO });
+                } else {
+                    commsChannel.setEffects({ textColorClass: DSDK_CLASSES.TEXT_SUCCESS });
+                }
+            }, 6000);
+        });
+    </script>
+
+</body>
+</html>

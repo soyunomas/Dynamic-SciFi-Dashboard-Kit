@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>DSDK - CriticalWarningTextPanel Examples</title>
+    <link rel="stylesheet" href="../DynamicSciFiDashboardKit.css">
+    <style>
+        body {
+            background-color: #000000;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .dashboard-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .panel-container {
+            flex: 1 1 350px; /* Permite crecer/encoger, base más ancha para texto grande */
+            display: flex;
+            flex-direction: column;
+            min-height: 200px; /* Altura mínima para visualización del texto */
+        }
+
+        /* Aseguramos que el panel dsdk ocupe todo el alto del contenedor */
+        .panel-container > .dsdk-panel {
+            flex-grow: 1;
+        }
+
+        /* Para CriticalWarningTextPanel, el panel-content no tiene padding
+           y el .dsdk-critical-warning-text-container es el que define
+           el área del texto. La altura es importante aquí. */
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-row">
+        <div id="warningPanelCritical" class="panel-container"></div>
+        <div id="warningPanelStabilizing" class="panel-container"></div>
+        <div id="warningPanelStable" class="panel-container"></div>
+        <div id="warningPanelVariant" class="panel-container"></div>
+    </div>
+
+    <script src="../DynamicSciFiDashboardKit.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const DSDK = DynamicSciFiDashboardKit;
+
+            // Panel 1: Estado CRITICAL
+            const criticalPanel = new DSDK.CriticalWarningTextPanel('#warningPanelCritical', {
+                initialText: 'MELTDOWN IMMINENT',
+                initialWarningState: 'critical', // Esto setea el panelState base a 'critical'
+                fontSize: '2.4rem',
+                enableSparks: true,
+                enableScanlineHalo: true
+                // scanlineStates no es necesario cambiar, 'critical' ya está incluido por defecto
+            });
+
+            // Panel 2: Estado STABILIZING
+            const stabilizingPanel = new DSDK.CriticalWarningTextPanel('#warningPanelStabilizing', {
+                initialText: 'SYSTEM RECOVERY IN PROGRESS',
+                initialWarningState: 'stabilizing', // Esto setea el panelState base a 'warning'
+                fontSize: '1.9rem', // Un poco más pequeño para más texto
+                enableSparks: true, // 'warning' también activa sparks por defecto
+                enableScanlineHalo: true,
+                scanlineOpacity: 0.12
+                // scanlineStates no es necesario cambiar, 'warning' ya está incluido
+            });
+
+            // Panel 3: Estado STABLE
+            const stablePanel = new DSDK.CriticalWarningTextPanel('#warningPanelStable', {
+                initialText: 'ALL SYSTEMS NOMINAL',
+                initialWarningState: 'stable', // Esto setea el panelState base a 'stable'
+                fontSize: '2.2rem',
+                enableSparks: false, // 'stable' no activa sparks
+                enableScanlineHalo: true, // Para que se vean en 'stable', debemos indicar el estado
+                scanlineStates: ['critical', 'warning', 'stable'], // Añadir 'stable'
+                scanlineOpacity: 0.06,
+                scanlineHaloColor: 'rgba(var(--dsdk-rgb-success-color), 0.1)' // Color scanline verde
+            });
+
+            // Panel 4: Variante (CRITICAL, pero con texto diferente y sin chispas)
+            const variantPanel = new DSDK.CriticalWarningTextPanel('#warningPanelVariant', {
+                initialText: 'CONTAINMENT FIELD FAILURE - SECTOR GAMMA',
+                initialWarningState: 'critical',
+                fontSize: '1.7rem', // Aún más pequeño para texto largo
+                enableSparks: false, // Desactivamos chispas para este ejemplo
+                enableScanlineHalo: true,
+                scanlineThickness: '2px',
+                scanlineHaloColor: 'rgba(var(--dsdk-rgb-danger-color), 0.25)'
+            });
+
+            // Simular cambios de texto o estado después de un tiempo (opcional)
+            setTimeout(() => {
+                criticalPanel.setText('CORE BREACH ALERT');
+            }, 5000);
+
+            setTimeout(() => {
+                stabilizingPanel.setWarningState('stable', 'RECOVERY COMPLETE');
+                 // El scanline se quitará porque el nuevo panelState base será 'stable'
+                 // y no está en los scanlineStates por defecto del panel (a menos que lo configures)
+            }, 7000);
+        });
+    </script>
+
+</body>
+</html>
