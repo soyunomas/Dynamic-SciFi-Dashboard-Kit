@@ -15,9 +15,18 @@
 *   **JavaScript Moderno:** Escrito en ES6+ sin dependencias externas pesadas (solo usa Bootstrap para el layout de los ejemplos).
 *   **Fácil de Usar:** API sencilla para integrar y controlar los paneles.
 *   **Responsivo (con Bootstrap):** Los ejemplos y la estructura de los paneles están pensados para adaptarse a diferentes tamaños de pantalla con la ayuda de un framework como Bootstrap.
+  
 ## Demo
 
-Aquí podrás ver una demo con todos los paneles ( pulsa los botones para cambiar de estados) [**Showcase Completo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/demo.html)** .
+Aquí podrás ver una demo con todos los paneles (pulsa los botones para cambiar de estados).
+
+<p align="center">
+  <a href="https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/demo.html" target="_blank" rel="noopener noreferrer">
+    <img src="./screenshots/demo-screenshot.png" alt="Captura de pantalla de la demo Dynamic SciFi Dashboard Kit" width="75%">
+  </a>
+</p>
+
+[**Enlace**](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/demo.html)
 
 ## Paneles Disponibles
 
