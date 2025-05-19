@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSDK - Full Dashboard Chaos (Visual Enhancements)</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="DynamicSciFiDashboardKit.css">
+    
+    <style>
+        body {
+            background-color: #000000;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .panel-container {
+            display: flex; 
+            flex-direction: column;
+            background-color: transparent; 
+        }
+        .panel-container > .dsdk-panel { 
+            flex-grow: 1; 
+            width: 100%;
+            margin-bottom: 0 !important;
+        }
+        .panel-col {
+            display: flex;
+            flex-direction: column;
+        }
+        .panel-col > .panel-container {
+            flex-grow: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid p-3">
+        
+        <div class="row mb-3 gx-3">
+            <div class="col-md-3 panel-col">
+                <div id="logPanel1" class="panel-container" style="height: 300px;"></div>
+            </div>
+            <div class="col-md-3 panel-col">
+                <div id="statusLedPanel1" class="panel-container" style="height: 300px;"></div>
+            </div>
+            <div class="col-md-3 panel-col">
+                <div id="actionPanel1" class="panel-container" style="height: 300px;"></div>
+            </div>
+            <div class="col-md-3 panel-col">
+                <div id="kvPanel1" class="panel-container" style="height: 300px;"></div>
+            </div>
+        </div>
+
+        <div class="row mb-3 gx-3">
+            <!-- CanvasGraphPanel para la sonda sinusoidal -->
+            <div class="col-md-4 panel-col">
+                <div id="sineWavePanel" class="panel-container" style="height: 250px;"></div>
+            </div>
+            <div class="col-md-2 panel-col">
+                <div id="circGaugePanel1" class="panel-container" style="height: 250px;"></div>
+            </div>
+            <div class="col-md-2 panel-col">
+                <div id="integrityPulse1" class="panel-container" style="height: 250px;"></div>
+            </div>
+            <div class="col-md-4 panel-col">
+                <div id="critWarnPanel1" class="panel-container" style="height: 250px;"></div>
+            </div>
+        </div>
+        
+        <div class="row mb-3 gx-3">
+            <div class="col-md-2 panel-col">
+                <div id="ledPanel1" class="panel-container" style="height: 200px;"></div>
+            </div>
+            <div class="col-md-4 panel-col">
+                 <div id="dynTextPanel1" class="panel-container" style="height: 200px;"></div>
+            </div>
+            <div class="col-md-3 panel-col">
+                <div id="hBarGaugePanel1" class="panel-container" style="height: 200px;"></div>
+            </div>
+            <div class="col-md-3 panel-col">
+                 <div id="ledPanel2" class="panel-container" style="height: 200px;"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="DynamicSciFiDashboardKit.js"></script> 
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof DynamicSciFiDashboardKit === 'undefined') {
+                console.error("FATAL: DynamicSciFiDashboardKit no está cargado.");
+                alert("Error CRÍTICO: La librería DSDK no se pudo cargar.");
+                return;
+            }
+
+            const DSDK = DynamicSciFiDashboardKit;
+            const DSDK_CLASSES = DSDK.DSDK_CLASSES || { 
+                TEXT_SUCCESS: 'dsdk-text-success', TEXT_WARNING: 'dsdk-text-warning', 
+                TEXT_DANGER: 'dsdk-text-danger', TEXT_INFO: 'dsdk-text-info' 
+            };
+
+            let globalSystemState = 'normal'; 
+            
+            let logPanel1, statusLedPanel1, kvPanel1;
+            let sineWavePanel, circGaugePanel1, integrityPulse1, critWarnPanel1; // sineWavePanel es el nuevo CanvasGraphPanel
+            let ledPanel1, dynTextPanel1, hBarGaugePanel1, ledPanel2;
+            let actionPanel1;
+
+            const allActivePanels = []; // Para iterar y aplicar estado global fácilmente
+
+
+            function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+            function getRandomArrayElement(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+            const panelStates = ['normal', 'warning', 'critical', 'stable'];
+            const logLevels = ['info', 'warn', 'error', 'success'];
+            const appLedValidColors = ['green', 'yellow', 'red', 'blue', 'orange', 'purple', 'cyan', 'white', 'off'];
+            const VALID_WARNING_PANEL_INTERNAL_STATES = ['critical', 'stabilizing', 'stable'];
+
+            const sciFiMessages = [
+                "Quantum flux detected.", "Energy signature rising!", "Hull integrity at 75%.",
+                "Warp core stabilizing.", "Shields are holding.", "Unknown transmission.",
+                "Spacetime anomaly.", "Life support nominal.", "Navigation online.",
+                "Hostile vessel!", "Evasive maneuvers!", "Target locked."
+            ];
+            const critWarnTexts = {
+                critical: ["MELTDOWN IMMINENT", "SYSTEM FAILURE", "EVACUATE NOW"],
+                stabilizing: ["ENERGY SPIKE", "WARNING", "HOLDING"],
+                stable: ["ALL SYSTEMS GREEN", "NOMINAL", "ONLINE"],
+                normal: ["SYSTEMS READY", "AWAITING COMMAND", "IDLE"] 
+            };
+            const dynamicTextSamples = {
+                normal: ["Receiving telemetry...", "Data stream active.", "Monitoring subspace frequencies..."],
+                warning: ["Unstable energy readings!", "Decryption key required.", "High radiation levels detected!"],
+                critical: ["!@#$ CORRUPTED DATA $#@!", "COMMUNICATIONS OFFLINE", "CONTAINMENT BREACH IMMINENT!"],
+                stable: ["Secure channel established.", "All clear.", "System diagnostics complete."]
+            };
+
+
+            console.log("APP.JS: Iniciando inicialización de paneles DSDK...");
+
+            try {
+                logPanel1 = new DSDK.LogDisplayPanel('#logPanel1', { title: 'Main System Log', maxEntries: 12, enableSparks: true });
+                allActivePanels.push(logPanel1);
+                safeLog(logPanel1, {text: "logPanel1 Initialized.", level: "success"});
+
+                statusLedPanel1 = new DSDK.StatusIndicatorLedPanel('#statusLedPanel1', {
+                    title: 'Subsystem Status',
+                    indicators: [
+                        { id: 'nav', text: 'Navigation', color: 'green' }, 
+                        { id: 'wpn', text: 'Weapons', color: 'blue' },
+                        { id: 'shd', text: 'Shields', color: 'green' }, 
+                        { id: 'eng', text: 'Engines', color: 'green' },
+                        { id: 'ls', text: 'Life Support', color: 'blue' }
+                    ],
+                    enableScanlineHalo: true, scanlineStates:['critical', 'warning']
+                });
+                allActivePanels.push(statusLedPanel1);
+
+                kvPanel1 = new DSDK.KeyValueListPanel('#kvPanel1', { title: 'Ship Vitals' });
+                if (kvPanel1 && typeof kvPanel1.setItems === 'function') {
+                    kvPanel1.setItems([
+                        { key: 'Hull Integrity', value: '100%', statusClass: DSDK_CLASSES.TEXT_SUCCESS },
+                        { key: 'Shield Strength', value: '100%', statusClass: DSDK_CLASSES.TEXT_SUCCESS },
+                        { key: 'Core Temp', value: '350K', statusClass: DSDK_CLASSES.TEXT_INFO },
+                        { key: 'External Temp', value: '-270°C' }
+                    ]);
+                }
+                allActivePanels.push(kvPanel1);
+
+                // CanvasGraphPanel para la sonda sinusoidal
+                sineWavePanel = new DSDK.CanvasGraphPanel('#sineWavePanel', { 
+                    title: 'Energy Matrix Pulse', 
+                    graphType: 'sine',
+                    enableSparks: true,
+                    enableScanlineHalo: true,
+                    scanlineOpacity: 0.1,
+                    // Si tu librería tiene problemas con colorScheme, puedes omitirlo
+                    // y dependerá del colorScheme por defecto de CanvasGraphPanel en tu librería.
+                    // Si no tiene un default robusto, podría fallar aquí.
+                     colorScheme: { 
+                        normal:   { stroke: '#00E5E5', lineWidth: 1.5, noiseFactor: 0.05 },
+                        warning:  { stroke: '#FFD700', lineWidth: 1.8, noiseFactor: 0.15 },
+                        critical: { stroke: '#FF4500', lineWidth: 2.0, noiseFactor: 0.3 },
+                        stable:   { stroke: '#32CD32', lineWidth: 1.5, noiseFactor: 0.02 }
+                    }
+                });
+                allActivePanels.push(sineWavePanel);
+
+                circGaugePanel1 = new DSDK.CircularGaugePanel('#circGaugePanel1', { 
+                    title: 'Warp Field', initialValue: 60, units: '%', label: 'Primary Coil', targetValue: 85,
+                    valueFontSize: '1.8em', labelFontSize: '0.7em', unitsFontSize: '0.6em', arcWidth: 10, gaugeRadius: 65
+                });
+                allActivePanels.push(circGaugePanel1);
+
+                integrityPulse1 = new DSDK.IntegrityPulsePanel('#integrityPulse1', { 
+                    title: 'Containment Pulse', barCount: 9, 
+                    enableSparks: true, enableScanlineHalo: true, scanlineStates:['critical']
+                });
+                allActivePanels.push(integrityPulse1);
+
+                critWarnPanel1 = new DSDK.CriticalWarningTextPanel('#critWarnPanel1', { 
+                    initialText: 'ALL CLEAR', initialWarningState: 'stable', fontSize: '2.3rem' 
+                });
+                allActivePanels.push(critWarnPanel1);
+                
+                ledPanel1 = new DSDK.LedDisplayPanel('#ledPanel1', { label: 'AMMO COUNT', initialValue: 250, units: '', initialStatus: 'normal' });
+                allActivePanels.push(ledPanel1);
+                
+                dynTextPanel1 = new DSDK.DynamicTextPanel('#dynTextPanel1', { 
+                    title: 'Comms Channel 1', 
+                    initialText: 'Awaiting transmission...', 
+                    initialEffects: { blur: true }
+                });
+                allActivePanels.push(dynTextPanel1);
+                
+                hBarGaugePanel1 = new DSDK.HorizontalBarGaugePanel('#hBarGaugePanel1', { 
+                    title: 'Torpedo Bay 1', label: 'Photon Torpedoes', initialValue: 10, maxValue: 10, units: ' units', barHeight: '20px' 
+                });
+                allActivePanels.push(hBarGaugePanel1);
+                
+                ledPanel2 = new DSDK.LedDisplayPanel('#ledPanel2', { label: 'MISSION TIME', initialValue: "00:00:00", units: '', initialStatus: 'normal' });
+                allActivePanels.push(ledPanel2);
+
+                actionPanel1 = new DSDK.ActionButtonsPanel('#actionPanel1', {
+                    title: 'System Control',
+                    buttons: [
+                        { id: 'btn-cycle-state', text: 'Cycle Sys. State', style: 'normal', onClick: cycleGlobalState },
+                        { id: 'btn-random-event', text: 'Trigger Anomaly', style: 'warning', onClick: triggerRandomEvent },
+                        { id: 'btn-red-alert', text: 'RED ALERT!', style: 'danger', onClick: () => setGlobalState('critical') },
+                        { id: 'btn-all-clear', text: 'All Systems Clear', style: 'success', onClick: () => setGlobalState('stable') }
+                    ]
+                });
+                allActivePanels.push(actionPanel1); // ActionPanel también puede tener un setPanelState
+                
+                console.log("APP.JS: Inicialización de paneles principales completada.");
+
+            } catch(e) {
+                console.error("APP.JS FATAL ERROR durante inicialización de paneles DSDK:", e);
+                alert("Error CRÍTICO al inicializar uno o más paneles.");
+                return; 
+            }
+
+            function safeLog(panelInstance, logEntry) {
+                if (panelInstance && typeof panelInstance.addLog === 'function') {
+                    panelInstance.addLog(logEntry);
+                }
+            }
+            
+            function applyStateToAllPanels(newState) {
+                 allActivePanels.forEach(panel => {
+                    if (panel && typeof panel.setPanelState === 'function') {
+                        try {
+                            panel.setPanelState(newState);
+                        } catch (e) {
+                            console.warn(`Error setting panel state for a panel during global update:`, e, panel);
+                        }
+                    }
+                });
+            }
+
+            function setGlobalState(newState) {
+                if (!panelStates.includes(newState)) return;
+                globalSystemState = newState;
+                
+                safeLog(logPanel1, { text: `SYSTEM STATE: ${newState.toUpperCase()}`, level: newState === 'critical' ? 'error' : (newState === 'warning' ? 'warn' : 'info') });
+
+                applyStateToAllPanels(newState); // Aplicar estado general a todos
+
+                // --- Reacciones específicas y visuales para cada panel ---
+                const currentCritWarnInternalState = newState === 'normal' ? 'stable' : (newState === 'stabilizing' ? 'stabilizing' : newState);
+                if (critWarnPanel1 && typeof critWarnPanel1.setWarningState === 'function') {
+                    critWarnPanel1.setWarningState(
+                        VALID_WARNING_PANEL_INTERNAL_STATES.includes(currentCritWarnInternalState) ? currentCritWarnInternalState : 'stable', 
+                        getRandomArrayElement(critWarnTexts[currentCritWarnInternalState] || critWarnTexts.stable)
+                    );
+                }
+
+                if (circGaugePanel1 && typeof circGaugePanel1.setValue === 'function') {
+                    let gaugeVal = 60;
+                    if (newState === 'warning') gaugeVal = getRandomInt(70, 90);
+                    else if (newState === 'critical') gaugeVal = getRandomInt(90, 100);
+                    else if (newState === 'stable') gaugeVal = getRandomInt(10, 30);
+                    else gaugeVal = getRandomInt(40,65);
+                    circGaugePanel1.setValue(gaugeVal);
+                    circGaugePanel1.setTargetValue(newState === 'critical' ? 95 : 80);
+                }
+                
+                // Torpedo Bay 1 - con más movimiento
+                if (hBarGaugePanel1 && typeof hBarGaugePanel1.setValue === 'function') {
+                    let torpedoCount = hBarGaugePanel1.currentValue !== undefined ? hBarGaugePanel1.currentValue : 10;
+                    if (newState === 'critical' && torpedoCount > 0) torpedoCount = Math.max(0, torpedoCount - getRandomInt(1,3));
+                    else if (newState === 'warning' && torpedoCount > 2) torpedoCount = Math.max(0, torpedoCount - 1);
+                    else if (newState === 'stable' && torpedoCount < 10) torpedoCount = Math.min(10, torpedoCount + 2);
+                    else if (newState === 'normal' && torpedoCount < 8) torpedoCount = Math.min(10, torpedoCount + 1);
+                    else if (torpedoCount === 0 && Math.random() < 0.3) torpedoCount = getRandomInt(3,7); // Rearm esporádico
+                    hBarGaugePanel1.setValue(torpedoCount);
+                }
+
+
+                if (ledPanel1 && typeof ledPanel1.setValue === 'function') {
+                    ledPanel1.setValue(getRandomInt(50, 500));
+                    ledPanel1.setStatus(newState === 'critical' || newState === 'warning' ? newState : 'normal');
+                }
+                
+                if (dynTextPanel1 && typeof dynTextPanel1.setText === 'function') {
+                    dynTextPanel1.setText(getRandomArrayElement(dynamicTextSamples[newState] || dynamicTextSamples.normal));
+                    dynTextPanel1.setEffects({
+                        blur: newState === 'normal' || Math.random() > 0.7,
+                        flicker: newState === 'warning' || Math.random() > 0.5,
+                        glitch: newState === 'critical' && Math.random() > 0.3,
+                        textColorClass: newState === 'critical' ? DSDK_CLASSES.TEXT_DANGER : (newState === 'warning' ? DSDK_CLASSES.TEXT_WARNING : (newState === 'stable' ? DSDK_CLASSES.TEXT_SUCCESS : null))
+                    });
+                }
+
+                if (statusLedPanel1 && typeof statusLedPanel1.updateIndicator === 'function' &&
+                    kvPanel1 && typeof kvPanel1.updateItem === 'function') {
+                    
+                    statusLedPanel1.updateIndicator('nav', { color: newState === 'critical' ? 'red' : (newState === 'warning' ? 'yellow' : 'green'), blinking: newState === 'critical' });
+                    statusLedPanel1.updateIndicator('wpn', { color: newState === 'critical' || newState === 'warning' ? 'orange' : 'blue', blinking: newState === 'warning' });
+                    statusLedPanel1.updateIndicator('shd', { color: newState === 'critical' ? 'red' : (newState === 'stable' ? 'green' : 'blue'), blinking: newState === 'critical' });
+                    statusLedPanel1.updateIndicator('eng', { color: newState === 'critical' ? 'red' : (newState === 'warning' ? 'yellow' : 'green'), blinking: newState === 'critical' || newState === 'warning' });
+                    statusLedPanel1.updateIndicator('ls',  { color: newState === 'critical' ? 'red' : 'blue', blinking: newState === 'critical' });
+
+                    let hullStatus = DSDK_CLASSES.TEXT_SUCCESS, hullValue = `${getRandomInt(90, 100)}%`;
+                    let shieldStatus = DSDK_CLASSES.TEXT_SUCCESS, shieldValue = `${getRandomInt(90, 100)}%`;
+                    let coreTempStatus = DSDK_CLASSES.TEXT_INFO, coreTempValue = `${getRandomInt(300,450)}K`;
+
+                    if (newState === 'critical') {
+                        hullStatus = DSDK_CLASSES.TEXT_DANGER; hullValue = `${getRandomInt(10, 40)}%`;
+                        shieldStatus = DSDK_CLASSES.TEXT_DANGER; shieldValue = `${getRandomInt(0, 30)}%`;
+                        coreTempStatus = DSDK_CLASSES.TEXT_DANGER; coreTempValue = `${getRandomInt(700,900)}K`;
+                    } else if (newState === 'warning') {
+                        hullStatus = DSDK_CLASSES.TEXT_WARNING; hullValue = `${getRandomInt(41, 75)}%`;
+                        shieldStatus = DSDK_CLASSES.TEXT_WARNING; shieldValue = `${getRandomInt(31, 70)}%`;
+                        coreTempStatus = DSDK_CLASSES.TEXT_WARNING; coreTempValue = `${getRandomInt(451,699)}K`;
+                    }
+                    kvPanel1.updateItem('Hull Integrity', hullValue, hullStatus);
+                    kvPanel1.updateItem('Shield Strength', shieldValue, shieldStatus);
+                    kvPanel1.updateItem('Core Temp', coreTempValue, coreTempStatus);
+                }
+                 // Actualizar el propio panel de acción también, si tiene sentido
+                if (actionPanel1 && typeof actionPanel1.setPanelState === 'function') {
+                    actionPanel1.setPanelState(newState);
+                }
+            }
+
+            function cycleGlobalState() {
+                const currentIndex = panelStates.indexOf(globalSystemState);
+                const nextIndex = (currentIndex + 1) % panelStates.length;
+                setGlobalState(panelStates[nextIndex]);
+            }
+
+            function triggerRandomEvent() {
+                const randomMessage = getRandomArrayElement(sciFiMessages);
+                const randomLevel = getRandomArrayElement(logLevels);
+                safeLog(logPanel1, { text: `ANOMALY: ${randomMessage}`, level: randomLevel });
+                
+                if (dynTextPanel1 && typeof dynTextPanel1.setText === 'function') {
+                    dynTextPanel1.setText(`EVENT: ${randomMessage.toUpperCase()}`);
+                    dynTextPanel1.setEffects({
+                        blur: Math.random() > 0.6,
+                        flicker: Math.random() > 0.4,
+                        glitch: Math.random() > 0.8,
+                        textColorClass: getRandomArrayElement([DSDK_CLASSES.TEXT_INFO, DSDK_CLASSES.TEXT_WARNING, DSDK_CLASSES.TEXT_DANGER])
+                    });
+                }
+                // Pequeña probabilidad de cambiar el estado global con un evento
+                if (Math.random() < 0.33) {
+                    const targetStates = panelStates.filter(s => s !== globalSystemState); // Evitar quedarse en el mismo estado
+                    if (targetStates.length > 0) {
+                        setGlobalState(getRandomArrayElement(targetStates));
+                    }
+                } else { // Si no cambia el estado global, al menos refresca algunos valores
+                    if (circGaugePanel1 && typeof circGaugePanel1.setValue === 'function') circGaugePanel1.setValue(getRandomInt(30,90));
+                    if (hBarGaugePanel1 && typeof hBarGaugePanel1.setValue === 'function' && hBarGaugePanel1.currentValue < 10) hBarGaugePanel1.setValue(hBarGaugePanel1.currentValue + 1);
+                }
+            }
+            
+            if (logPanel1) {
+                setGlobalState('normal'); 
+                safeLog(logPanel1, {text: "Dashboard Online.", level: "success"});
+
+                let missionSeconds = 0;
+                setInterval(() => {
+                    missionSeconds++;
+                    const hours = Math.floor(missionSeconds / 3600).toString().padStart(2, '0');
+                    const minutes = Math.floor((missionSeconds % 3600) / 60).toString().padStart(2, '0');
+                    const seconds = (missionSeconds % 60).toString().padStart(2, '0');
+                    if (ledPanel2 && typeof ledPanel2.setValue === 'function') ledPanel2.setValue(`${hours}:${minutes}:${seconds}`);
+                }, 1000);
+                
+                // Intervalo para actualizar "Core Temp" en kvPanel1
+                setInterval(() => {
+                    if (kvPanel1 && typeof kvPanel1.updateItem === 'function') {
+                        let temp = getRandomInt(300,550);
+                        let tempStatus = DSDK_CLASSES.TEXT_INFO;
+                        if (globalSystemState === 'warning') temp = getRandomInt(500, 700);
+                        if (globalSystemState === 'critical') temp = getRandomInt(650, 900);
+                        
+                        if (temp > 750) tempStatus = DSDK_CLASSES.TEXT_DANGER;
+                        else if (temp > 550) tempStatus = DSDK_CLASSES.TEXT_WARNING;
+                        kvPanel1.updateItem('Core Temp', `${temp}K`, tempStatus);
+                    }
+                }, 4500);
+
+                // Intervalo menos frecuente para eventos o ciclos de estado si no hay interacción
+                 setInterval(() => {
+                    if (document.hasFocus()) return; // No hacer cambios automáticos si el usuario está interactuando (aproximación)
+                    if (Math.random() < 0.15) {
+                        triggerRandomEvent();
+                    } else if (Math.random() < 0.08) {
+                        cycleGlobalState();
+                    }
+                }, 15000);
+
+
+            } else {
+                console.error("APP.JS: No se continuó con la lógica principal porque logPanel1 no se inicializó.");
+            }
+        });
+    </script>
+</body>
+</html>
