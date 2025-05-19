@@ -17,7 +17,7 @@
 *   **Responsivo (con Bootstrap):** Los ejemplos y la estructura de los paneles están pensados para adaptarse a diferentes tamaños de pantalla con la ayuda de un framework como Bootstrap.
 ## Demo
 
-Aquí podrás ver una demo con todos los paneles ( pulsa los botones para cambiar de estados) [**Showcase Completo]([./demo.html](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/demo.html))** .
+Aquí podrás ver una demo con todos los paneles ( pulsa los botones para cambiar de estados) [**Showcase Completo]([./demo.html](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/demo.html)** .
 
 ## Paneles Disponibles
 
