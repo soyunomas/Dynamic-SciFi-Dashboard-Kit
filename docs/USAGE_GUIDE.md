@@ -726,6 +726,81 @@ setTimeout(() => {
 }, 6000);
 ```
 
+### 3.12. `TrueCanvasGraphPanel`
+
+Muestra un gráfico de línea en un canvas, diseñado para representar datos en tiempo real proporcionados externamente. Es ideal para visualizar series temporales, telemetría o cualquier flujo de datos numéricos.
+
+**Inicialización:**
+```javascript
+const realtimeGraph = new DynamicSciFiDashboardKit.TrueCanvasGraphPanel('#realtimeGraphContainer', {
+    title: 'Sensor Data Stream',
+    maxDataPoints: 150,
+    dataRange: { min: 0, max: 100 } // Opcional: fija el rango del eje Y
+});
+```
+
+**Opciones Específicas:**
+*   `title` (`string`): Título del panel. Default: `'Realtime Data Graph'`.
+*   `maxDataPoints` (`number`): Número máximo de puntos de datos a retener y mostrar en el gráfico. Los puntos más antiguos se descartan. Default: `200`.
+*   `dataRange` (`object | null`): Define un rango fijo para el eje Y. Si es `null` (default), el eje Y se autoescala basado en los datos visibles.
+    *   `min` (`number`): Valor mínimo del eje Y.
+    *   `max` (`number`): Valor máximo del eje Y.
+*   `colorScheme` (`object`): Objeto que define el estilo de la línea para cada estado del panel (`normal`, `warning`, `critical`, `stable`). Cada estado tiene:
+    *   `stroke` (`string`): Color del trazo de la línea.
+    *   `lineWidth` (`number`): Ancho de la línea.
+    *   *Nota: `noiseFactor` no aplica directamente como en `CanvasGraphPanel` ya que los datos son externos.*
+*   `enableSparks` (`boolean`): Si se activan los efectos de chispas en los bordes del panel según el estado. Default: `true`.
+*   `enableScanlineHalo` (`boolean`): Si se activa el efecto de scanline sobre el panel según el estado. Default: `true`.
+
+**Métodos Específicos:**
+*   `addDataPoint(yValue)`: Añade un nuevo punto de dato (valor Y) al final del gráfico. Si se supera `maxDataPoints`, el punto más antiguo se elimina.
+    *   `yValue` (`number`): El valor numérico del punto de dato.
+*   `setData(newDataArray)`: Reemplaza todos los datos actuales del gráfico con el array proporcionado. Se tomarán los últimos `maxDataPoints` del array si este es más largo.
+    *   `newDataArray` (`array<number>`): Un array de valores numéricos.
+*   `clearData()`: Elimina todos los puntos de datos del gráfico, dejándolo vacío.
+*   `setPanelState(newState)`: (Sobrescrito) Además de cambiar el estado general del panel (borde, título, efectos), también actualiza el color/estilo de la línea del gráfico según el `colorScheme` para el nuevo estado.
+
+**Ejemplo de Uso:**
+```javascript
+// HTML: <div id="sensorGraph" class="panel-container" style="height: 300px;"></div>
+
+const sensorPanel = new DynamicSciFiDashboardKit.TrueCanvasGraphPanel('#sensorGraph', {
+    title: 'Temperature Readings',
+    maxDataPoints: 100,
+    dataRange: { min: 10, max: 90 }, // Grados Celsius
+    initialState: 'stable',
+    enableScanlineHalo: true,
+    scanlineStates: ['critical', 'warning']
+});
+
+// Añadir datos iniciales
+let initialData = [];
+for(let i=0; i<30; i++) {
+    initialData.push(20 + Math.random() * 10);
+}
+sensorPanel.setData(initialData);
+
+let time = 0;
+setInterval(() => {
+    // Simular un nuevo dato
+    let newValue = 50 + Math.sin(time * 0.2) * 25 + (Math.random() - 0.5) * 5;
+    
+    // Ajustar valor y estado basado en umbrales
+    if (newValue > 75) {
+        sensorPanel.setPanelState('critical');
+    } else if (newValue > 60) {
+        sensorPanel.setPanelState('warning');
+    } else if (newValue < 25) {
+        sensorPanel.setPanelState('normal'); // Podría ser un estado 'info' o 'cold'
+    } else {
+        sensorPanel.setPanelState('stable');
+    }
+    
+    sensorPanel.addDataPoint(newValue);
+    time += 0.1;
+}, 200); // Añadir un nuevo punto cada 200ms
+```
+
 ## 4. `DSDK_CLASSES` (Constantes CSS)
 
 La librería expone un objeto `DynamicSciFiDashboardKit.DSDK_CLASSES` que contiene mapeos de nombres lógicos a las clases CSS reales utilizadas internamente. Esto es útil para aplicar estilos de manera consistente, especialmente para clases de texto de estado.
