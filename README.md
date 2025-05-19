@@ -20,19 +20,19 @@
 
 Aquí tienes un vistazo rápido a los paneles que ofrece la librería. Haz clic en una imagen para ver un ejemplo en vivo.
 
-| Panel                         | Screenshot                                                                                 | Ejemplo en Vivo                                                       |
+| Panel                         | Screenshot                                                                                 | Ejemplo en Vivo (GitHub Pages)                                        |
 | :---------------------------- | :-----------------------------------------------------------------------------------------: | :--------------------------------------------------------------------: |
-| **LogDisplayPanel**           | [![LogDisplayPanel Screenshot][log-screenshot]](#)                                       | [Ver Ejemplo](./examples/LogDisplayPanel.html)                       |
-| **CriticalWarningTextPanel**  | [![CriticalWarningTextPanel Screenshot][critwarn-screenshot]](#)                           | [Ver Ejemplo](./examples/CriticalWarningTextPanel.html)              |
-| **KeyValueListPanel**       | [![KeyValueListPanel Screenshot][kv-screenshot]](#)                                       | [Ver Ejemplo](./examples/KeyValueListPanel.html)                     |
-| **LedDisplayPanel**           | [![LedDisplayPanel Screenshot][led-screenshot]](#)                                         | [Ver Ejemplo](./examples/LedDisplayPanel.html)                       |
-| **DynamicTextPanel**        | [![DynamicTextPanel Screenshot][dyntext-screenshot]](#)                                   | [Ver Ejemplo](./examples/DynamicTextPanel.html)                      |
-| **ActionButtonsPanel**      | [![ActionButtonsPanel Screenshot][action-screenshot]](#)                                   | [Ver Ejemplo](./examples/ActionButtonsPanel.html)                    |
-| **CanvasGraphPanel**        | [![CanvasGraphPanel Screenshot][canvas-screenshot]](#)                                     | [Ver Ejemplo](./examples/CanvasGraphPanel.html)                      |
-| **IntegrityPulsePanel**     | [![IntegrityPulsePanel Screenshot][pulse-screenshot]](#)                                   | [Ver Ejemplo](./examples/IntegrityPulsePanel.html)                   |
-| **CircularGaugePanel**      | [![CircularGaugePanel Screenshot][circgauge-screenshot]](#)                                 | [Ver Ejemplo](./examples/CircularGaugePanel.html)                    |
-| **StatusIndicatorLedPanel** | [![StatusIndicatorLedPanel Screenshot][statusled-screenshot]](#)                           | [Ver Ejemplo](./examples/StatusIndicatorLedPanel.html)               |
-| **HorizontalBarGaugePanel** | [![HorizontalBarGaugePanel Screenshot][hgauge-screenshot]](#)                               | [Ver Ejemplo](./examples/HorizontalBarGaugePanel.html)               |
+| **LogDisplayPanel**           | [![LogDisplayPanel Screenshot][log-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/LogDisplayPanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/LogDisplayPanel.html) |
+| **CriticalWarningTextPanel**  | [![CriticalWarningTextPanel Screenshot][critwarn-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/CriticalWarningTextPanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/CriticalWarningTextPanel.html) |
+| **KeyValueListPanel**       | [![KeyValueListPanel Screenshot][kv-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/KeyValueListPanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/KeyValueListPanel.html) |
+| **LedDisplayPanel**           | [![LedDisplayPanel Screenshot][led-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/LedDisplayPanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/LedDisplayPanel.html) |
+| **DynamicTextPanel**        | [![DynamicTextPanel Screenshot][dyntext-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/DynamicTextPanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/DynamicTextPanel.html) |
+| **ActionButtonsPanel**      | [![ActionButtonsPanel Screenshot][action-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/ActionButtonsPanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/ActionButtonsPanel.html) |
+| **CanvasGraphPanel**        | [![CanvasGraphPanel Screenshot][canvas-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/CanvasGraphPanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/CanvasGraphPanel.html) |
+| **IntegrityPulsePanel**     | [![IntegrityPulsePanel Screenshot][pulse-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/IntegrityPulsePanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/IntegrityPulsePanel.html) |
+| **CircularGaugePanel**      | [![CircularGaugePanel Screenshot][circgauge-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/CircularGaugePanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/CircularGaugePanel.html) |
+| **StatusIndicatorLedPanel** | [![StatusIndicatorLedPanel Screenshot][statusled-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/StatusIndicatorLedPanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/StatusIndicatorLedPanel.html) |
+| **HorizontalBarGaugePanel** | [![HorizontalBarGaugePanel Screenshot][hgauge-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/HorizontalBarGaugePanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/HorizontalBarGaugePanel.html) |
 
 <!-- Definiciones de enlaces para las imágenes (ponlas al final del archivo) -->
 [log-screenshot]: ./screenshots/LogDisplayPanel.png
