@@ -126,16 +126,15 @@
     z-index: 1; 
 }
 .dsdk-panel-content { 
-    flex-grow: 1; /* Permite que el contenido crezca para llenar el panel */
-    overflow-y: auto; /* Scroll si el contenido interno es más grande que el panel-content */
+    flex-grow: 1; 
+    overflow-y: auto; 
     padding: 10px; 
     font-size: 0.8rem; 
     scrollbar-width: thin; 
     scrollbar-color: var(--dsdk-accent-color-secondary) var(--dsdk-panel-bg); 
-    position: relative; /* Para z-index y otros posicionamientos internos */
+    position: relative; 
     z-index: 1;
-    max-height: 250px; /* Límite general, anulado por excepciones */
-    /* min-height: 0; Es importante para flexbox en algunos casos, pero con flex-grow:1 usualmente no se necesita explícitamente aquí */
+    max-height: 250px; 
 }
 
 /* Excepciones para paneles que gestionan su propio padding/altura interna de forma diferente */
@@ -143,13 +142,13 @@
 .dsdk-canvas-graph-panel .dsdk-panel-content,
 .dsdk-critical-warning-text-panel .dsdk-panel-content,
 .dsdk-circular-gauge-panel .dsdk-panel-content,
-.dsdk-horizontal-bar-gauge-panel .dsdk-panel-content {
-    padding: 0 !important; /* Sin padding interno para estos contenedores especiales */
-    max-height: none !important; /* Anula el max-height general */
-    display: flex; /* Se convierten en contenedores flex */
-    flex-direction: column; /* Para que sus hijos se apilen verticalmente */
-    flex-grow: 1; /* CORRECCIÓN: Asegura que estos panel-content también se expandan para llenar el espacio vertical del panel padre */
-    /* overflow: hidden;  Se podría considerar si el contenido interno causa problemas, pero generalmente no es necesario aquí */
+.dsdk-horizontal-bar-gauge-panel .dsdk-panel-content,
+.dsdk-true-canvas-graph-panel .dsdk-panel-content { /* AÑADIDO .dsdk-true-canvas-graph-panel .dsdk-panel-content */
+    padding: 0 !important; 
+    max-height: none !important; 
+    display: flex; 
+    flex-direction: column; 
+    flex-grow: 1; 
 }
 
 
@@ -227,7 +226,6 @@
     display: flex; 
     align-items: center; 
     justify-content: center;
-    /* width: 100%; height: 100%;  Ya es manejado por flex-grow del panel-content */
 }
 .dsdk-critical-warning-text { font-family: var(--dsdk-font-mono); font-size: 2.2rem; font-weight: 900; color: var(--dsdk-danger-color); text-align: center; text-transform: uppercase; animation: dsdk-crt-warning-flicker 1.2s infinite steps(2); line-height: 1; letter-spacing: 1px; transition: color 0.5s ease-in-out, text-shadow 0.5s ease-in-out; }
 .dsdk-critical-warning-text-container.dsdk-state-critical { border-color: var(--dsdk-danger-color); background-color: rgba(var(--dsdk-rgb-danger-color), 0.15); box-shadow: 0 0 10px rgba(var(--dsdk-rgb-danger-color),0.5), inset 0 0 8px rgba(var(--dsdk-rgb-danger-color),0.3); }
@@ -256,7 +254,7 @@
     justify-content: space-around; 
     align-items: flex-end; 
     width: 100%; 
-    flex-grow: 1; /* Para que este contenedor llene el panel-content (que es flex column) */
+    flex-grow: 1; 
     min-height: 60px; 
     background-color: rgba(0,0,0,0.2); 
     border-radius: 0 0 0.4rem 0.4rem; 
@@ -264,7 +262,6 @@
     padding: 0 5px; 
 }
 .dsdk-pulse-bar { 
-    /* width se establece por JS */
     min-width: 2px; 
     border-radius: 3px 3px 0 0; 
     background-color: var(--dsdk-pulse-bar-color); 
@@ -284,7 +281,7 @@
 
 
 /* --- CircularGaugePanel Styles --- */
-.dsdk-circular-gauge-panel .dsdk-panel-content { /* Hereda flex-grow: 1 de la regla de excepción */
+.dsdk-circular-gauge-panel .dsdk-panel-content { 
     background-color: var(--dsdk-gauge-bg-color); 
     overflow: hidden;  
 }
@@ -346,7 +343,7 @@
 
 
 /* --- HorizontalBarGaugePanel Styles --- */
-.dsdk-horizontal-bar-gauge-panel .dsdk-panel-content { /* Hereda flex-grow: 1 de la regla de excepción */
+.dsdk-horizontal-bar-gauge-panel .dsdk-panel-content { 
     padding: 10px !important; 
     justify-content: center; 
 }

@@ -9,7 +9,6 @@ const DynamicSciFiDashboardKit = (function() {
         SPARKS_EFFECT: 'dsdk-sparks-effect',
         SCANLINE_HALO_ACTIVE: 'dsdk-scanline-halo-active',
         PANEL_STATE_PREFIX: 'dsdk-panel-',
-        // HEADER_STATE_PREFIX: 'dsdk-header-', // No usado actualmente
         
         LOG_DISPLAY_PANEL: 'dsdk-log-display-panel',
         CRITICAL_WARNING_TEXT_PANEL: 'dsdk-critical-warning-text-panel',
@@ -17,11 +16,12 @@ const DynamicSciFiDashboardKit = (function() {
         LED_DISPLAY_PANEL: 'dsdk-led-display-panel',
         DYNAMIC_TEXT_PANEL: 'dsdk-dynamic-text-panel',
         ACTION_BUTTONS_PANEL: 'dsdk-action-buttons-panel',
-        CANVAS_GRAPH_PANEL: 'dsdk-canvas-graph-panel',
+        CANVAS_GRAPH_PANEL: 'dsdk-canvas-graph-panel', // Panel original de canvas
+        TRUE_CANVAS_GRAPH_PANEL: 'dsdk-true-canvas-graph-panel', // NUEVO: Para el panel de datos reales
         INTEGRITY_PULSE_PANEL: 'dsdk-integrity-pulse-panel',
         CIRCULAR_GAUGE_PANEL: 'dsdk-circular-gauge-panel',
         STATUS_INDICATOR_PANEL: 'dsdk-status-indicator-panel',
-        HORIZONTAL_BAR_GAUGE_PANEL: 'dsdk-horizontal-bar-gauge-panel', // AÑADIDO
+        HORIZONTAL_BAR_GAUGE_PANEL: 'dsdk-horizontal-bar-gauge-panel',
 
         LOG_LIST: 'dsdk-log-list',
         LOG_INFO: 'dsdk-log-info', LOG_WARN: 'dsdk-log-warn', LOG_ERROR: 'dsdk-log-error', LOG_SUCCESS: 'dsdk-log-success',
@@ -31,7 +31,7 @@ const DynamicSciFiDashboardKit = (function() {
         DYNAMIC_TEXT_CONTAINER: 'dsdk-dynamic-text-container', DYNAMIC_TEXT: 'dsdk-dynamic-text',
         BLURRED_TEXT: 'dsdk-blurred-text', FLICKER_TEXT: 'dsdk-flicker-text', GLITCH_TEXT: 'dsdk-glitch-text',
         ACTION_BUTTONS_CONTAINER: 'dsdk-action-buttons-container', BUTTON: 'dsdk-button', BUTTON_STYLE_PREFIX: 'dsdk-button-',
-        CANVAS_GRAPH: 'dsdk-canvas-graph',
+        CANVAS_GRAPH: 'dsdk-canvas-graph', // Para el elemento <canvas> en sí (reutilizado)
         CRITICAL_WARNING_TEXT_CONTAINER: 'dsdk-critical-warning-text-container', CRITICAL_WARNING_TEXT: 'dsdk-critical-warning-text',
         WARNING_PANEL_STATE_PREFIX: 'dsdk-state-',
         TEXT_DANGER: 'dsdk-text-danger', TEXT_WARNING: 'dsdk-text-warning', TEXT_SUCCESS: 'dsdk-text-success', TEXT_INFO: 'dsdk-text-info',
@@ -55,7 +55,6 @@ const DynamicSciFiDashboardKit = (function() {
         STATUS_LED_BLINKING: 'dsdk-led-blinking',
         STATUS_LED_COLOR_PREFIX: 'dsdk-led-color-',
 
-        // AÑADIDO para HorizontalBarGaugePanel
         GAUGE_HORIZONTAL_WRAPPER: 'dsdk-gauge-horizontal-wrapper',
         GAUGE_HORIZONTAL_INFO: 'dsdk-gauge-horizontal-info',
         GAUGE_HORIZONTAL_LABEL: 'dsdk-gauge-horizontal-label',
@@ -291,14 +290,12 @@ const DynamicSciFiDashboardKit = (function() {
         }
     }
     class CanvasGraphPanel extends BasePanel { constructor(containerSelector, options = {}) { const defaults = { title: 'Graph Panel', graphType: 'ecg', colorScheme: { normal: { stroke: '#00E5E5', lineWidth: 1.5, noiseFactor: 0.05 }, warning: { stroke: '#FFD700', lineWidth: 1.5, noiseFactor: 0.15 }, critical: { stroke: '#FF4500', lineWidth: 2, noiseFactor: 0.3 }, stable: { stroke: '#32CD32', lineWidth: 1.5, noiseFactor: 0.02 }, }, animationSpeed: 0.05, ecgDataLength: 200, ecgSpikeChance: 0.08, }; super(containerSelector, { ...defaults, ...options }, DSDK_CLASSES.CANVAS_GRAPH_PANEL); if (!this.dom.panel) return; this.animationFrameId = null; this.lastTimestamp = 0; this.ecgData = []; this.sineTime = 0; this._renderContent(); this._initCanvas(); this.loop = this.loop.bind(this); this.animationFrameId = requestAnimationFrame(this.loop); } _renderContent() { if (!this.dom.content) return; this.dom.content.innerHTML = ''; this.dom.canvas = document.createElement('canvas'); this.dom.canvas.classList.add(DSDK_CLASSES.CANVAS_GRAPH); this.dom.content.appendChild(this.dom.canvas); this.ctx = this.dom.canvas.getContext('2d'); } _initCanvas() { if (!this.dom.canvas || !this.ctx) return; const aR = () => { if (!this.dom.canvas || !this.dom.content.clientWidth || !this.dom.content.clientHeight) { if (this.dom.panel && this.dom.panel.offsetParent !== null) { requestAnimationFrame(aR); } return; } const d = window.devicePixelRatio || 1; this.dom.canvas.width = this.dom.content.clientWidth * d; this.dom.canvas.height = this.dom.content.clientHeight * d; this.ctx.scale(d, d); if (this.config.graphType === 'ecg') { this.config.ecgDataLength = Math.max(50, Math.floor(this.dom.content.clientWidth / 2.5)); this.ecgData = Array(this.config.ecgDataLength).fill(this.dom.content.clientHeight / 2); } }; requestAnimationFrame(aR); this.resizeListener = () => requestAnimationFrame(aR); if (typeof window !== 'undefined') window.addEventListener('resize', this.resizeListener); } loop(t) { if (!this.ctx || !this.dom.canvas || !this.dom.canvas.width || !this.dom.canvas.height) { this.animationFrameId = requestAnimationFrame(this.loop); return; } this.ctx.clearRect(0, 0, this.dom.canvas.width, this.dom.canvas.height); const cCS = this.config.colorScheme[this.currentState] || this.config.colorScheme['normal']; if (this.config.graphType === 'ecg') { this._drawECG(cCS); } else if (this.config.graphType === 'sine') { this._drawSineWaves(cCS); } this.animationFrameId = requestAnimationFrame(this.loop); } _drawECG(cs) { const cH = this.dom.content.clientHeight; const cW = this.dom.content.clientWidth; if (cW <=0 || cH <=0) return; this.ctx.strokeStyle = cs.stroke; this.ctx.lineWidth = cs.lineWidth; this.ctx.beginPath(); let nV = cH / 2; let sF = 0.45; if (this.currentState === 'stable') sF = 0.1; else if (this.currentState === 'warning') sF = 0.25; else if (this.currentState === 'normal') sF = 0.15; const eSC = this.config.ecgSpikeChance * ((this.currentState === 'critical' || this.currentState === 'warning') ? 1.5 : 0.5); if (Math.random() < eSC) { nV += (Math.random() * 2 - 1) * cH * sF; } else if (Math.random() < eSC * 2) { nV += (Math.random() * 2 - 1) * cH * (sF * 0.33); } this.ecgData.push(nV); if (this.ecgData.length > this.config.ecgDataLength) this.ecgData.shift(); while (this.ecgData.length < this.config.ecgDataLength) { this.ecgData.unshift(cH / 2); } const sX = cW / this.config.ecgDataLength; for (let i = 0; i < this.ecgData.length; i++) { this.ctx.lineTo(i * sX, this.ecgData[i]); } this.ctx.stroke(); } _drawSineWaves(cs) { this.sineTime += this.config.animationSpeed; const cH = this.dom.content.clientHeight; const cW = this.dom.content.clientWidth; if (cW <=0 || cH <=0) return; const dW = (a, f, p, cl, lW, nF) => { this.ctx.beginPath(); this.ctx.strokeStyle = cl; this.ctx.lineWidth = lW; for (let x = 0; x < cW; x++) { const n = (Math.random() - 0.5) * a * nF; const y = cH / 2 + a * Math.sin((x * f / cW) * 2 * Math.PI + this.sineTime + p) + n; if (x === 0) this.ctx.moveTo(x, y); else this.ctx.lineTo(x, y); } this.ctx.stroke(); }; dW(cH * 0.30, 5, 0, cs.stroke, cs.lineWidth, cs.noiseFactor); if (this.currentState === 'critical') { dW(cH * 0.20, 8, Math.PI / 3, 'rgba(255,0,0,0.5)', 1, cs.noiseFactor * 1.5); } else if (this.currentState === 'warning') { dW(cH * 0.15, 6, Math.PI / 2, 'rgba(255,165,0,0.6)', 1, cs.noiseFactor); } } destroy() { if (this.resizeListener && typeof window !== 'undefined') window.removeEventListener('resize', this.resizeListener); this.resizeListener = null; super.destroy(); } }
-    
-    // MODIFICADO: IntegrityPulsePanel
     class IntegrityPulsePanel extends BasePanel {
         constructor(containerSelector, options = {}) {
             const defaults = { 
                 title: 'Integrity Pulse', 
                 initialState: 'normal', 
-                barCount: 5, // Default sigue siendo 5, pero ahora soporta más
+                barCount: 5,
                 enableSparks: false, 
                 enableScanlineHalo: false, 
             };
@@ -314,44 +311,32 @@ const DynamicSciFiDashboardKit = (function() {
             const pulseContainer = document.createElement('div');
             pulseContainer.classList.add(DSDK_CLASSES.INTEGRITY_PULSE_CONTAINER);
             
-            const numBars = Math.max(1, Math.min(100, this.config.barCount)); // Limitar entre 1 y 100 por cordura
+            const numBars = Math.max(1, Math.min(100, this.config.barCount));
 
             for (let i = 0; i < numBars; i++) {
                 const bar = document.createElement('div');
                 bar.classList.add(DSDK_CLASSES.PULSE_BAR);
-
-                // Ancho dinámico de la barra
-                // Dejar un pequeño espacio entre barras usando un factor (ej. 0.9 del espacio disponible)
-                // o depender del space-around del contenedor.
-                // Si se usa space-around, el ancho debe ser tal que quepan.
-                // Por ejemplo, si hay mucho espacio (pocas barras), que no sean demasiado anchas.
                 let barWidthPercentage;
                 if (numBars <= 5) {
-                    barWidthPercentage = 18; // Comportamiento original para pocas barras
+                    barWidthPercentage = 18; 
                 } else if (numBars <= 10) {
                     barWidthPercentage = 90 / numBars;
                 } else {
-                     // Para muchas barras, hacerlas más delgadas y dejar que space-around actúe
                     barWidthPercentage = Math.max(0.5, (100 / numBars) * 0.75); 
                 }
                 bar.style.width = `${barWidthPercentage}%`;
-                
-                // Duración y delay de animación dinámicos
                 const baseDuration = 0.8 + (numBars > 20 ? Math.random() * 0.5 : 0.2);
-                const durationVariation = Math.random() * 0.6 - 0.3; // +/- 0.3s
+                const durationVariation = Math.random() * 0.6 - 0.3; 
                 const finalDuration = Math.max(0.5, baseDuration + durationVariation);
                 bar.style.animationDuration = `${finalDuration}s`;
-
                 const delay = (Math.random() * finalDuration) * -1;
                 bar.style.animationDelay = `${delay}s`;
-                
                 pulseContainer.appendChild(bar); 
                 this.dom.bars.push(bar);
             }
             this.dom.content.appendChild(pulseContainer);
         }
     }
-
     class CircularGaugePanel extends BasePanel {
         constructor(containerSelector, options = {}) {
             const defaults = {
@@ -376,11 +361,9 @@ const DynamicSciFiDashboardKit = (function() {
             };
             super(containerSelector, { ...defaults, ...options }, DSDK_CLASSES.CIRCULAR_GAUGE_PANEL);
             if (!this.dom.panel) return;
-
             this.svgNS = "http://www.w3.org/2000/svg";
             this.currentValue = this.config.initialValue;
             this.isAnimating = false;
-
             this._renderContent();
             this.setValue(this.config.initialValue, false); 
             if (this.config.targetValue !== null) {
@@ -392,7 +375,6 @@ const DynamicSciFiDashboardKit = (function() {
             this.dom.content.innerHTML = '';
             this.dom.svgContainer = document.createElement('div'); 
             this.dom.svgContainer.classList.add(DSDK_CLASSES.GAUGE_SVG_CONTAINER);
-            
             this.dom.svg = document.createElementNS(this.svgNS, 'svg');
             this.dom.svg.classList.add(DSDK_CLASSES.GAUGE_SVG);
             const viewBoxSize = (this.config.gaugeRadius + this.config.arcWidth) * 2 + 20; 
@@ -469,7 +451,6 @@ const DynamicSciFiDashboardKit = (function() {
         setValue(newValue, animate = true) { let clampedValue = Math.max(this.config.minValue, Math.min(this.config.maxValue, newValue)); this.currentValue = clampedValue; this._updateGaugeView(this.currentValue, animate); }
         setTargetValue(newTargetValue) { this.config.targetValue = newTargetValue; if (newTargetValue === null && this.dom.targetMarker) { this.dom.targetMarker.remove(); this.dom.targetMarker = null; } else if (newTargetValue !== null && !this.dom.targetMarker) { this.dom.targetMarker = document.createElementNS(this.svgNS, 'path'); this.dom.targetMarker.classList.add(DSDK_CLASSES.GAUGE_TARGET_MARKER); this.dom.targetMarker.style.strokeWidth = Math.max(1, this.config.arcWidth / 4); if (this.dom.textValue) this.dom.svg.insertBefore(this.dom.targetMarker, this.dom.textValue); else this.dom.svg.appendChild(this.dom.targetMarker); } this._updateGaugeView(this.currentValue, false); }
     }
-
     class StatusIndicatorLedPanel extends BasePanel {
         constructor(containerSelector, options = {}) {
             const defaults = {
@@ -480,18 +461,14 @@ const DynamicSciFiDashboardKit = (function() {
             };
             super(containerSelector, { ...defaults, ...options }, DSDK_CLASSES.STATUS_INDICATOR_PANEL);
             if (!this.dom.panel) return;
-
             this.indicatorsMap = new Map();
             this._renderContent();
         }
-
         _renderContent() {
             if (!this.dom.content) return;
             this.dom.content.innerHTML = ''; 
-
             this.dom.indicatorList = document.createElement('ul');
             this.dom.indicatorList.classList.add(DSDK_CLASSES.STATUS_INDICATOR_LIST);
-            
             this.config.indicators.forEach(indicatorData => {
                 const indicatorElement = this._createIndicatorElement(indicatorData);
                 if (indicatorElement) {
@@ -500,43 +477,33 @@ const DynamicSciFiDashboardKit = (function() {
             });
             this.dom.content.appendChild(this.dom.indicatorList);
         }
-
         _createIndicatorElement(indicatorData) {
             if (!indicatorData.id || typeof indicatorData.text === 'undefined') {
                 console.error('DSDK StatusIndicatorLedPanel: Indicator data must include an "id" and "text".', indicatorData);
                 return null;
             }
-
             const itemElement = document.createElement('li');
             itemElement.classList.add(DSDK_CLASSES.STATUS_INDICATOR_ITEM);
             itemElement.dataset.indicatorId = indicatorData.id;
-
             const ledElement = document.createElement('span');
             ledElement.classList.add(DSDK_CLASSES.STATUS_LED);
-
             const textElement = document.createElement('span');
             textElement.classList.add(DSDK_CLASSES.STATUS_LED_TEXT);
             textElement.textContent = indicatorData.text;
-
             itemElement.appendChild(ledElement);
             itemElement.appendChild(textElement);
-
             this.indicatorsMap.set(indicatorData.id, {
                 itemElement,
                 ledElement,
                 textElement,
                 currentData: { ...indicatorData } 
             });
-
             this._applyIndicatorState(indicatorData.id, indicatorData.color, indicatorData.blinking);
-            
             return itemElement;
         }
-
         _applyIndicatorState(id, color, blinking) {
             const indicator = this.indicatorsMap.get(id);
             if (!indicator) return;
-
             if (color && VALID_LED_COLORS.includes(color)) {
                 VALID_LED_COLORS.forEach(c => {
                     indicator.ledElement.classList.remove(`${DSDK_CLASSES.STATUS_LED_COLOR_PREFIX}${c}`);
@@ -546,13 +513,11 @@ const DynamicSciFiDashboardKit = (function() {
             } else if (color) {
                 console.warn(`DSDK StatusIndicatorLedPanel: Invalid color "${color}" for indicator "${id}". Valid colors are: ${VALID_LED_COLORS.join(', ')}.`);
             }
-
             if (typeof blinking === 'boolean') {
                 indicator.ledElement.classList.toggle(DSDK_CLASSES.STATUS_LED_BLINKING, blinking);
                 indicator.currentData.blinking = blinking;
             }
         }
-
         addIndicator(indicatorData, atBeginning = false) {
             if (!this.dom.indicatorList) this._renderContent();
             if (!indicatorData || !indicatorData.id) {
@@ -564,15 +529,12 @@ const DynamicSciFiDashboardKit = (function() {
                 this.updateIndicator(indicatorData.id, indicatorData);
                 return;
             }
-            
             const newIndicatorData = { color: 'off', blinking: false, ...indicatorData };
-            
             if (atBeginning) {
                 this.config.indicators.unshift(newIndicatorData);
             } else {
                 this.config.indicators.push(newIndicatorData);
             }
-
             const indicatorElement = this._createIndicatorElement(newIndicatorData);
             if (indicatorElement) {
                 if (atBeginning && this.dom.indicatorList.firstChild) {
@@ -582,37 +544,30 @@ const DynamicSciFiDashboardKit = (function() {
                 }
             }
         }
-
         updateIndicator(id, updates) {
             const indicator = this.indicatorsMap.get(id);
             if (!indicator) {
                 console.warn(`DSDK StatusIndicatorLedPanel: Indicator with ID "${id}" not found for update.`);
                 return;
             }
-
             const configIndicator = this.config.indicators.find(ind => ind.id === id);
-
             if (updates.text !== undefined) {
                 indicator.textElement.textContent = updates.text;
                 indicator.currentData.text = updates.text;
                 if (configIndicator) configIndicator.text = updates.text;
             }
-            
             let newColor = indicator.currentData.color;
             if (updates.color !== undefined) {
                 newColor = updates.color;
                 if (configIndicator) configIndicator.color = updates.color;
             }
-
             let newBlinking = indicator.currentData.blinking;
             if (updates.blinking !== undefined) {
                 newBlinking = updates.blinking;
                 if (configIndicator) configIndicator.blinking = updates.blinking;
             }
-            
             this._applyIndicatorState(id, newColor, newBlinking);
         }
-        
         removeIndicator(id) {
             const indicator = this.indicatorsMap.get(id);
             if (indicator) {
@@ -623,30 +578,12 @@ const DynamicSciFiDashboardKit = (function() {
                 console.warn(`DSDK StatusIndicatorLedPanel: Indicator with ID "${id}" not found for removal.`);
             }
         }
-
-        setIndicatorBlinking(id, isBlinking) {
-            this.updateIndicator(id, { blinking: isBlinking });
-        }
-
-        setIndicatorColor(id, newColor) {
-            this.updateIndicator(id, { color: newColor });
-        }
-
-        setIndicatorText(id, newText) {
-            this.updateIndicator(id, { text: newText });
-        }
-
-        getIndicator(id) {
-            const indicator = this.indicatorsMap.get(id);
-            return indicator ? { ...indicator.currentData } : null;
-        }
-
-        getAllIndicators() {
-            return this.config.indicators.map(ind => ({...ind}));
-        }
+        setIndicatorBlinking(id, isBlinking) { this.updateIndicator(id, { blinking: isBlinking }); }
+        setIndicatorColor(id, newColor) { this.updateIndicator(id, { color: newColor }); }
+        setIndicatorText(id, newText) { this.updateIndicator(id, { text: newText }); }
+        getIndicator(id) { const indicator = this.indicatorsMap.get(id); return indicator ? { ...indicator.currentData } : null; }
+        getAllIndicators() { return this.config.indicators.map(ind => ({...ind})); }
     }
-
-    // NUEVO: HorizontalBarGaugePanel
     class HorizontalBarGaugePanel extends BasePanel {
         constructor(containerSelector, options = {}) {
             const defaults = {
@@ -655,43 +592,35 @@ const DynamicSciFiDashboardKit = (function() {
                 maxValue: 100,
                 initialValue: 0,
                 units: '%',
-                label: '', // Si está vacío, no se muestra
+                label: '', 
                 barHeight: '16px',
                 showValueText: true,
                 valueTextFormat: (value, units) => `${Math.round(value)}${units}`,
-                animationDuration: 400, // ms, para la transición de la barra
+                animationDuration: 400,
                 enableSparks: false,
                 enableScanlineHalo: false,
-                // colorScheme para la barra, si se quiere anular el comportamiento por panelState
-                // colorScheme: { normal: '#00E5E5', warning: '#FFD700', ... }
             };
             super(containerSelector, { ...defaults, ...options }, DSDK_CLASSES.HORIZONTAL_BAR_GAUGE_PANEL);
             if (!this.dom.panel) return;
-
             this.currentValue = this.config.initialValue;
             this._renderContent();
-            this.setValue(this.config.initialValue, false); // Inicializar sin animación
+            this.setValue(this.config.initialValue, false); 
             this.dom.panel.style.setProperty('--dsdk-gauge-h-bar-height', this.config.barHeight);
         }
-
         _renderContent() {
             if (!this.dom.content) return;
-            this.dom.content.innerHTML = ''; // Limpiar el contenido del panel base
-
+            this.dom.content.innerHTML = ''; 
             this.dom.wrapper = document.createElement('div');
             this.dom.wrapper.classList.add(DSDK_CLASSES.GAUGE_HORIZONTAL_WRAPPER);
-
             if (this.config.label || this.config.showValueText) {
                 this.dom.infoContainer = document.createElement('div');
                 this.dom.infoContainer.classList.add(DSDK_CLASSES.GAUGE_HORIZONTAL_INFO);
-
                 if (this.config.label) {
                     this.dom.labelElement = document.createElement('span');
                     this.dom.labelElement.classList.add(DSDK_CLASSES.GAUGE_HORIZONTAL_LABEL);
                     this.dom.labelElement.textContent = this.config.label;
                     this.dom.infoContainer.appendChild(this.dom.labelElement);
                 }
-
                 if (this.config.showValueText) {
                     this.dom.valueTextElement = document.createElement('span');
                     this.dom.valueTextElement.classList.add(DSDK_CLASSES.GAUGE_HORIZONTAL_VALUE_TEXT);
@@ -699,14 +628,10 @@ const DynamicSciFiDashboardKit = (function() {
                 }
                 this.dom.wrapper.appendChild(this.dom.infoContainer);
             }
-
             this.dom.trackElement = document.createElement('div');
             this.dom.trackElement.classList.add(DSDK_CLASSES.GAUGE_HORIZONTAL_TRACK);
-
             this.dom.barElement = document.createElement('div');
             this.dom.barElement.classList.add(DSDK_CLASSES.GAUGE_HORIZONTAL_BAR);
-            
-            // Aplicar transición si hay duración
             if (this.config.animationDuration > 0) {
                 this.dom.barElement.style.transition = `width ${this.config.animationDuration / 1000}s cubic-bezier(0.65, 0, 0.35, 1), background-color 0.3s ease-in-out`;
             } else {
@@ -714,39 +639,30 @@ const DynamicSciFiDashboardKit = (function() {
                 this.dom.barElement.style.transitionDuration = '0.3s';
                 this.dom.barElement.style.transitionTimingFunction = 'ease-in-out';
             }
-
-
             this.dom.trackElement.appendChild(this.dom.barElement);
             this.dom.wrapper.appendChild(this.dom.trackElement);
             this.dom.content.appendChild(this.dom.wrapper);
         }
-
         _updateGaugeView(value, animate = true) {
             if (!this.dom.barElement) return;
-
             const { minValue, maxValue } = this.config;
             const percentage = Math.max(0, Math.min(100, ((value - minValue) / (maxValue - minValue)) * 100));
-            
             if (!animate || this.config.animationDuration === 0) {
                 const originalTransition = this.dom.barElement.style.transition;
-                this.dom.barElement.style.transition = 'none'; // Desactivar temporalmente para cambio instantáneo de width
+                this.dom.barElement.style.transition = 'none'; 
                 this.dom.barElement.style.width = `${percentage}%`;
-                void this.dom.barElement.offsetWidth; // Forzar reflow
-                this.dom.barElement.style.transition = originalTransition; // Restaurar
+                void this.dom.barElement.offsetWidth; 
+                this.dom.barElement.style.transition = originalTransition; 
             } else {
                 this.dom.barElement.style.width = `${percentage}%`;
             }
-
             if (this.config.showValueText && this.dom.valueTextElement) {
                 this.dom.valueTextElement.textContent = this.config.valueTextFormat(value, this.config.units);
             }
-            
-            // Aplicar color de barra según colorScheme o estado del panel
             let barColor = '';
             if (this.config.colorScheme && this.config.colorScheme[this.currentState]) {
                 barColor = this.config.colorScheme[this.currentState];
             } else {
-                // Usar variables CSS basadas en el estado del panel
                 switch (this.currentState) {
                     case 'critical': barColor = 'var(--dsdk-gauge-h-bar-critical)'; break;
                     case 'warning':  barColor = 'var(--dsdk-gauge-h-bar-warning)'; break;
@@ -758,19 +674,210 @@ const DynamicSciFiDashboardKit = (function() {
                 this.dom.barElement.style.backgroundColor = barColor;
             }
         }
-
         setValue(newValue, animate = true) {
             const clampedValue = Math.max(this.config.minValue, Math.min(this.config.maxValue, newValue));
             this.currentValue = clampedValue;
             this._updateGaugeView(this.currentValue, animate);
         }
-
-        // Sobrescribir setPanelState para actualizar el color de la barra si no hay colorScheme
         setPanelState(newState) {
-            super.setPanelState(newState); // Llama al método base
-            if (this.dom.barElement && !this.config.colorScheme) { // Solo actualiza si no hay un colorScheme personalizado
-                 this._updateGaugeView(this.currentValue, false); // Re-renderiza para aplicar color por estado
+            super.setPanelState(newState); 
+            if (this.dom.barElement && !this.config.colorScheme) { 
+                 this._updateGaugeView(this.currentValue, false); 
             }
+        }
+    }
+
+    // NUEVO: TrueCanvasGraphPanel
+    class TrueCanvasGraphPanel extends BasePanel {
+        constructor(containerSelector, options = {}) {
+            const defaults = {
+                title: 'Realtime Data Graph',
+                maxDataPoints: 200,
+                dataRange: null, // { min: number, max: number } or null for auto-scaling
+                colorScheme: { // Similar to CanvasGraphPanel for consistency
+                    normal:   { stroke: '#00E5E5', lineWidth: 1.5 },
+                    warning:  { stroke: '#FFD700', lineWidth: 1.8 },
+                    critical: { stroke: '#FF4500', lineWidth: 2.0 },
+                    stable:   { stroke: '#32CD32', lineWidth: 1.5 }
+                },
+                enableSparks: true, // Inherited from BasePanel
+                enableScanlineHalo: true, // Inherited from BasePanel
+            };
+            // Use DSDK_CLASSES.TRUE_CANVAS_GRAPH_PANEL for the main panel div
+            super(containerSelector, { ...defaults, ...options }, DSDK_CLASSES.TRUE_CANVAS_GRAPH_PANEL); 
+            if (!this.dom.panel) return;
+
+            this.data = []; // Stores the Y-values of the data points
+            this.drawQueued = false; // To debounce draw calls with requestAnimationFrame
+
+            this._renderContent(); // Creates the canvas element
+            this._initCanvas();    // Sets up canvas dimensions and resize listener
+
+            // Perform an initial draw (likely an empty canvas or with initial data if provided)
+            requestAnimationFrame(() => this._drawGraph());
+        }
+
+        _renderContent() {
+            if (!this.dom.content) return;
+            this.dom.content.innerHTML = ''; // Clear any base content
+            this.dom.canvas = document.createElement('canvas');
+            // Use DSDK_CLASSES.CANVAS_GRAPH for the canvas element itself for consistent styling
+            this.dom.canvas.classList.add(DSDK_CLASSES.CANVAS_GRAPH); 
+            this.dom.content.appendChild(this.dom.canvas);
+            this.ctx = this.dom.canvas.getContext('2d');
+        }
+
+        _initCanvas() {
+            if (!this.dom.canvas || !this.ctx) return;
+
+            const adjustCanvasResolution = () => {
+                // Ensure the panel and its content div are in the DOM and have dimensions
+                if (!this.dom.canvas || !this.dom.content || !this.dom.content.clientWidth || !this.dom.content.clientHeight) {
+                    // If not ready, try again on the next frame, but only if panel is still potentially valid
+                    if (this.dom.panel && this.dom.panel.offsetParent !== null) { 
+                        requestAnimationFrame(adjustCanvasResolution);
+                    }
+                    return;
+                }
+
+                const dpr = window.devicePixelRatio || 1;
+                this.dom.canvas.width = this.dom.content.clientWidth * dpr;
+                this.dom.canvas.height = this.dom.content.clientHeight * dpr;
+                this.ctx.scale(dpr, dpr); // Scale context for high-DPI displays
+                
+                this._drawGraph(); // Redraw graph with new dimensions
+            };
+            
+            requestAnimationFrame(adjustCanvasResolution); // Initial setup
+
+            this.resizeListener = () => requestAnimationFrame(adjustCanvasResolution);
+            if (typeof window !== 'undefined') {
+                window.addEventListener('resize', this.resizeListener);
+            }
+        }
+
+        addDataPoint(yValue) {
+            if (typeof yValue !== 'number' || isNaN(yValue)) {
+                console.warn('TrueCanvasGraphPanel: addDataPoint expects a valid number. Received:', yValue);
+                return;
+            }
+            this.data.push(yValue);
+            // Maintain maxDataPoints
+            while (this.data.length > this.config.maxDataPoints) {
+                this.data.shift(); // Remove oldest data point
+            }
+            this._requestDraw(); // Request a redraw
+        }
+
+        setData(newDataArray) {
+            if (!Array.isArray(newDataArray) || !newDataArray.every(p => typeof p === 'number' && !isNaN(p))) {
+                console.warn('TrueCanvasGraphPanel: setData expects an array of valid numbers.');
+                return;
+            }
+            // Take the last `maxDataPoints` from the new array, or fewer if array is shorter
+            this.data = newDataArray.slice(-this.config.maxDataPoints);
+            this._requestDraw(); // Request a redraw
+        }
+        
+        clearData() {
+            this.data = [];
+            this._requestDraw();
+        }
+
+        _requestDraw() {
+            if (!this.drawQueued) {
+                this.drawQueued = true;
+                requestAnimationFrame(() => {
+                    this._drawGraph();
+                    this.drawQueued = false;
+                });
+            }
+        }
+        
+        _drawGraph() {
+            if (!this.ctx || !this.dom.canvas || !this.dom.content || !this.dom.canvas.width || !this.dom.canvas.height) {
+                return; // Canvas not ready
+            }
+
+            const canvasWidth = this.dom.content.clientWidth; // Logical width for calculations
+            const canvasHeight = this.dom.content.clientHeight; // Logical height
+
+            if (canvasWidth <= 0 || canvasHeight <= 0) return; // No space to draw
+
+            this.ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+            if (this.data.length < 2) {
+                // Not enough data to draw a line (need at least 2 points)
+                return;
+            }
+
+            // Determine stroke style and line width from current panel state and color scheme
+            const cs = this.config.colorScheme[this.currentState] || this.config.colorScheme['normal'];
+            this.ctx.strokeStyle = cs.stroke;
+            this.ctx.lineWidth = cs.lineWidth;
+
+            let minY, maxY;
+            // Determine Y-axis range
+            if (this.config.dataRange && typeof this.config.dataRange.min === 'number' && typeof this.config.dataRange.max === 'number') {
+                minY = this.config.dataRange.min;
+                maxY = this.config.dataRange.max;
+            } else {
+                // Auto-scale based on current data
+                minY = Math.min(...this.data);
+                maxY = Math.max(...this.data);
+            }
+            
+            // Handle cases where all data points are the same or range is zero
+            if (minY === maxY) {
+                minY -= 0.5; // Provide a small visible range
+                maxY += 0.5;
+            }
+             if (minY === maxY) { // Still equal (e.g. if dataRange forced it like {min:0, max:0})
+                if(maxY === 0) { maxY = 1; } // if 0,0 -> 0,1 range
+                else { minY = maxY - (Math.abs(maxY * 0.1) || 1); } // create a small default range around the value
+            }
+
+
+            const rangeY = maxY - minY;
+            // If range is still zero (should be rare now), draw a flat line in the middle to avoid division by zero.
+            if (rangeY === 0) {
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, canvasHeight / 2);
+                this.ctx.lineTo(canvasWidth, canvasHeight / 2);
+                this.ctx.stroke();
+                return;
+            }
+            
+            const stepX = canvasWidth / (this.data.length - 1); // X-axis step
+
+            this.ctx.beginPath();
+            this.data.forEach((point, index) => {
+                const x = index * stepX;
+                // Scale point to canvas coordinates (invert Y-axis for typical cartesian plot)
+                const y = canvasHeight - ((point - minY) / rangeY) * canvasHeight;
+
+                if (index === 0) {
+                    this.ctx.moveTo(x, y);
+                } else {
+                    this.ctx.lineTo(x, y);
+                }
+            });
+            this.ctx.stroke();
+        }
+
+        // Override setPanelState to trigger a redraw for color changes
+        setPanelState(newState) {
+            super.setPanelState(newState); // Call BasePanel's method
+            this._requestDraw(); // Redraw to apply new color scheme
+        }
+        
+        destroy() {
+            if (this.resizeListener && typeof window !== 'undefined') {
+                window.removeEventListener('resize', this.resizeListener);
+            }
+            this.resizeListener = null;
+            // Any other specific cleanup for TrueCanvasGraphPanel can go here
+            super.destroy(); // Call BasePanel's destroy method
         }
     }
 
@@ -779,7 +886,8 @@ const DynamicSciFiDashboardKit = (function() {
         LogDisplayPanel, CriticalWarningTextPanel, KeyValueListPanel, LedDisplayPanel,
         DynamicTextPanel, ActionButtonsPanel, CanvasGraphPanel,
         IntegrityPulsePanel, CircularGaugePanel, StatusIndicatorLedPanel,
-        HorizontalBarGaugePanel, // AÑADIDO
+        HorizontalBarGaugePanel,
+        TrueCanvasGraphPanel, // Export the new panel
         DSDK_CLASSES: DSDK_CLASSES 
     };
 })();
