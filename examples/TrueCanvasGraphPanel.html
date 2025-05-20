@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>DSDK - TrueCanvasGraphPanel Examples</title>
+    <link rel="stylesheet" href="DynamicSciFiDashboardKit.css"> 
+    <style>
+        body {
+            background-color: #000000;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .dashboard-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .panel-container {
+            flex: 1 1 350px; /* Base más ancha para gráficos */
+            display: flex;
+            flex-direction: column;
+            min-height: 280px; /* Altura mínima para que el canvas sea visible y útil */
+        }
+
+        /* Aseguramos que el panel dsdk ocupe todo el alto del contenedor */
+        .panel-container > .dsdk-panel {
+            flex-grow: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-row">
+        <div id="realtimeECGPanel" class="panel-container"></div>
+        <div id="realtimeManchesterPanel" class="panel-container"></div>
+        <div id="realtimeSinePanel" class="panel-container"></div>
+        <div id="realtimeBinaryPanel" class="panel-container"></div>
+    </div>
+
+    <script src="DynamicSciFiDashboardKit.js"></script> 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const DSDK = DynamicSciFiDashboardKit;
+            const MAX_DATA_POINTS = 150;
+            const UPDATE_INTERVAL = 50; // ms, para ~20 FPS
+            const SHARED_DATA_RANGE = { min: -0.1, max: 1.1 }; // Rango Y compartido para normalizar visualmente
+
+            // --- Panel 1: Simulación de Latido de Corazón (ECG-like) ---
+            const ecgPanel = new DSDK.TrueCanvasGraphPanel('#realtimeECGPanel', {
+                title: 'Bio-Signal (ECG-like)',
+                initialState: 'normal',
+                maxDataPoints: MAX_DATA_POINTS,
+                dataRange: SHARED_DATA_RANGE,
+                enableSparks: true,
+                enableScanlineHalo: true,
+                 colorScheme: { // Personalizar el colorScheme si es necesario
+                    normal:   { stroke: '#00E5E5', lineWidth: 1.8 }, // Teal brillante
+                    warning:  { stroke: '#FFD700', lineWidth: 2.0 }, // Oro
+                    critical: { stroke: '#FF6347', lineWidth: 2.2 }, // Tomate (un rojo menos agresivo)
+                    stable:   { stroke: '#32CD32', lineWidth: 1.8 }  // Verde lima
+                }
+            });
+
+            const ecgPattern = [0, 0, 0, 0.05, 0.15, 0.5, -0.25, 0.1, 0, 0, -0.05, -0.05, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+            let ecgPatternIndex = 0;
+            function generateECGPoint(panel) {
+                let baseValue = ecgPattern[ecgPatternIndex];
+                ecgPatternIndex = (ecgPatternIndex + 1) % ecgPattern.length;
+                let noise = (Math.random() - 0.5) * 0.03;
+                let amplitudeFactor = 0.6;
+
+                if (panel.currentState === 'critical') {
+                    amplitudeFactor = 0.1; // Señal más plana
+                    noise = (Math.random() - 0.5) * 0.1; // Más ruido
+                } else if (panel.currentState === 'warning') {
+                    amplitudeFactor = 0.3;
+                    noise = (Math.random() - 0.5) * 0.05;
+                }
+                let currentValue = 0.5 + baseValue * amplitudeFactor + noise;
+                return Math.max(0, Math.min(1, currentValue)); // Normalizar entre 0 y 1
+            }
+
+            // --- Panel 2: Simulación de Manchester Diferencial ---
+            const manchesterPanel = new DSDK.TrueCanvasGraphPanel('#realtimeManchesterPanel', {
+                title: 'Data Stream (Manchester Diff.)',
+                initialState: 'normal',
+                maxDataPoints: MAX_DATA_POINTS,
+                dataRange: SHARED_DATA_RANGE,
+                enableSparks: true,
+                enableScanlineHalo: true,
+                 colorScheme: {
+                    normal:   { stroke: '#DA70D6', lineWidth: 1.5 }, // Orquídea
+                    critical: { stroke: '#FF4500', lineWidth: 1.8 }, // Rojo-Naranja
+                    stable:   { stroke: '#20B2AA', lineWidth: 1.5 }  // Verde Mar Claro
+                }
+            });
+
+            let manchesterBitCounter = 0;
+            let currentManchesterBit = Math.random() > 0.5; // true for high, false for low start
+            let prevManchesterLevel = currentManchesterBit ? 0.8 : 0.2; // Initial level based on first bit
+            const MANCHESTER_BIT_DURATION_POINTS = 20; // Cada bit dura N puntos
+
+            function generateManchesterPoint(panel) {
+                let level;
+                const pointInBit = manchesterBitCounter % MANCHESTER_BIT_DURATION_POINTS;
+
+                // Transición a mitad del bit (siempre)
+                if (pointInBit === MANCHESTER_BIT_DURATION_POINTS / 2) {
+                    prevManchesterLevel = (prevManchesterLevel === 0.8) ? 0.2 : 0.8;
+                }
+                
+                // Inicio de un nuevo bit
+                if (pointInBit === 0) {
+                    const newBit = Math.random() > 0.5;
+                    // En Manchester Diferencial: transición al inicio del bit si el bit es '0' (o el opuesto de la convención)
+                    // Para simplificar: si el bit cambia, podría haber o no transición según la convención.
+                    // Aquí, si es un '0' lógico (representado por `newBit = false`), hay transición. Si es '1', no hay.
+                    if (!newBit) { // Si el bit es 0
+                         prevManchesterLevel = (prevManchesterLevel === 0.8) ? 0.2 : 0.8;
+                    }
+                    currentManchesterBit = newBit;
+                }
+                level = prevManchesterLevel;
+                manchesterBitCounter++;
+
+                let noise = (Math.random() - 0.5) * 0.02;
+                if (panel.currentState === 'critical') {
+                    noise = (Math.random() - 0.5) * 0.35; // Mucho ruido
+                } else if (panel.currentState === 'warning') {
+                    noise = (Math.random() - 0.5) * 0.1;
+                }
+                return Math.max(0, Math.min(1, level + noise));
+            }
+
+            // --- Panel 3: Señal Sinusoidal ---
+            const sinePanel = new DSDK.TrueCanvasGraphPanel('#realtimeSinePanel', {
+                title: 'Energy Signature (Sine Wave)',
+                initialState: 'stable',
+                maxDataPoints: MAX_DATA_POINTS,
+                dataRange: SHARED_DATA_RANGE,
+                enableSparks: false,
+                enableScanlineHalo: true,
+                scanlineStates: ['stable', 'warning', 'critical'],
+                scanlineHaloColor: 'rgba(0, 255, 127, 0.1)'
+            });
+
+            let sineTime = 0;
+            function generateSinePoint(panel) {
+                let frequency = 2;
+                let amplitude = 0.4;
+                let noise = (Math.random() - 0.5) * 0.02;
+
+                if (panel.currentState === 'critical') {
+                    frequency = 15; // Aumento brusco de frecuencia
+                    amplitude = 0.3;
+                    noise = (Math.random() - 0.5) * 0.2;
+                } else if (panel.currentState === 'warning') {
+                    frequency = 5;
+                    amplitude = 0.35;
+                    noise = (Math.random() - 0.5) * 0.1;
+                }
+                
+                sineTime += 0.15; // Velocidad de avance
+                let value = 0.5 + amplitude * Math.sin(frequency * sineTime * (Math.PI / 180) * 20) + noise;
+                return Math.max(0, Math.min(1, value));
+            }
+
+            // --- Panel 4: Representación Binaria (Pulsos Cortos) ---
+            const binaryPanel = new DSDK.TrueCanvasGraphPanel('#realtimeBinaryPanel', {
+                title: 'Telemetry Stream (Binary)',
+                initialState: 'normal',
+                maxDataPoints: MAX_DATA_POINTS,
+                dataRange: SHARED_DATA_RANGE,
+                enableSparks: true,
+                enableScanlineHalo: false,
+                colorScheme: {
+                    normal:   { stroke: '#FFA500', lineWidth: 1.5 }, // Naranja
+                    critical: { stroke: '#DC143C', lineWidth: 1.8 }, // Carmesí
+                }
+            });
+            
+            let binaryOutputData = [];
+            const BINARY_PULSE_WIDTH_POINTS = 8; // Duración de cada bit en puntos
+            const BINARY_HIGH = 0.9;
+            const BINARY_LOW = 0.1;
+
+            function generateBinaryPoint(panel) {
+                if (binaryOutputData.length === 0) {
+                    const bitValue = Math.random() > 0.5 ? BINARY_HIGH : BINARY_LOW;
+                    for (let i = 0; i < BINARY_PULSE_WIDTH_POINTS; i++) {
+                        binaryOutputData.push(bitValue);
+                    }
+                }
+                let value = binaryOutputData.shift();
+                let noise = (Math.random() - 0.5) * 0.02;
+
+                if (panel.currentState === 'critical') {
+                    noise = (Math.random() - 0.5) * 0.25; // Ruido considerable
+                } else if (panel.currentState === 'warning') {
+                    noise = (Math.random() - 0.5) * 0.1;
+                }
+                return Math.max(0, Math.min(1, value + noise));
+            }
+
+            // Intervalo para actualizar todos los paneles
+            setInterval(() => {
+                ecgPanel.addDataPoint(generateECGPoint(ecgPanel));
+                manchesterPanel.addDataPoint(generateManchesterPoint(manchesterPanel));
+                sinePanel.addDataPoint(generateSinePoint(sinePanel));
+                binaryPanel.addDataPoint(generateBinaryPoint(binaryPanel));
+            }, UPDATE_INTERVAL);
+
+            // Simular cambios de estado para demostración
+            setTimeout(() => {
+                ecgPanel.setPanelState('warning');
+                ecgPanel.config.title = 'Bio-Signal - Elevated';
+                if(ecgPanel.dom.header) ecgPanel.dom.header.textContent = ecgPanel.config.title;
+
+                manchesterPanel.setPanelState('warning');
+                 manchesterPanel.config.title = 'Data Stream - Interference';
+                if(manchesterPanel.dom.header) manchesterPanel.dom.header.textContent = manchesterPanel.config.title;
+            }, 8000);
+
+            setTimeout(() => {
+                ecgPanel.setPanelState('critical');
+                ecgPanel.config.title = 'Bio-Signal - CRITICAL';
+                if(ecgPanel.dom.header) ecgPanel.dom.header.textContent = ecgPanel.config.title;
+
+                manchesterPanel.setPanelState('critical');
+                manchesterPanel.config.title = 'Data Stream - CORRUPTED';
+                if(manchesterPanel.dom.header) manchesterPanel.dom.header.textContent = manchesterPanel.config.title;
+                
+                sinePanel.setPanelState('critical');
+                sinePanel.config.title = 'Energy Signature - OVERLOAD';
+                if(sinePanel.dom.header) sinePanel.dom.header.textContent = sinePanel.config.title;
+
+                binaryPanel.setPanelState('critical');
+                binaryPanel.config.title = 'Telemetry Stream - NOISY';
+                if(binaryPanel.dom.header) binaryPanel.dom.header.textContent = binaryPanel.config.title;
+            }, 15000);
+            
+            setTimeout(() => {
+                sinePanel.setPanelState('warning'); 
+                sinePanel.config.title = 'Energy Signature - Fluctuating';
+                if(sinePanel.dom.header) sinePanel.dom.header.textContent = sinePanel.config.title;
+
+                binaryPanel.setPanelState('normal');
+                binaryPanel.config.title = 'Telemetry Stream - Nominal';
+                if(binaryPanel.dom.header) binaryPanel.dom.header.textContent = binaryPanel.config.title;
+            }, 22000);
+        });
+    </script>
+
+</body>
+</html>
