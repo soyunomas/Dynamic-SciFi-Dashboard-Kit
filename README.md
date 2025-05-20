@@ -1,53 +1,56 @@
+English | [Español](./README-ES.md)
+
+---
+
 # Dynamic-SciFi-Dashboard-Kit
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub stars](https://img.shields.io/github/stars/Soyunomas/Dynamic-SciFi-Dashboard-Kit.svg?style=social&label=Star)](https://github.com/Soyunomas/Dynamic-SciFi-Dashboard-Kit/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/Soyunomas/Dynamic-SciFi-Dashboard-Kit.svg?style=social&label=Fork)](https://github.com/Soyunomas/Dynamic-SciFi-Dashboard-Kit/network/members)
-<!-- Puedes añadir más badges, como versión, estado de build, etc. si aplica -->
 
-**Dynamic-SciFi-Dashboard-Kit** es una librería JavaScript ligera y personalizable para crear interfaces de usuario interactivas con una estética futurista y de ciencia ficción. Ofrece un conjunto de componentes de "panel" listos para usar, diseñados para construir dashboards dinámicos y visualmente atractivos.
+**Dynamic-SciFi-Dashboard-Kit** is a lightweight and customizable JavaScript library for creating interactive user interfaces with a futuristic, sci-fi aesthetic. It offers a set of ready-to-use "panel" components designed for building dynamic and visually appealing dashboards.
 
-## Características
+## Features
 
-*   **Componentes Modulares:** Una variedad de paneles para diferentes propósitos (logs, alertas, datos, gráficos, etc.).
-*   **Estética Sci-Fi:** Estilos predefinidos con un toque futurista, incluyendo efectos como "scanlines" y "sparks".
-*   **Personalizable:** La apariencia se puede modificar fácilmente mediante variables CSS.
-*   **JavaScript Moderno:** Escrito en ES6+ sin dependencias externas pesadas (solo usa Bootstrap para el layout de los ejemplos).
-*   **Fácil de Usar:** API sencilla para integrar y controlar los paneles.
-*   **Responsivo (con Bootstrap):** Los ejemplos y la estructura de los paneles están pensados para adaptarse a diferentes tamaños de pantalla con la ayuda de un framework como Bootstrap.
-  
+*   **Modular Components:** A variety of panels for different purposes (logs, alerts, data, graphs, etc.).
+*   **Sci-Fi Aesthetics:** Predefined styles with a futuristic touch, including effects like "scanlines" and "sparks".
+*   **Customizable:** Appearance can be easily modified using CSS variables.
+*   **Modern JavaScript:** Written in ES6+ with no heavy external dependencies (only uses Bootstrap for example layouts).
+*   **Easy to Use:** Simple API to integrate and control the panels.
+*   **Responsive (with Bootstrap):** Examples and panel structure are designed to adapt to different screen sizes with the help of a framework like Bootstrap.
+
 ## Demo
 
-Aquí podrás ver una demo con todos los paneles (pulsa los botones para cambiar de estados).
+Here you can see a demo with all the panels (click the buttons to change states).
 
 <p align="center">
   <a href="https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/demo.html" target="_blank" rel="noopener noreferrer">
-    <img src="./screenshots/demo-screenshot.png" alt="Captura de pantalla de la demo Dynamic SciFi Dashboard Kit" width="75%">
+    <img src="./screenshots/demo-screenshot.png" alt="Screenshot of the Dynamic SciFi Dashboard Kit demo" width="75%">
   </a>
 </p>
 
-[**Enlace**](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/demo.html)
+[**Link**](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/demo.html)
 
-## Paneles Disponibles
+## Available Panels
 
-Aquí tienes un vistazo rápido a los paneles que ofrece la librería. Haz clic en una imagen para ver un ejemplo en vivo.
+Here's a quick overview of the panels offered by the library. Click on an image to see a live example.
 
-| Panel                         | Screenshot                                                                                         | Ejemplo en Vivo (GitHub Pages)                                                |
+| Panel                         | Screenshot                                                                                         | Live Example (GitHub Pages)                                                |
 | :---------------------------- | :-------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------: |
-| **LogDisplayPanel**           | [![LogDisplayPanel Screenshot][log-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/LogDisplayPanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/LogDisplayPanel.html) |
-| **CriticalWarningTextPanel**  | [![CriticalWarningTextPanel Screenshot][critwarn-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/CriticalWarningTextPanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/CriticalWarningTextPanel.html) |
-| **KeyValueListPanel**       | [![KeyValueListPanel Screenshot][kv-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/KeyValueListPanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/KeyValueListPanel.html) |
-| **LedDisplayPanel**           | [![LedDisplayPanel Screenshot][led-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/LedDisplayPanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/LedDisplayPanel.html) |
-| **DynamicTextPanel**        | [![DynamicTextPanel Screenshot][dyntext-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/DynamicTextPanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/DynamicTextPanel.html) |
-| **ActionButtonsPanel**      | [![ActionButtonsPanel Screenshot][action-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/ActionButtonsPanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/ActionButtonsPanel.html) |
-| **CanvasGraphPanel**        | [![CanvasGraphPanel Screenshot][canvas-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/CanvasGraphPanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/CanvasGraphPanel.html) |
-| **IntegrityPulsePanel**     | [![IntegrityPulsePanel Screenshot][pulse-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/IntegrityPulsePanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/IntegrityPulsePanel.html) |
-| **CircularGaugePanel**      | [![CircularGaugePanel Screenshot][circgauge-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/CircularGaugePanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/CircularGaugePanel.html) |
-| **StatusIndicatorLedPanel** | [![StatusIndicatorLedPanel Screenshot][statusled-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/StatusIndicatorLedPanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/StatusIndicatorLedPanel.html) |
-| **HorizontalBarGaugePanel** | [![HorizontalBarGaugePanel Screenshot][hgauge-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/HorizontalBarGaugePanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/HorizontalBarGaugePanel.html) |
-| **TrueCanvasGraphPanel**    | [![TrueCanvasGraphPanel Screenshot][truecanvas-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/TrueCanvasGraphPanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/TrueCanvasGraphPanel.html) |
+| **LogDisplayPanel**           | [![LogDisplayPanel Screenshot][log-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/LogDisplayPanel.html) | [View Example](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/LogDisplayPanel.html) |
+| **CriticalWarningTextPanel**  | [![CriticalWarningTextPanel Screenshot][critwarn-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/CriticalWarningTextPanel.html) | [View Example](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/CriticalWarningTextPanel.html) |
+| **KeyValueListPanel**       | [![KeyValueListPanel Screenshot][kv-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/KeyValueListPanel.html) | [View Example](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/KeyValueListPanel.html) |
+| **LedDisplayPanel**           | [![LedDisplayPanel Screenshot][led-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/LedDisplayPanel.html) | [View Example](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/LedDisplayPanel.html) |
+| **DynamicTextPanel**        | [![DynamicTextPanel Screenshot][dyntext-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/DynamicTextPanel.html) | [View Example](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/DynamicTextPanel.html) |
+| **ActionButtonsPanel**      | [![ActionButtonsPanel Screenshot][action-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/ActionButtonsPanel.html) | [View Example](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/ActionButtonsPanel.html) |
+| **CanvasGraphPanel**        | [![CanvasGraphPanel Screenshot][canvas-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/CanvasGraphPanel.html) | [View Example](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/CanvasGraphPanel.html) |
+| **IntegrityPulsePanel**     | [![IntegrityPulsePanel Screenshot][pulse-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/IntegrityPulsePanel.html) | [View Example](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/IntegrityPulsePanel.html) |
+| **CircularGaugePanel**      | [![CircularGaugePanel Screenshot][circgauge-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/CircularGaugePanel.html) | [View Example](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/CircularGaugePanel.html) |
+| **StatusIndicatorLedPanel** | [![StatusIndicatorLedPanel Screenshot][statusled-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/StatusIndicatorLedPanel.html) | [View Example](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/StatusIndicatorLedPanel.html) |
+| **HorizontalBarGaugePanel** | [![HorizontalBarGaugePanel Screenshot][hgauge-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/HorizontalBarGaugePanel.html) | [View Example](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/HorizontalBarGaugePanel.html) |
+| **TrueCanvasGraphPanel**    | [![TrueCanvasGraphPanel Screenshot][truecanvas-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/TrueCanvasGraphPanel.html) | [View Example](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/TrueCanvasGraphPanel.html) |
 
-<!-- Definiciones de enlaces para las imágenes (ponlas al final del archivo) -->
+<!-- Image link definitions (place them at the end of the file) -->
 [log-screenshot]: ./screenshots/LogDisplayPanel.png
 [critwarn-screenshot]: ./screenshots/CriticalWarningTextPanel.png
 [kv-screenshot]: ./screenshots/KeyValueListPanel.png
@@ -62,47 +65,47 @@ Aquí tienes un vistazo rápido a los paneles que ofrece la librería. Haz clic 
 [truecanvas-screenshot]: ./screenshots/TrueCanvasGraphPanel.png
 
 
-## Instalación
+## Installation
 
-1.  Descarga (o clona) este repositorio.
-2.  Incluye los archivos `DynamicSciFiDashboardKit.css` y `DynamicSciFiDashboardKit.js` en tu proyecto HTML:
+1.  Download (or clone) this repository.
+2.  Include the `DynamicSciFiDashboardKit.css` and `DynamicSciFiDashboardKit.js` files in your HTML project:
 
 ```html
 <head>
-    <!-- ... tus otras etiquetas head ... -->
+    <!-- ... your other head tags ... -->
     <link rel="stylesheet" href="path/to/DynamicSciFiDashboardKit.css">
 </head>
 <body>
-    <!-- ... tu contenido HTML ... -->
+    <!-- ... your HTML content ... -->
     <script src="path/to/DynamicSciFiDashboardKit.js"></script>
     <script>
-        // Tu código para inicializar los paneles
+        // Your code to initialize the panels
     </script>
 </body>
 ```
 
-## Guía de Uso
+## Usage Guide
 
-Para una guía detallada sobre cómo usar cada panel, sus opciones y métodos, por favor consulta la [**Guía de Uso Completa (`docs/USAGE_GUIDE.md`)**](./docs/USAGE_GUIDE.md).
+For a detailed guide on how to use each panel, its options, and methods, please refer to the [**Complete Usage Guide (`docs/USAGE_GUIDE.md`)**](./docs/USAGE_GUIDE.md).
 
-## Personalización
+## Customization
 
-La apariencia de los paneles se puede personalizar extensamente sobrescribiendo las variables CSS definidas en `DynamicSciFiDashboardKit.css`. Revisa el archivo CSS para ver la lista de variables disponibles.
+The appearance of the panels can be extensively customized by overriding the CSS variables defined in `DynamicSciFiDashboardKit.css`. Review the CSS file to see the list of available variables.
 
-Ejemplo:
+Example:
 ```css
-/* En tu propio archivo CSS, después de importar DynamicSciFiDashboardKit.css */
+/* In your own CSS file, after importing DynamicSciFiDashboardKit.css */
 :root {
-    --dsdk-accent-color-main: #FF6347; /* Tomato como color de acento principal */
+    --dsdk-accent-color-main: #FF6347; /* Tomato as main accent color */
     --dsdk-panel-bg: rgba(20, 20, 30, 0.9);
     --dsdk-font-mono: 'Share Tech Mono', monospace;
 }
 ```
 
-## Licencia
+## License
 
-Este proyecto está bajo la Licencia MIT. Ver el archivo [LICENSE](./LICENSE) para más detalles.
+This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for more details.
 
 ---
 
-Creado por [Soyunomas](https://github.com/Soyunomas)
+Created by [Soyunomas](https://github.com/Soyunomas)
