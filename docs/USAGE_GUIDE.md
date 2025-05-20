@@ -1,52 +1,52 @@
-# Guía de Uso: DynamicSciFiDashboardKit
+# Usage Guide: DynamicSciFiDashboardKit
 
-`DynamicSciFiDashboardKit` es una librería JavaScript diseñada para crear interfaces de usuario con una estética futurista y de ciencia ficción. Proporciona un conjunto de componentes (paneles) listos para usar que pueden ser fácilmente integrados en cualquier aplicación web.
+`DynamicSciFiDashboardKit` is a JavaScript library designed to create user interfaces with a futuristic, sci-fi aesthetic. It provides a set of ready-to-use components (panels) that can be easily integrated into any web application.
 
-**Audiencia Objetivo:** Desarrolladores web con conocimientos de HTML, CSS y JavaScript.
+**Target Audience:** Web developers with knowledge of HTML, CSS, and JavaScript.
 
-## 1. Instalación y Configuración
+## 1. Installation and Setup
 
-Para utilizar `DynamicSciFiDashboardKit`, necesitas incluir dos archivos en tu proyecto:
+To use `DynamicSciFiDashboardKit`, you need to include two files in your project:
 
-1.  **`DynamicSciFiDashboardKit.css`**: Contiene todos los estilos necesarios para los paneles.
-2.  **`DynamicSciFiDashboardKit.js`**: Contiene la lógica de la librería y la definición de los paneles.
+1.  **`DynamicSciFiDashboardKit.css`**: Contains all the necessary styles for the panels.
+2.  **`DynamicSciFiDashboardKit.js`**: Contains the library's logic and panel definitions.
 
-**Inclusión en HTML:**
+**HTML Inclusion:**
 
 ```html
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Mi Dashboard Sci-Fi</title>
+    <title>My Sci-Fi Dashboard</title>
     <link rel="stylesheet" href="path/to/DynamicSciFiDashboardKit.css">
     <style>
-        /* Tus estilos personalizados aquí, si son necesarios */
+        /* Your custom styles here, if needed */
         body { background-color: #05080d; padding: 20px; }
         .panel-container { min-height: 200px; margin-bottom: 20px; display: flex; flex-direction: column; }
-        .panel-container > .dsdk-panel { flex-grow: 1; } /* Para que el panel ocupe el espacio */
+        .panel-container > .dsdk-panel { flex-grow: 1; } /* For the panel to occupy the space */
     </style>
 </head>
 <body>
-    <!-- Contenedores para tus paneles -->
-    <div id="miLogPanel" class="panel-container"></div>
-    <div id="miGaugePanel" class="panel-container" style="height: 250px;"></div>
+    <!-- Containers for your panels -->
+    <div id="myLogPanel" class="panel-container"></div>
+    <div id="myGaugePanel" class="panel-container" style="height: 250px;"></div>
 
     <script src="path/to/DynamicSciFiDashboardKit.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const DSDK = DynamicSciFiDashboardKit; // Alias para conveniencia
+            const DSDK = DynamicSciFiDashboardKit; // Alias for convenience
 
-            // Inicialización de paneles
-            const logPanel = new DSDK.LogDisplayPanel('#miLogPanel', {
-                title: 'Registro de Eventos del Sistema'
+            // Panel initialization
+            const logPanel = new DSDK.LogDisplayPanel('#myLogPanel', {
+                title: 'System Event Log'
             });
-            logPanel.addLog({ text: 'Dashboard inicializado.', level: 'info' });
+            logPanel.addLog({ text: 'Dashboard initialized.', level: 'info' });
 
-            const gaugePanel = new DSDK.CircularGaugePanel('#miGaugePanel', {
-                title: 'Nivel de Energía Primaria',
+            const gaugePanel = new DSDK.CircularGaugePanel('#myGaugePanel', {
+                title: 'Primary Energy Level',
                 initialValue: 75,
-                label: 'Reactor Principal',
+                label: 'Main Reactor',
                 units: '%'
             });
         });
@@ -55,61 +55,61 @@ Para utilizar `DynamicSciFiDashboardKit`, necesitas incluir dos archivos en tu p
 </html>
 ```
 
-**Importante:**
-*   Asegúrate de que las rutas a `DynamicSciFiDashboardKit.css` y `DynamicSciFiDashboardKit.js` sean correctas.
-*   Cada panel necesita un elemento contenedor único en el DOM (por ejemplo, un `div` con un ID único).
+**Important:**
+*   Ensure that the paths to `DynamicSciFiDashboardKit.css` and `DynamicSciFiDashboardKit.js` are correct.
+*   Each panel requires a unique container element in the DOM (e.g., a `div` with a unique ID).
 
-## 2. Conceptos Básicos
+## 2. Basic Concepts
 
 ### 2.1. `BasePanel`
 
-Todos los paneles específicos heredan de una clase base llamada `BasePanel`. Esta clase proporciona funcionalidades y opciones comunes.
+All specific panels inherit from a base class called `BasePanel`. This class provides common functionalities and options.
 
-**Opciones Comunes (Heredadas de `BasePanel`)**:
+**Common Options (Inherited from `BasePanel`)**:
 
-*   `title` (`string`): Título que se muestra en la cabecera del panel. Default: `'Panel'` (o un título específico si la clase hija lo define). Si es cadena vacía o `null` y la clase no tiene título por defecto, la cabecera no se renderiza.
-*   `initialState` (`string`): Estado visual inicial del panel. Valores válidos: `'normal'`, `'warning'`, `'critical'`, `'stable'`. Default: `'normal'`.
-*   `enableSparks` (`boolean`): Habilita un efecto de chispas en los bordes del panel para los estados `'critical'` y `'warning'`. Default: `true` (puede ser sobrescrito por la clase hija).
-*   `enableScanlineHalo` (`boolean`): Habilita un efecto visual de "scanlines" sobre el panel. Default: `false` (puede ser sobrescrito por la clase hija).
-*   `scanlineHaloColor` (`string | null`): Color CSS específico para el efecto scanline. Si es `null`, el color se determina automáticamente según el estado del panel. Default: `null`.
-*   `scanlineThickness` (`string`): Grosor de las scanlines (ej. `'4px'`). Default: `'4px'`.
-*   `scanlineOpacity` (`number`): Opacidad de las scanlines (un valor entre 0 y 1). Default: `0.08`.
-*   `scanlineStates` (`array`): Array de strings que define en qué estados del panel se mostrará el efecto scanline (si `enableScanlineHalo` es `true`). Default: `['critical', 'warning']`.
+*   `title` (`string`): Title displayed in the panel header. Default: `'Panel'` (or a specific title if the child class defines it). If an empty string or `null` and the class has no default title, the header is not rendered.
+*   `initialState` (`string`): Initial visual state of the panel. Valid values: `'normal'`, `'warning'`, `'critical'`, `'stable'`. Default: `'normal'`.
+*   `enableSparks` (`boolean`): Enables a sparks effect on the panel borders for `'critical'` and `'warning'` states. Default: `true` (can be overridden by the child class).
+*   `enableScanlineHalo` (`boolean`): Enables a visual "scanlines" effect over the panel. Default: `false` (can be overridden by the child class).
+*   `scanlineHaloColor` (`string | null`): Specific CSS color for the scanline effect. If `null`, the color is automatically determined based on the panel state. Default: `null`.
+*   `scanlineThickness` (`string`): Thickness of the scanlines (e.g., `'4px'`). Default: `'4px'`.
+*   `scanlineOpacity` (`number`): Opacity of the scanlines (a value between 0 and 1). Default: `0.08`.
+*   `scanlineStates` (`array`): Array of strings defining in which panel states the scanline effect will be shown (if `enableScanlineHalo` is `true`). Default: `['critical', 'warning']`.
 
-**Métodos Comunes (Heredados de `BasePanel`)**:
+**Common Methods (Inherited from `BasePanel`)**:
 
-*   `setPanelState(newState)`: Cambia el estado visual general del panel.
-    *   `newState` (`string`): Uno de los estados válidos: `'normal'`, `'warning'`, `'critical'`, `'stable'`.
-*   `setScanlineHalo(enabled, options = {})`: Configura o activa/desactiva el efecto scanline.
-    *   `enabled` (`boolean`): `true` para activar, `false` para desactivar.
-    *   `options` (`object`, opcional): Un objeto con propiedades para personalizar el efecto:
-        *   `color` (`string`, opcional): Color CSS para las scanlines.
-        *   `thickness` (`string`, opcional): Grosor de las scanlines.
-        *   `opacity` (`number`, opcional): Opacidad de las scanlines.
-*   `destroy()`: Elimina el panel del DOM y limpia los recursos asociados (event listeners, timers de animación). **Muy importante llamar a este método** cuando un panel ya no es necesario para evitar fugas de memoria.
+*   `setPanelState(newState)`: Changes the overall visual state of the panel.
+    *   `newState` (`string`): One of the valid states: `'normal'`, `'warning'`, `'critical'`, `'stable'`.
+*   `setScanlineHalo(enabled, options = {})`: Configures or activates/deactivates the scanline effect.
+    *   `enabled` (`boolean`): `true` to activate, `false` to deactivate.
+    *   `options` (`object`, optional): An object with properties to customize the effect:
+        *   `color` (`string`, optional): CSS color for the scanlines.
+        *   `thickness` (`string`, optional): Thickness of the scanlines.
+        *   `opacity` (`number`, optional): Opacity of the scanlines.
+*   `destroy()`: Removes the panel from the DOM and cleans up associated resources (event listeners, animation timers). **It is very important to call this method** when a panel is no longer needed to prevent memory leaks.
 
-### 2.2. Inicialización de un Panel
+### 2.2. Panel Initialization
 
-Para crear una instancia de cualquier panel:
+To create an instance of any panel:
 
 ```javascript
-const miPanel = new DynamicSciFiDashboardKit.NombreDelPanel('#idDelContenedor', {
-    // opciones específicas del panel y comunes aquí
+const myPanel = new DynamicSciFiDashboardKit.PanelName('#containerId', {
+    // specific panel and common options here
 });
 ```
 
-*   `#idDelContenedor`: Selector CSS del elemento HTML que contendrá el panel.
-*   `{opciones}`: Un objeto de configuración.
+*   `#containerId`: CSS selector of the HTML element that will contain the panel.
+*   `{options}`: A configuration object.
 
-## 3. Documentación de Paneles
+## 3. Panel Documentation
 
-A continuación, se detalla cada panel disponible.
+Below is a detailed description of each available panel.
 
 ### 3.1. `LogDisplayPanel`
 
-Muestra una lista de mensajes de log con diferentes niveles de severidad.
+Displays a list of log messages with different severity levels.
 
-**Inicialización:**
+**Initialization:**
 ```javascript
 const logPanel = new DynamicSciFiDashboardKit.LogDisplayPanel('#logContainer', {
     title: 'System Logs',
@@ -118,18 +118,18 @@ const logPanel = new DynamicSciFiDashboardKit.LogDisplayPanel('#logContainer', {
 });
 ```
 
-**Opciones Específicas:**
-*   `title` (`string`): Título del panel. Default: `'Log Display'`.
-*   `maxEntries` (`number`): Número máximo de entradas de log a mostrar. Las más antiguas se eliminan automáticamente. Default: `20`.
+**Specific Options:**
+*   `title` (`string`): Panel title. Default: `'Log Display'`.
+*   `maxEntries` (`number`): Maximum number of log entries to display. Oldest entries are automatically removed. Default: `20`.
 
-**Métodos Específicos:**
-*   `addLog(logEntry)`: Añade una nueva entrada al log.
-    *   `logEntry` (`object`): Un objeto con las siguientes propiedades:
-        *   `text` (`string`): El mensaje de log.
-        *   `level` (`string`, opcional): Nivel del log. Valores válidos: `'info'`, `'warn'`, `'error'`, `'success'`. Afecta el color del texto.
-*   `clearLogs()`: Elimina todas las entradas del log.
+**Specific Methods:**
+*   `addLog(logEntry)`: Adds a new entry to the log.
+    *   `logEntry` (`object`): An object with the following properties:
+        *   `text` (`string`): The log message.
+        *   `level` (`string`, optional): Log level. Valid values: `'info'`, `'warn'`, `'error'`, `'success'`. Affects text color.
+*   `clearLogs()`: Removes all log entries.
 
-**Ejemplo de Uso:**
+**Usage Example:**
 ```javascript
 // HTML: <div id="logDemo" class="panel-container"></div>
 
@@ -158,9 +158,9 @@ setTimeout(() => {
 
 ### 3.2. `CriticalWarningTextPanel`
 
-Muestra un texto grande y llamativo, ideal para alertas críticas o mensajes de estado importantes.
+Displays large, eye-catching text, ideal for critical alerts or important status messages.
 
-**Inicialización:**
+**Initialization:**
 ```javascript
 const warningPanel = new DynamicSciFiDashboardKit.CriticalWarningTextPanel('#warningContainer', {
     initialText: 'SYSTEM OFFLINE',
@@ -168,24 +168,24 @@ const warningPanel = new DynamicSciFiDashboardKit.CriticalWarningTextPanel('#war
 });
 ```
 
-**Opciones Específicas:**
-*   `title` (`string`): Título del panel. Default: `''` (sin cabecera, para dar más énfasis al texto).
-*   `initialText` (`string`): El texto que se mostrará inicialmente. Default: `'WARNING'`.
-*   `initialWarningState` (`string`): Estado interno del texto, que afecta su animación y el estado base del panel. Valores válidos: `'critical'`, `'stabilizing'`, `'stable'`. Default: `'critical'`.
-*   `fontSize` (`string`): Tamaño de fuente CSS para el texto de advertencia. Default: `'2.2rem'`.
+**Specific Options:**
+*   `title` (`string`): Panel title. Default: `''` (no header, to give more emphasis to the text).
+*   `initialText` (`string`): The text to be displayed initially. Default: `'WARNING'`.
+*   `initialWarningState` (`string`): Internal state of the text, which affects its animation and the base state of the panel. Valid values: `'critical'`, `'stabilizing'`, `'stable'`. Default: `'critical'`.
+*   `fontSize` (`string`): CSS font size for the warning text. Default: `'2.2rem'`.
 *   `enableSparks` (`boolean`): Default: `true`.
 *   `enableScanlineHalo` (`boolean`): Default: `true`.
 *   `scanlineThickness` (`string`): Default: `'3px'`.
 *   `scanlineOpacity` (`number`): Default: `0.1`.
 
-**Métodos Específicos:**
-*   `setWarningState(newState, newText)`: Cambia el estado interno del texto y, opcionalmente, el texto mismo.
-    *   `newState` (`string`): `'critical'`, `'stabilizing'`, o `'stable'`. Esto también actualizará el `panelState` general (ej. `critical` para `critical`, `warning` para `stabilizing`, `stable` para `stable`).
-    *   `newText` (`string`, opcional): El nuevo texto a mostrar.
-*   `setText(newText)`: Cambia únicamente el texto mostrado, sin alterar el `warningState`.
-    *   `newText` (`string`): El nuevo texto.
+**Specific Methods:**
+*   `setWarningState(newState, newText)`: Changes the internal state of the text and, optionally, the text itself.
+    *   `newState` (`string`): `'critical'`, `'stabilizing'`, or `'stable'`. This will also update the general `panelState` (e.g., `critical` for `critical`, `warning` for `stabilizing`, `stable` for `stable`).
+    *   `newText` (`string`, optional): The new text to display.
+*   `setText(newText)`: Changes only the displayed text, without altering the `warningState`.
+    *   `newText` (`string`): The new text.
 
-**Ejemplo de Uso:**
+**Usage Example:**
 ```javascript
 // HTML: <div id="critWarnDemo" class="panel-container" style="height: 150px;"></div>
 
@@ -206,32 +206,32 @@ setTimeout(() => {
 
 ### 3.3. `KeyValueListPanel`
 
-Muestra una lista de pares clave-valor, útil para mostrar datos de configuración o telemetría.
+Displays a list of key-value pairs, useful for showing configuration data or telemetry.
 
-**Inicialización:**
+**Initialization:**
 ```javascript
 const dataPanel = new DynamicSciFiDashboardKit.KeyValueListPanel('#dataContainer', {
     title: 'System Parameters'
 });
 ```
 
-**Opciones Específicas:**
-*   `title` (`string`): Título del panel. Default: `'Data List'`.
+**Specific Options:**
+*   `title` (`string`): Panel title. Default: `'Data List'`.
 
-**Métodos Específicos:**
-*   `setItems(itemsArray)`: Establece o reemplaza todos los ítems de la lista.
-    *   `itemsArray` (`array`): Un array de objetos, donde cada objeto representa un ítem y tiene la forma:
-        *   `key` (`string`): La clave.
-        *   `value` (`string | number`): El valor.
-        *   `statusClass` (`string`, opcional): Una clase CSS para aplicar estilo al valor (ej. `DSDK_CLASSES.TEXT_DANGER`, `DSDK_CLASSES.TEXT_SUCCESS`).
-*   `updateItem(key, newValue, newStatusClass)`: Actualiza un ítem existente identificado por su clave.
-    *   `key` (`string`): La clave del ítem a actualizar.
-    *   `newValue` (`string | number`): El nuevo valor.
-    *   `newStatusClass` (`string`, opcional): La nueva clase de estado para el valor.
-*   `addItem(itemObject)`: Añade un nuevo ítem o actualiza uno existente si la clave ya existe.
-    *   `itemObject` (`object`): Similar a un objeto en `itemsArray`.
+**Specific Methods:**
+*   `setItems(itemsArray)`: Sets or replaces all items in the list.
+    *   `itemsArray` (`array`): An array of objects, where each object represents an item and has the form:
+        *   `key` (`string`): The key.
+        *   `value` (`string | number`): The value.
+        *   `statusClass` (`string`, optional): A CSS class to apply styling to the value (e.g., `DSDK_CLASSES.TEXT_DANGER`, `DSDK_CLASSES.TEXT_SUCCESS`).
+*   `updateItem(key, newValue, newStatusClass)`: Updates an existing item identified by its key.
+    *   `key` (`string`): The key of the item to update.
+    *   `newValue` (`string | number`): The new value.
+    *   `newStatusClass` (`string`, optional): The new status class for the value.
+*   `addItem(itemObject)`: Adds a new item or updates an existing one if the key already exists.
+    *   `itemObject` (`object`): Similar to an object in `itemsArray`.
 
-**Ejemplo de Uso:**
+**Usage Example:**
 ```javascript
 // HTML: <div id="kvDemo" class="panel-container"></div>
 
@@ -259,9 +259,9 @@ setTimeout(() => {
 
 ### 3.4. `LedDisplayPanel`
 
-Muestra un valor numérico o de texto en un display tipo LED, con una etiqueta y opcionalmente unidades.
+Displays a numeric or text value on an LED-like display, with a label and optionally units.
 
-**Inicialización:**
+**Initialization:**
 ```javascript
 const ledPanel = new DynamicSciFiDashboardKit.LedDisplayPanel('#ledContainer', {
     label: 'Flux Capacitor',
@@ -270,20 +270,20 @@ const ledPanel = new DynamicSciFiDashboardKit.LedDisplayPanel('#ledContainer', {
 });
 ```
 
-**Opciones Específicas:**
-*   `title` (`string`): Título del panel. Default: `''` (sin cabecera).
-*   `label` (`string`): Etiqueta que se muestra encima del display LED. Default: `'VALUE'`.
-*   `initialValue` (`number | string`): El valor que se mostrará inicialmente. Default: `0`.
-*   `initialStatus` (`string`): Estado visual del display LED. Valores: `'normal'`, `'warning'`, `'critical'`. Afecta el color y animación del display. Default: `'normal'`.
-*   `units` (`string`): Unidades que se añaden después del valor (ej. 'kW', '%'). Default: `''`.
+**Specific Options:**
+*   `title` (`string`): Panel title. Default: `''` (no header).
+*   `label` (`string`): Label displayed above the LED display. Default: `'VALUE'`.
+*   `initialValue` (`number | string`): The value to be displayed initially. Default: `0`.
+*   `initialStatus` (`string`): Visual state of the LED display. Values: `'normal'`, `'warning'`, `'critical'`. Affects display color and animation. Default: `'normal'`.
+*   `units` (`string`): Units appended after the value (e.g., 'kW', '%'). Default: `''`.
 
-**Métodos Específicos:**
-*   `setValue(value)`: Establece el valor mostrado en el display.
-    *   `value` (`number | string`): El nuevo valor.
-*   `setStatus(status)`: Cambia el estado visual del display LED.
-    *   `status` (`string`): `'normal'`, `'warning'`, o `'critical'`.
+**Specific Methods:**
+*   `setValue(value)`: Sets the value shown on the display.
+    *   `value` (`number | string`): The new value.
+*   `setStatus(status)`: Changes the visual state of the LED display.
+    *   `status` (`string`): `'normal'`, `'warning'`, or `'critical'`.
 
-**Ejemplo de Uso:**
+**Usage Example:**
 ```javascript
 // HTML: <div id="ledDemo" class="panel-container" style="height: 180px;"></div>
 
@@ -293,7 +293,7 @@ const ledPanel = new DynamicSciFiDashboardKit.LedDisplayPanel('#ledDemo', {
     units: 'K',
     initialStatus: 'normal'
 });
-ledPanel.setPanelState('stable'); // Panel exterior
+ledPanel.setPanelState('stable'); // Outer panel
 
 setTimeout(() => {
     ledPanel.setValue(750);
@@ -310,9 +310,9 @@ setTimeout(() => {
 
 ### 3.5. `DynamicTextPanel`
 
-Muestra un bloque de texto con posibles efectos visuales como blur, flicker o glitch.
+Displays a block of text with possible visual effects like blur, flicker, or glitch.
 
-**Inicialización:**
+**Initialization:**
 ```javascript
 const textPanel = new DynamicSciFiDashboardKit.DynamicTextPanel('#textContainer', {
     title: 'Communications Array',
@@ -320,22 +320,22 @@ const textPanel = new DynamicSciFiDashboardKit.DynamicTextPanel('#textContainer'
 });
 ```
 
-**Opciones Específicas:**
-*   `title` (`string`): Título del panel. Default: `'Dynamic Text Display'`.
-*   `initialText` (`string`): El texto que se mostrará inicialmente. Default: `'Awaiting data...'`.
-*   `initialEffects` (`object`): Un objeto para configurar los efectos visuales iniciales. Default: `{ blur: false, flicker: false, glitch: false, textColorClass: null }`.
-    *   `blur` (`boolean`): Aplicar efecto de desenfoque.
-    *   `flicker` (`boolean`): Aplicar efecto de parpadeo.
-    *   `glitch` (`boolean`): Aplicar efecto de "glitch".
-    *   `textColorClass` (`string | null`): Clase CSS para el color del texto (ej. `DSDK_CLASSES.TEXT_INFO`).
+**Specific Options:**
+*   `title` (`string`): Panel title. Default: `'Dynamic Text Display'`.
+*   `initialText` (`string`): The text to be displayed initially. Default: `'Awaiting data...'`.
+*   `initialEffects` (`object`): An object to configure initial visual effects. Default: `{ blur: false, flicker: false, glitch: false, textColorClass: null }`.
+    *   `blur` (`boolean`): Apply blur effect.
+    *   `flicker` (`boolean`): Apply flicker effect.
+    *   `glitch` (`boolean`): Apply "glitch" effect.
+    *   `textColorClass` (`string | null`): CSS class for text color (e.g., `DSDK_CLASSES.TEXT_INFO`).
 
-**Métodos Específicos:**
-*   `setText(text)`: Establece el texto mostrado.
-    *   `text` (`string`): El nuevo texto.
-*   `setEffects(effectsObject)`: Establece o actualiza los efectos visuales. Las propiedades no incluidas en `effectsObject` no se modifican.
-    *   `effectsObject` (`object`): Objeto con las mismas propiedades que `initialEffects` (todas opcionales).
+**Specific Methods:**
+*   `setText(text)`: Sets the displayed text.
+    *   `text` (`string`): The new text.
+*   `setEffects(effectsObject)`: Sets or updates visual effects. Properties not included in `effectsObject` remain unchanged.
+    *   `effectsObject` (`object`): Object with the same properties as `initialEffects` (all optional).
 
-**Ejemplo de Uso:**
+**Usage Example:**
 ```javascript
 // HTML: <div id="dynTextDemo" class="panel-container" style="height: 150px;"></div>
 
@@ -361,9 +361,9 @@ setTimeout(() => {
 
 ### 3.6. `ActionButtonsPanel`
 
-Muestra un conjunto de botones configurables con acciones asociadas.
+Displays a set of configurable buttons with associated actions.
 
-**Inicialización:**
+**Initialization:**
 ```javascript
 const actionPanel = new DynamicSciFiDashboardKit.ActionButtonsPanel('#actionsContainer', {
     title: 'System Controls',
@@ -373,36 +373,36 @@ const actionPanel = new DynamicSciFiDashboardKit.ActionButtonsPanel('#actionsCon
 });
 ```
 
-**Opciones Específicas:**
-*   `title` (`string`): Título del panel. Default: `'Actions'`.
-*   `buttons` (`array`): Un array de objetos de configuración de botón. Default: `[]`. Cada objeto botón:
-    *   `id` (`string`, **requerido**): Identificador único para el botón.
-    *   `text` (`string`): Texto del botón. Default: `'Button'`.
-    *   `style` (`string`, opcional): Estilo del botón. Valores: `'normal'`, `'danger'`, `'warning'`, `'success'`. Default: `'normal'`.
-    *   `disabled` (`boolean`, opcional): Si el botón está deshabilitado inicialmente. Default: `false`.
-    *   `onClick` (`function`, opcional): Función a ejecutar cuando se hace clic en el botón.
+**Specific Options:**
+*   `title` (`string`): Panel title. Default: `'Actions'`.
+*   `buttons` (`array`): An array of button configuration objects. Default: `[]`. Each button object:
+    *   `id` (`string`, **required**): Unique identifier for the button.
+    *   `text` (`string`): Button text. Default: `'Button'`.
+    *   `style` (`string`, optional): Button style. Values: `'normal'`, `'danger'`, `'warning'`, `'success'`. Default: `'normal'`.
+    *   `disabled` (`boolean`, optional): Whether the button is initially disabled. Default: `false`.
+    *   `onClick` (`function`, optional): Function to execute when the button is clicked.
 
-**Métodos Específicos:**
-*   `addButton(buttonConfig, addToDom = true)`: Añade un nuevo botón.
-    *   `buttonConfig` (`object`): Objeto de configuración del botón (ver `buttons` en opciones).
-    *   `addToDom` (`boolean`): Si debe añadirse al DOM inmediatamente. Default: `true`.
-*   `removeButton(buttonId)`: Elimina un botón por su ID.
-    *   `buttonId` (`string`): ID del botón a eliminar.
-*   `updateButton(buttonId, updates)`: Actualiza propiedades de un botón existente.
-    *   `buttonId` (`string`): ID del botón a actualizar.
-    *   `updates` (`object`): Objeto con las propiedades a cambiar:
-        *   `newText` (`string`, opcional): Nuevo texto para el botón.
-        *   `newDisabledState` (`boolean`, opcional): Nuevo estado de habilitación.
-        *   `newStyle` (`string`, opcional): Nuevo estilo para el botón.
-*   `setButtonDisabled(buttonId, isDisabled)`: Atajo para habilitar/deshabilitar un botón.
-    *   `buttonId` (`string`): ID del botón.
-    *   `isDisabled` (`boolean`): `true` para deshabilitar, `false` para habilitar.
+**Specific Methods:**
+*   `addButton(buttonConfig, addToDom = true)`: Adds a new button.
+    *   `buttonConfig` (`object`): Button configuration object (see `buttons` in options).
+    *   `addToDom` (`boolean`): Whether to add to DOM immediately. Default: `true`.
+*   `removeButton(buttonId)`: Removes a button by its ID.
+    *   `buttonId` (`string`): ID of the button to remove.
+*   `updateButton(buttonId, updates)`: Updates properties of an existing button.
+    *   `buttonId` (`string`): ID of the button to update.
+    *   `updates` (`object`): Object with properties to change:
+        *   `newText` (`string`, optional): New text for the button.
+        *   `newDisabledState` (`boolean`, optional): New enabled/disabled state.
+        *   `newStyle` (`string`, optional): New style for the button.
+*   `setButtonDisabled(buttonId, isDisabled)`: Shortcut to enable/disable a button.
+    *   `buttonId` (`string`): Button ID.
+    *   `isDisabled` (`boolean`): `true` to disable, `false` to enable.
 
-**Ejemplo de Uso:**
+**Usage Example:**
 ```javascript
 // HTML: <div id="actionDemo" class="panel-container"></div>
-// Necesitarás un logPanel instanciado para que este ejemplo funcione completamente.
-// const logPanel = new DynamicSciFiDashboardKit.LogDisplayPanel('#unLogPanelID');
+// You'll need a logPanel instance for this example to work fully.
+// const logPanel = new DynamicSciFiDashboardKit.LogDisplayPanel('#someLogPanelID');
 
 const actionPanel = new DynamicSciFiDashboardKit.ActionButtonsPanel('#actionDemo', {
     title: 'Weapon Systems',
@@ -428,9 +428,9 @@ setTimeout(() => {
 
 ### 3.7. `CanvasGraphPanel`
 
-Muestra un gráfico animado en un canvas, como un ECG o una onda sinusoidal.
+Displays an animated graph on a canvas, like an ECG or a sine wave.
 
-**Inicialización:**
+**Initialization:**
 ```javascript
 const graphPanel = new DynamicSciFiDashboardKit.CanvasGraphPanel('#graphContainer', {
     title: 'Vital Signs',
@@ -438,21 +438,21 @@ const graphPanel = new DynamicSciFiDashboardKit.CanvasGraphPanel('#graphContaine
 });
 ```
 
-**Opciones Específicas:**
-*   `title` (`string`): Título del panel. Default: `'Graph Panel'`.
-*   `graphType` (`string`): Tipo de gráfico a mostrar. Valores: `'ecg'`, `'sine'`. Default: `'ecg'`.
-*   `colorScheme` (`object`): Objeto que define los colores y estilos de línea para cada estado del panel (`normal`, `warning`, `critical`, `stable`). Cada estado tiene:
-    *   `stroke` (`string`): Color del trazo.
-    *   `lineWidth` (`number`): Ancho de línea.
-    *   `noiseFactor` (`number`): Factor de "ruido" o variabilidad en la gráfica.
-*   `animationSpeed` (`number`): Velocidad de animación para el gráfico tipo `'sine'`. Default: `0.05`.
-*   `ecgDataLength` (`number`): Número de puntos de datos para el gráfico `'ecg'`. Afecta la "longitud" de la onda en pantalla. Default: `200` (se ajusta un poco según el ancho del panel).
-*   `ecgSpikeChance` (`number`): Probabilidad de que ocurra un "pico" en el gráfico ECG. Default: `0.08`.
+**Specific Options:**
+*   `title` (`string`): Panel title. Default: `'Graph Panel'`.
+*   `graphType` (`string`): Type of graph to display. Values: `'ecg'`, `'sine'`. Default: `'ecg'`.
+*   `colorScheme` (`object`): Object defining colors and line styles for each panel state (`normal`, `warning`, `critical`, `stable`). Each state has:
+    *   `stroke` (`string`): Stroke color.
+    *   `lineWidth` (`number`): Line width.
+    *   `noiseFactor` (`number`): "Noise" or variability factor in the graph.
+*   `animationSpeed` (`number`): Animation speed for the `'sine'` type graph. Default: `0.05`.
+*   `ecgDataLength` (`number`): Number of data points for the `'ecg'` graph. Affects the "length" of the wave on screen. Default: `200` (adjusts slightly based on panel width).
+*   `ecgSpikeChance` (`number`): Probability of a "spike" occurring in the ECG graph. Default: `0.08`.
 
-**Métodos Específicos:**
-*   No tiene métodos públicos específicos además de los heredados. El gráfico se actualiza automáticamente basado en el `panelState` y sus opciones.
+**Specific Methods:**
+*   Has no specific public methods other than inherited ones. The graph updates automatically based on `panelState` and its options.
 
-**Ejemplo de Uso:**
+**Usage Example:**
 ```javascript
 // HTML: <div id="canvasDemo" class="panel-container" style="height: 250px;"></div>
 
@@ -478,9 +478,9 @@ setTimeout(() => {
 
 ### 3.8. `IntegrityPulsePanel`
 
-Muestra una serie de barras verticales que "pulsan", ideal para indicar actividad o integridad del sistema.
+Displays a series of vertical bars that "pulse," ideal for indicating system activity or integrity.
 
-**Inicialización:**
+**Initialization:**
 ```javascript
 const pulsePanel = new DynamicSciFiDashboardKit.IntegrityPulsePanel('#pulseContainer', {
     title: 'Core Integrity',
@@ -488,23 +488,23 @@ const pulsePanel = new DynamicSciFiDashboardKit.IntegrityPulsePanel('#pulseConta
 });
 ```
 
-**Opciones Específicas:**
-*   `title` (`string`): Título del panel. Default: `'Integrity Pulse'`.
-*   `initialState` (`string`): Estado inicial. Default: `'normal'`.
-*   `barCount` (`number`): Número de barras a mostrar. Default: `5`. Un número entre 1 y 100 es razonable.
+**Specific Options:**
+*   `title` (`string`): Panel title. Default: `'Integrity Pulse'`.
+*   `initialState` (`string`): Initial state. Default: `'normal'`.
+*   `barCount` (`number`): Number of bars to display. Default: `5`. A number between 1 and 100 is reasonable.
 *   `enableSparks` (`boolean`): Default: `false`.
 *   `enableScanlineHalo` (`boolean`): Default: `false`.
 
-**Métodos Específicos:**
-*   No tiene métodos públicos específicos. Las barras se animan y colorean según el `panelState`.
+**Specific Methods:**
+*   Has no specific public methods. Bars animate and color according to `panelState`.
 
-**Ejemplo de Uso:**
+**Usage Example:**
 ```javascript
 // HTML: <div id="pulseDemo" class="panel-container" style="height: 250px;"></div>
 
 const pulsePanel = new DynamicSciFiDashboardKit.IntegrityPulsePanel('#pulseDemo', {
     title: 'Shield Harmonics',
-    barCount: 12, // Más barras
+    barCount: 12, // More bars
     initialState: 'stable'
 });
 
@@ -523,9 +523,9 @@ setTimeout(() => {
 
 ### 3.9. `CircularGaugePanel`
 
-Muestra un medidor circular (tipo velocímetro) para representar un valor dentro de un rango.
+Displays a circular gauge (speedometer-like) to represent a value within a range.
 
-**Inicialización:**
+**Initialization:**
 ```javascript
 const gaugePanel = new DynamicSciFiDashboardKit.CircularGaugePanel('#gaugeContainer', {
     title: 'Reactor Output',
@@ -535,33 +535,33 @@ const gaugePanel = new DynamicSciFiDashboardKit.CircularGaugePanel('#gaugeContai
 });
 ```
 
-**Opciones Específicas:**
-*   `title` (`string`): Título del panel. Default: `'Gauge'`.
-*   `minValue` (`number`): Valor mínimo del medidor. Default: `0`.
-*   `maxValue` (`number`): Valor máximo del medidor. Default: `100`.
-*   `initialValue` (`number`): Valor inicial del medidor. Default: `0`.
-*   `targetValue` (`number | null`): Un valor objetivo que se marca en el medidor. Default: `null` (sin marcador).
-*   `units` (`string`): Unidades que se muestran con el valor y la etiqueta. Default: `'%'`.
-*   `label` (`string`): Etiqueta descriptiva que se muestra debajo del valor. Default: `''`.
-*   `valueFontSize` (`string`): Tamaño de fuente CSS para el valor numérico. Default: `'2em'`.
-*   `labelFontSize` (`string`): Tamaño de fuente CSS para la etiqueta. Default: `'0.8em'`.
-*   `unitsFontSize` (`string`): Tamaño de fuente CSS para las unidades. Default: `'0.7em'`.
-*   `labelYOffset` (`number`): Desplazamiento vertical adicional para la etiqueta en píxeles SVG. Útil para ajustar finamente la posición de la etiqueta. Default: `5`.
-*   `arcWidth` (`number`): Ancho del arco del medidor en píxeles (SVG). Default: `12`.
-*   `gaugeRadius` (`number`): Radio del medidor en píxeles (SVG). Default: `80`.
-*   `startAngle` (`number`): Ángulo de inicio del arco en grados (0 es arriba, 90 derecha, etc.). Default: `-135`.
-*   `endAngle` (`number`): Ángulo final del arco en grados. Default: `135`.
-*   `animationDuration` (`number`): Duración de la animación de cambio de valor en milisegundos. Default: `400`.
+**Specific Options:**
+*   `title` (`string`): Panel title. Default: `'Gauge'`.
+*   `minValue` (`number`): Minimum value of the gauge. Default: `0`.
+*   `maxValue` (`number`): Maximum value of the gauge. Default: `100`.
+*   `initialValue` (`number`): Initial value of the gauge. Default: `0`.
+*   `targetValue` (`number | null`): A target value marked on the gauge. Default: `null` (no marker).
+*   `units` (`string`): Units displayed with the value and label. Default: `'%'`.
+*   `label` (`string`): Descriptive label displayed below the value. Default: `''`.
+*   `valueFontSize` (`string`): CSS font size for the numeric value. Default: `'2em'`.
+*   `labelFontSize` (`string`): CSS font size for the label. Default: `'0.8em'`.
+*   `unitsFontSize` (`string`): CSS font size for the units. Default: `'0.7em'`.
+*   `labelYOffset` (`number`): Additional vertical offset for the label in SVG pixels. Useful for fine-tuning label position. Default: `5`.
+*   `arcWidth` (`number`): Width of the gauge arc in SVG pixels. Default: `12`.
+*   `gaugeRadius` (`number`): Radius of the gauge in SVG pixels. Default: `80`.
+*   `startAngle` (`number`): Start angle of the arc in degrees (0 is top, 90 right, etc.). Default: `-135`.
+*   `endAngle` (`number`): End angle of the arc in degrees. Default: `135`.
+*   `animationDuration` (`number`): Duration of value change animation in milliseconds. Default: `400`.
 *   `enableSparks`, `enableScanlineHalo` (`boolean`): Default: `false`.
 
-**Métodos Específicos:**
-*   `setValue(newValue, animate = true)`: Establece el valor del medidor.
-    *   `newValue` (`number`): El nuevo valor a mostrar.
-    *   `animate` (`boolean`, opcional): Si el cambio debe ser animado. Default: `true`.
-*   `setTargetValue(newTargetValue)`: Establece o elimina el marcador de valor objetivo.
-    *   `newTargetValue` (`number | null`): El nuevo valor objetivo, o `null` para quitar el marcador.
+**Specific Methods:**
+*   `setValue(newValue, animate = true)`: Sets the gauge value.
+    *   `newValue` (`number`): The new value to display.
+    *   `animate` (`boolean`, optional): Whether the change should be animated. Default: `true`.
+*   `setTargetValue(newTargetValue)`: Sets or removes the target value marker.
+    *   `newTargetValue` (`number | null`): The new target value, or `null` to remove the marker.
 
-**Ejemplo de Uso:**
+**Usage Example:**
 ```javascript
 // HTML: <div id="circGaugeDemo" class="panel-container" style="height: 280px;"></div>
 
@@ -591,15 +591,15 @@ setTimeout(() => {
 setTimeout(() => {
     circGauge.setValue(145);
     circGauge.setPanelState('critical');
-    circGauge.setTargetValue(130); // Cambiar el objetivo
+    circGauge.setTargetValue(130); // Change the target
 }, 6000);
 ```
 
 ### 3.10. `StatusIndicatorLedPanel`
 
-Muestra una lista de indicadores de estado, cada uno con un LED de color y un texto descriptivo.
+Displays a list of status indicators, each with a colored LED and descriptive text.
 
-**Inicialización:**
+**Initialization:**
 ```javascript
 const statusPanel = new DynamicSciFiDashboardKit.StatusIndicatorLedPanel('#statusLedContainer', {
     title: 'Subsystem Status',
@@ -610,30 +610,30 @@ const statusPanel = new DynamicSciFiDashboardKit.StatusIndicatorLedPanel('#statu
 });
 ```
 
-**Opciones Específicas:**
-*   `title` (`string`): Título del panel. Default: `'System Status'`.
-*   `indicators` (`array`): Array de objetos de configuración de indicador. Default: `[]`. Cada objeto:
-    *   `id` (`string`, **requerido**): ID único para el indicador.
-    *   `text` (`string`, **requerido**): Texto descriptivo.
-    *   `color` (`string`, opcional): Color del LED. Valores: `'green'`, `'yellow'`, `'red'`, `'blue'`, `'orange'`, `'purple'`, `'cyan'`, `'white'`, `'off'`. Default: `'off'`.
-    *   `blinking` (`boolean`, opcional): Si el LED debe parpadear. Default: `false`.
+**Specific Options:**
+*   `title` (`string`): Panel title. Default: `'System Status'`.
+*   `indicators` (`array`): Array of indicator configuration objects. Default: `[]`. Each object:
+    *   `id` (`string`, **required**): Unique ID for the indicator.
+    *   `text` (`string`, **required**): Descriptive text.
+    *   `color` (`string`, optional): LED color. Values: `'green'`, `'yellow'`, `'red'`, `'blue'`, `'orange'`, `'purple'`, `'cyan'`, `'white'`, `'off'`. Default: `'off'`.
+    *   `blinking` (`boolean`, optional): Whether the LED should blink. Default: `false`.
 *   `enableSparks`, `enableScanlineHalo` (`boolean`): Default: `false`.
 
-**Métodos Específicos:**
-*   `addIndicator(indicatorData, atBeginning = false)`: Añade un nuevo indicador.
-    *   `indicatorData` (`object`): Objeto de configuración del indicador.
-    *   `atBeginning` (`boolean`): Si `true`, añade el indicador al principio de la lista. Default: `false`.
-*   `updateIndicator(id, updates)`: Actualiza un indicador existente.
-    *   `id` (`string`): ID del indicador.
-    *   `updates` (`object`): Objeto con propiedades a actualizar (`text`, `color`, `blinking`).
-*   `removeIndicator(id)`: Elimina un indicador por su ID.
-*   `setIndicatorBlinking(id, isBlinking)`: Activa/desactiva el parpadeo de un LED.
-*   `setIndicatorColor(id, newColor)`: Cambia el color de un LED.
-*   `setIndicatorText(id, newText)`: Cambia el texto de un indicador.
-*   `getIndicator(id)`: Devuelve los datos actuales de un indicador.
-*   `getAllIndicators()`: Devuelve un array con los datos de todos los indicadores.
+**Specific Methods:**
+*   `addIndicator(indicatorData, atBeginning = false)`: Adds a new indicator.
+    *   `indicatorData` (`object`): Indicator configuration object.
+    *   `atBeginning` (`boolean`): If `true`, adds the indicator to the beginning of the list. Default: `false`.
+*   `updateIndicator(id, updates)`: Updates an existing indicator.
+    *   `id` (`string`): Indicator ID.
+    *   `updates` (`object`): Object with properties to update (`text`, `color`, `blinking`).
+*   `removeIndicator(id)`: Removes an indicator by its ID.
+*   `setIndicatorBlinking(id, isBlinking)`: Toggles blinking for an LED.
+*   `setIndicatorColor(id, newColor)`: Changes an LED's color.
+*   `setIndicatorText(id, newText)`: Changes an indicator's text.
+*   `getIndicator(id)`: Returns the current data for an indicator.
+*   `getAllIndicators()`: Returns an array with data for all indicators.
 
-**Ejemplo de Uso:**
+**Usage Example:**
 ```javascript
 // HTML: <div id="statusLedDemo" class="panel-container" style="min-height: 260px;"></div>
 
@@ -659,9 +659,9 @@ setTimeout(() => {
 
 ### 3.11. `HorizontalBarGaugePanel`
 
-Muestra un medidor de barra horizontal para representar un valor dentro de un rango.
+Displays a horizontal bar gauge to represent a value within a range.
 
-**Inicialización:**
+**Initialization:**
 ```javascript
 const hGaugePanel = new DynamicSciFiDashboardKit.HorizontalBarGaugePanel('#hGaugeContainer', {
     title: 'Shield Capacity',
@@ -671,27 +671,27 @@ const hGaugePanel = new DynamicSciFiDashboardKit.HorizontalBarGaugePanel('#hGaug
 });
 ```
 
-**Opciones Específicas:**
-*   `title` (`string`): Título del panel. Default: `'Horizontal Gauge'`.
-*   `minValue` (`number`): Valor mínimo del medidor. Default: `0`.
-*   `maxValue` (`number`): Valor máximo del medidor. Default: `100`.
-*   `initialValue` (`number`): Valor inicial del medidor. Default: `0`.
-*   `units` (`string`): Unidades que se muestran con el valor de texto (si está habilitado). Default: `'%'`.
-*   `label` (`string`): Etiqueta descriptiva que se muestra encima de la barra (si no está vacía). Default: `''`.
-*   `barHeight` (`string`): Altura de la barra del medidor (ej. `'16px'`, `'1.2em'`). Default: `'16px'`.
-*   `showValueText` (`boolean`): Si se debe mostrar el valor numérico actual junto a la etiqueta. Default: `true`.
-*   `valueTextFormat` (`function`): Función para formatear el texto del valor. Recibe `(value, units)` y debe devolver un string. Default: `(value, units) => \`${Math.round(value)}${units}\``.
-*   `animationDuration` (`number`): Duración de la animación de cambio de valor en milisegundos. `0` para desactivar animación de ancho. Default: `400`.
+**Specific Options:**
+*   `title` (`string`): Panel title. Default: `'Horizontal Gauge'`.
+*   `minValue` (`number`): Minimum value of the gauge. Default: `0`.
+*   `maxValue` (`number`): Maximum value of the gauge. Default: `100`.
+*   `initialValue` (`number`): Initial value of the gauge. Default: `0`.
+*   `units` (`string`): Units displayed with the text value (if enabled). Default: `'%'`.
+*   `label` (`string`): Descriptive label displayed above the bar (if not empty). Default: `''`.
+*   `barHeight` (`string`): Height of the gauge bar (e.g., `'16px'`, `'1.2em'`). Default: `'16px'`.
+*   `showValueText` (`boolean`): Whether to display the current numeric value next to the label. Default: `true`.
+*   `valueTextFormat` (`function`): Function to format the value text. Receives `(value, units)` and should return a string. Default: `(value, units) => \`${Math.round(value)}${units}\``.
+*   `animationDuration` (`number`): Duration of value change animation in milliseconds. `0` to disable width animation. Default: `400`.
 *   `enableSparks`, `enableScanlineHalo` (`boolean`): Default: `false`.
-*   `colorScheme` (`object`, opcional): Permite definir colores específicos para la barra según el estado del panel (ej. `{ normal: '#00E5E5', warning: '#FFD700', ... }`). Si no se provee, los colores se toman de las variables CSS (`--dsdk-gauge-h-bar-normal`, etc.) basadas en el `panelState`.
+*   `colorScheme` (`object`, optional): Allows defining specific colors for the bar based on panel state (e.g., `{ normal: '#00E5E5', warning: '#FFD700', ... }`). If not provided, colors are taken from CSS variables (`--dsdk-gauge-h-bar-normal`, etc.) based on `panelState`.
 
-**Métodos Específicos:**
-*   `setValue(newValue, animate = true)`: Establece el valor del medidor.
-    *   `newValue` (`number`): El nuevo valor a mostrar.
-    *   `animate` (`boolean`, opcional): Si el cambio de ancho debe ser animado (si `animationDuration > 0`). Default: `true`.
-*   `setPanelState(newState)`: (Sobrescrito) Además de cambiar el estado del panel, actualiza el color de la barra si no se usa un `colorScheme` personalizado.
+**Specific Methods:**
+*   `setValue(newValue, animate = true)`: Sets the gauge value.
+    *   `newValue` (`number`): The new value to display.
+    *   `animate` (`boolean`, optional): Whether the width change should be animated (if `animationDuration > 0`). Default: `true`.
+*   `setPanelState(newState)`: (Overridden) In addition to changing the panel state, it updates the bar color if a custom `colorScheme` is not used.
 
-**Ejemplo de Uso:**
+**Usage Example:**
 ```javascript
 // HTML: <div id="hGaugeDemo" class="panel-container" style="height: 150px;"></div>
 
@@ -719,61 +719,61 @@ setTimeout(() => {
 setTimeout(() => {
     hGaugePanel.setValue(10);
     hGaugePanel.setPanelState('critical');
-    // Como enableSparks es false por defecto para este panel, si quieres que se active
-    // debes configurarlo en las opciones iniciales o modificar la instancia
-    // hGaugePanel.config.enableSparks = true; // y luego llamar a setPanelState de nuevo si es necesario
-    // o que el panel base gestione esto al cambiar el estado
+    // As enableSparks is false by default for this panel, if you want it activated
+    // you must configure it in the initial options or modify the instance
+    // hGaugePanel.config.enableSparks = true; // and then call setPanelState again if needed
+    // or let the base panel manage this when the state changes
 }, 6000);
 ```
 
 ### 3.12. `TrueCanvasGraphPanel`
 
-Muestra un gráfico de línea en un canvas, diseñado para representar datos en tiempo real proporcionados externamente. Es ideal para visualizar series temporales, telemetría o cualquier flujo de datos numéricos.
+Displays a line graph on a canvas, designed for representing externally provided real-time data. Ideal for visualizing time series, telemetry, or any stream of numerical data.
 
-**Inicialización:**
+**Initialization:**
 ```javascript
 const realtimeGraph = new DynamicSciFiDashboardKit.TrueCanvasGraphPanel('#realtimeGraphContainer', {
     title: 'Sensor Data Stream',
     maxDataPoints: 150,
-    dataRange: { min: 0, max: 100 } // Opcional: fija el rango del eje Y
+    dataRange: { min: 0, max: 100 } // Optional: fixes the Y-axis range
 });
 ```
 
-**Opciones Específicas:**
-*   `title` (`string`): Título del panel. Default: `'Realtime Data Graph'`.
-*   `maxDataPoints` (`number`): Número máximo de puntos de datos a retener y mostrar en el gráfico. Los puntos más antiguos se descartan. Default: `200`.
-*   `dataRange` (`object | null`): Define un rango fijo para el eje Y. Si es `null` (default), el eje Y se autoescala basado en los datos visibles.
-    *   `min` (`number`): Valor mínimo del eje Y.
-    *   `max` (`number`): Valor máximo del eje Y.
-*   `colorScheme` (`object`): Objeto que define el estilo de la línea para cada estado del panel (`normal`, `warning`, `critical`, `stable`). Cada estado tiene:
-    *   `stroke` (`string`): Color del trazo de la línea.
-    *   `lineWidth` (`number`): Ancho de la línea.
-    *   *Nota: `noiseFactor` no aplica directamente como en `CanvasGraphPanel` ya que los datos son externos.*
-*   `enableSparks` (`boolean`): Si se activan los efectos de chispas en los bordes del panel según el estado. Default: `true`.
-*   `enableScanlineHalo` (`boolean`): Si se activa el efecto de scanline sobre el panel según el estado. Default: `true`.
+**Specific Options:**
+*   `title` (`string`): Panel title. Default: `'Realtime Data Graph'`.
+*   `maxDataPoints` (`number`): Maximum number of data points to retain and display on the graph. Oldest points are discarded. Default: `200`.
+*   `dataRange` (`object | null`): Defines a fixed range for the Y-axis. If `null` (default), the Y-axis auto-scales based on visible data.
+    *   `min` (`number`): Minimum Y-axis value.
+    *   `max` (`number`): Maximum Y-axis value.
+*   `colorScheme` (`object`): Object defining the line style for each panel state (`normal`, `warning`, `critical`, `stable`). Each state has:
+    *   `stroke` (`string`): Line stroke color.
+    *   `lineWidth` (`number`): Line width.
+    *   *Note: `noiseFactor` does not apply directly as in `CanvasGraphPanel` since data is external.*
+*   `enableSparks` (`boolean`): Whether to activate spark effects on panel borders based on state. Default: `true`.
+*   `enableScanlineHalo` (`boolean`): Whether to activate the scanline effect over the panel based on state. Default: `true`.
 
-**Métodos Específicos:**
-*   `addDataPoint(yValue)`: Añade un nuevo punto de dato (valor Y) al final del gráfico. Si se supera `maxDataPoints`, el punto más antiguo se elimina.
-    *   `yValue` (`number`): El valor numérico del punto de dato.
-*   `setData(newDataArray)`: Reemplaza todos los datos actuales del gráfico con el array proporcionado. Se tomarán los últimos `maxDataPoints` del array si este es más largo.
-    *   `newDataArray` (`array<number>`): Un array de valores numéricos.
-*   `clearData()`: Elimina todos los puntos de datos del gráfico, dejándolo vacío.
-*   `setPanelState(newState)`: (Sobrescrito) Además de cambiar el estado general del panel (borde, título, efectos), también actualiza el color/estilo de la línea del gráfico según el `colorScheme` para el nuevo estado.
+**Specific Methods:**
+*   `addDataPoint(yValue)`: Adds a new data point (Y value) to the end of the graph. If `maxDataPoints` is exceeded, the oldest point is removed.
+    *   `yValue` (`number`): The numerical value of the data point.
+*   `setData(newDataArray)`: Replaces all current graph data with the provided array. The last `maxDataPoints` from the array will be taken if it's longer.
+    *   `newDataArray` (`array<number>`): An array of numerical values.
+*   `clearData()`: Removes all data points from the graph, leaving it empty.
+*   `setPanelState(newState)`: (Overridden) In addition to changing the general panel state (border, title, effects), it also updates the graph line color/style according to the `colorScheme` for the new state.
 
-**Ejemplo de Uso:**
+**Usage Example:**
 ```javascript
 // HTML: <div id="sensorGraph" class="panel-container" style="height: 300px;"></div>
 
 const sensorPanel = new DynamicSciFiDashboardKit.TrueCanvasGraphPanel('#sensorGraph', {
     title: 'Temperature Readings',
     maxDataPoints: 100,
-    dataRange: { min: 10, max: 90 }, // Grados Celsius
+    dataRange: { min: 10, max: 90 }, // Degrees Celsius
     initialState: 'stable',
     enableScanlineHalo: true,
     scanlineStates: ['critical', 'warning']
 });
 
-// Añadir datos iniciales
+// Add initial data
 let initialData = [];
 for(let i=0; i<30; i++) {
     initialData.push(20 + Math.random() * 10);
@@ -782,78 +782,78 @@ sensorPanel.setData(initialData);
 
 let time = 0;
 setInterval(() => {
-    // Simular un nuevo dato
+    // Simulate new data
     let newValue = 50 + Math.sin(time * 0.2) * 25 + (Math.random() - 0.5) * 5;
     
-    // Ajustar valor y estado basado en umbrales
+    // Adjust value and state based on thresholds
     if (newValue > 75) {
         sensorPanel.setPanelState('critical');
     } else if (newValue > 60) {
         sensorPanel.setPanelState('warning');
     } else if (newValue < 25) {
-        sensorPanel.setPanelState('normal'); // Podría ser un estado 'info' o 'cold'
+        sensorPanel.setPanelState('normal'); // Could be an 'info' or 'cold' state
     } else {
         sensorPanel.setPanelState('stable');
     }
     
     sensorPanel.addDataPoint(newValue);
     time += 0.1;
-}, 200); // Añadir un nuevo punto cada 200ms
+}, 200); // Add a new point every 200ms
 ```
 
-## 4. `DSDK_CLASSES` (Constantes CSS)
+## 4. `DSDK_CLASSES` (CSS Constants)
 
-La librería expone un objeto `DynamicSciFiDashboardKit.DSDK_CLASSES` que contiene mapeos de nombres lógicos a las clases CSS reales utilizadas internamente. Esto es útil para aplicar estilos de manera consistente, especialmente para clases de texto de estado.
+The library exposes a `DynamicSciFiDashboardKit.DSDK_CLASSES` object containing mappings of logical names to the actual CSS classes used internally. This is useful for applying styles consistently, especially for status text classes.
 
 ```javascript
 const { DSDK_CLASSES } = DynamicSciFiDashboardKit;
 
-// Ejemplo para KeyValueListPanel
+// Example for KeyValueListPanel
 myKeyValuePanel.addItem({
     key: 'Reactor Status',
     value: 'OVERHEATING',
-    statusClass: DSDK_CLASSES.TEXT_DANGER // Usa la constante
+    statusClass: DSDK_CLASSES.TEXT_DANGER // Use the constant
 });
 
-// Ejemplo para DynamicTextPanel
+// Example for DynamicTextPanel
 myDynamicTextPanel.setEffects({
     textColorClass: DSDK_CLASSES.TEXT_WARNING
 });
 ```
-Clases de texto comúnmente usadas:
+Commonly used text classes:
 *   `DSDK_CLASSES.TEXT_DANGER`
 *   `DSDK_CLASSES.TEXT_WARNING`
 *   `DSDK_CLASSES.TEXT_SUCCESS`
 *   `DSDK_CLASSES.TEXT_INFO`
 
-## 5. Personalización Avanzada (CSS)
+## 5. Advanced Customization (CSS)
 
-La apariencia de los paneles se controla principalmente mediante variables CSS (Custom Properties) definidas en `DynamicSciFiDashboardKit.css` dentro del selector `:root`. Puedes sobrescribir estas variables en tu propio archivo CSS para personalizar la paleta de colores, fuentes, etc.
+The appearance of the panels is primarily controlled by CSS variables (Custom Properties) defined in `DynamicSciFiDashboardKit.css` within the `:root` selector. You can override these variables in your own CSS file to customize the color palette, fonts, etc.
 
-**Ejemplo de cómo cambiar el color de acento secundario y el fondo del panel:**
+**Example of how to change the secondary accent color and panel background:**
 ```css
-/* En tu archivo CSS, después de importar DynamicSciFiDashboardKit.css */
+/* In your CSS file, after importing DynamicSciFiDashboardKit.css */
 :root {
-    --dsdk-accent-color-secondary: #FF8C00; /* Naranja oscuro como acento secundario */
-    --dsdk-panel-bg: rgba(30, 10, 10, 0.85); /* Un fondo más rojizo y opaco */
-    --dsdk-font-sans: 'Orbitron', sans-serif; /* Cambiar la fuente principal a una más SciFi */
+    --dsdk-accent-color-secondary: #FF8C00; /* Dark orange as secondary accent */
+    --dsdk-panel-bg: rgba(30, 10, 10, 0.85); /* A more reddish and opaque background */
+    --dsdk-font-sans: 'Orbitron', sans-serif; /* Change the main font to a more SciFi one */
 }
 ```
-Revisa el archivo `DynamicSciFiDashboardKit.css` para ver la lista completa de variables disponibles para la personalización.
+Review the `DynamicSciFiDashboardKit.css` file for a complete list of available variables for customization.
 
-## 6. Consejos y Buenas Prácticas
+## 6. Tips and Best Practices
 
-*   **Gestión de Instancias:** Mantén referencias a tus instancias de panel si necesitas interactuar con ellas después de la creación (ej. `logPanel.addLog(...)`).
-*   **IDs Únicos:** Asegúrate de que cada panel se inicialice en un contenedor con un ID único en tu HTML.
-*   **Limpieza (`destroy()`):** Siempre llama al método `destroy()` en una instancia de panel cuando ya no la necesites (por ejemplo, al cambiar de vista en una Single Page Application). Esto es crucial para liberar recursos y prevenir fugas de memoria, especialmente con paneles que usan animaciones (`CanvasGraphPanel`, `IntegrityPulsePanel`).
-*   **Altura de Contenedores:** Algunos paneles (como `CanvasGraphPanel`, `IntegrityPulsePanel`, `CircularGaugePanel`, `CriticalWarningTextPanel`) se ven mejor o funcionan de manera óptima si su contenedor tiene una altura definida. Puedes usar CSS para esto:
+*   **Instance Management:** Keep references to your panel instances if you need to interact with them after creation (e.g., `logPanel.addLog(...)`).
+*   **Unique IDs:** Ensure each panel is initialized in a container with a unique ID in your HTML.
+*   **Cleanup (`destroy()`):** Always call the `destroy()` method on a panel instance when you no longer need it (e.g., when changing views in a Single Page Application). This is crucial for releasing resources and preventing memory leaks, especially with panels that use animations (`CanvasGraphPanel`, `IntegrityPulsePanel`).
+*   **Container Height:** Some panels (like `CanvasGraphPanel`, `IntegrityPulsePanel`, `CircularGaugePanel`, `CriticalWarningTextPanel`) look better or function optimally if their container has a defined height. You can use CSS for this:
     ```css
-    .mi-contenedor-de-grafico {
-        height: 250px; /* O la altura que necesites */
+    .my-graph-container {
+        height: 250px; /* Or the height you need */
     }
     ```
-    O directamente en el estilo del elemento:
+    Or directly in the element's style:
     ```html
-    <div id="miGrafico" class="panel-container" style="height: 250px;"></div>
+    <div id="myGraph" class="panel-container" style="height: 250px;"></div>
     ```
-*   **Rendimiento:** Si tienes muchos paneles con animaciones complejas (especialmente `CanvasGraphPanel` con alta frecuencia de actualización o `IntegrityPulsePanel` con muchas barras), considera el impacto en el rendimiento en dispositivos de bajos recursos.
+*   **Performance:** If you have many panels with complex animations (especially `CanvasGraphPanel` with high update frequency or `IntegrityPulsePanel` with many bars), consider the performance impact on low-resource devices.
