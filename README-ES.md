@@ -86,7 +86,7 @@ Aquí tienes un vistazo rápido a los paneles que ofrece la librería. Haz clic 
 
 ## Guía de Uso
 
-Para una guía detallada sobre cómo usar cada panel, sus opciones y métodos, por favor consulta la [**Guía de Uso Completa (`docs/USAGE_GUIDE.md`)**](./docs/USAGE_GUIDE.md).
+Para una guía detallada sobre cómo usar cada panel, sus opciones y métodos, por favor consulta la [**Guía de Uso Completa (`docs/USAGE_GUIDE.md`)**](./docs/USAGE_GUIDE-ES.md).
 
 ## Personalización
 
