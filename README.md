@@ -32,8 +32,8 @@ Aquí podrás ver una demo con todos los paneles (pulsa los botones para cambiar
 
 Aquí tienes un vistazo rápido a los paneles que ofrece la librería. Haz clic en una imagen para ver un ejemplo en vivo.
 
-| Panel                         | Screenshot                                                                                 | Ejemplo en Vivo (GitHub Pages)                                        |
-| :---------------------------- | :-----------------------------------------------------------------------------------------: | :--------------------------------------------------------------------: |
+| Panel                         | Screenshot                                                                                         | Ejemplo en Vivo (GitHub Pages)                                                |
+| :---------------------------- | :-------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------: |
 | **LogDisplayPanel**           | [![LogDisplayPanel Screenshot][log-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/LogDisplayPanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/LogDisplayPanel.html) |
 | **CriticalWarningTextPanel**  | [![CriticalWarningTextPanel Screenshot][critwarn-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/CriticalWarningTextPanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/CriticalWarningTextPanel.html) |
 | **KeyValueListPanel**       | [![KeyValueListPanel Screenshot][kv-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/KeyValueListPanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/KeyValueListPanel.html) |
@@ -45,6 +45,7 @@ Aquí tienes un vistazo rápido a los paneles que ofrece la librería. Haz clic 
 | **CircularGaugePanel**      | [![CircularGaugePanel Screenshot][circgauge-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/CircularGaugePanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/CircularGaugePanel.html) |
 | **StatusIndicatorLedPanel** | [![StatusIndicatorLedPanel Screenshot][statusled-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/StatusIndicatorLedPanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/StatusIndicatorLedPanel.html) |
 | **HorizontalBarGaugePanel** | [![HorizontalBarGaugePanel Screenshot][hgauge-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/HorizontalBarGaugePanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/HorizontalBarGaugePanel.html) |
+| **TrueCanvasGraphPanel**    | [![TrueCanvasGraphPanel Screenshot][truecanvas-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/TrueCanvasGraphPanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/TrueCanvasGraphPanel.html) |
 
 <!-- Definiciones de enlaces para las imágenes (ponlas al final del archivo) -->
 [log-screenshot]: ./screenshots/LogDisplayPanel.png
@@ -58,6 +59,7 @@ Aquí tienes un vistazo rápido a los paneles que ofrece la librería. Haz clic 
 [circgauge-screenshot]: ./screenshots/CircularGaugePanel.png
 [statusled-screenshot]: ./screenshots/StatusIndicatorLedPanel.png
 [hgauge-screenshot]: ./screenshots/HorizontalBarGaugePanel.png
+[truecanvas-screenshot]: ./screenshots/TrueCanvasGraphPanel.png
 
 
 ## Instalación
