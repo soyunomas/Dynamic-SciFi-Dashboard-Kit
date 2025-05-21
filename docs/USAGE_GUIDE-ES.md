@@ -800,6 +800,120 @@ setInterval(() => {
     time += 0.1;
 }, 200); // Añadir un nuevo punto cada 200ms
 ```
+### 3.13. `ImageDisplayPanel`
+
+Muestra una imagen o un stream de vídeo (webcam) con varios efectos visuales opcionales de estilo Sci-Fi, como interferencias, "glitch", pixelación, ruido de TV, barras de exploración y un efecto de fósforo CRT. También permite voltear la imagen horizontal o verticalmente.
+
+**Inicialización:**
+```javascript
+const imagePanel = new DynamicSciFiDashboardKit.ImageDisplayPanel('#miVisorDeImagen', {
+    title: 'Canal de Video Principal',
+    imageUrl: 'ruta/a/tu/imagen.png',
+    imageFit: 'cover',
+    enableCrtPhosphorEffect: true,
+    initialState: 'normal'
+});
+```
+
+**Opciones Específicas:**
+*   `title` (`string`): Título del panel. Default: `'Image Display'`.
+*   `sourceType` (`string`): Define la fuente del medio. Valores válidos: `'url'` (para imágenes o videos de una URL), `'webcam'`. Default: `'url'`.
+*   `imageUrl` (`string`): URL de la imagen a mostrar si `sourceType` es `'url'`. Default: `''`.
+*   `imageAltText` (`string`): Texto alternativo para la imagen. Default: `'Displayed image'`.
+*   `imageFit` (`string`): Cómo se debe redimensionar la imagen o video para que se ajuste a su contenedor. Valores válidos: `'contain'`, `'cover'`, `'fill'`, `'none'`, `'scale-down'`. Default: `'contain'`.
+*   `enableInterferenceEffect` (`boolean`): Habilita un efecto de líneas de interferencia y pequeños saltos. Default: `false`.
+*   `interferenceIntensity` (`string`): Intensidad del efecto de interferencia. Valores válidos: `'low'`, `'medium'`, `'high'`. Default: `'medium'`.
+*   `enableGlitchEffect` (`boolean`): Habilita un efecto de "glitch" visual con distorsiones y cortes. Default: `false`.
+*   `enablePixelationEffect` (`boolean`): Habilita un efecto de pixelación (blur y contraste) sobre la imagen. Default: `false`.
+*   `pixelationLevel` (`number`): Nivel del efecto de pixelación. Valores válidos: `1`, `2`, `3`. Default: `1`.
+*   `enableTvNoiseEffect` (`boolean`): Habilita una superposición de ruido estático tipo TV. Default: `false`.
+*   `tvNoiseIntensity` (`number`): Opacidad de la capa de ruido de TV (entre 0 y 1). Default: `0.15`.
+*   `enableRollingBarsEffect` (`boolean`): Habilita una superposición de barras horizontales que se desplazan verticalmente. Default: `false`.
+*   `rollingBarHeight` (`string`): Altura CSS de cada barra de exploración (ej. `'2px'`). Default: `'2px'`.
+*   `rollingBarSpeed` (`string`): Duración CSS de la animación de las barras de exploración (ej. `'4s'`, `'500ms'`). Default: `'4s'`.
+*   `webcamConstraints` (`object`): Objeto de restricciones para `navigator.mediaDevices.getUserMedia` cuando `sourceType` es `'webcam'`. Default: `{ video: true, audio: false }`.
+*   `fallbackImageUrl` (`string`): URL de una imagen de respaldo si la `imageUrl` principal no se carga o si hay un error con la webcam. Default: `''`.
+*   `onError` (`function | null`): Función callback que se ejecuta si ocurre un error (ej., al acceder a la webcam). Recibe el objeto de error como argumento. Default: `null`.
+*   `enableCrtPhosphorEffect` (`boolean`): Habilita un efecto de "fósforo CRT" que colorea la imagen/video. El color específico (`rojo`, `ámbar`, `verde/normal`, `verde/estable`) se basa en el `panelState` actual. Default: `false`.
+*   `flipHorizontal` (`boolean`): Voltea la imagen/video horizontalmente. Default: `false`.
+*   `flipVertical` (`boolean`): Voltea la imagen/video verticalmente. Default: `false`.
+*   `enableSparks` (`boolean`): Heredado de `BasePanel`. Default: `true`.
+*   `enableScanlineHalo` (`boolean`): Heredado de `BasePanel`. Default: `false`.
+
+**Métodos Específicos:**
+*   `setImage(newImageUrl, newAltText = this.config.imageAltText)`: Cambia la imagen mostrada a la URL especificada (y establece `sourceType` a `'url'`).
+    *   `newImageUrl` (`string`): Nueva URL de la imagen.
+    *   `newAltText` (`string`, opcional): Nuevo texto alternativo.
+*   `setImageFit(fitMode)`: Cambia el modo de ajuste de la imagen/video.
+    *   `fitMode` (`string`): Uno de los valores válidos para `imageFit`.
+*   `async startWebcam(constraints = this.config.webcamConstraints)`: Intenta iniciar la webcam y mostrar su stream. Es un método asíncrono.
+    *   `constraints` (`object`, opcional): Nuevas restricciones para la webcam.
+    *   Retorna: Una `Promise` que se resuelve con el `MediaStream` si tiene éxito, o se rechaza con un error.
+*   `stopWebcam()`: Detiene el stream de la webcam si está activo.
+*   `toggleInterference(enable, intensity = this.config.interferenceIntensity)`: Activa/desactiva el efecto de interferencia.
+*   `toggleGlitch(enable)`: Activa/desactiva el efecto de glitch.
+*   `togglePixelation(enable, level = this.config.pixelationLevel)`: Activa/desactiva el efecto de pixelación.
+*   `toggleTvNoise(enable, intensity = this.config.tvNoiseIntensity)`: Activa/desactiva el efecto de ruido de TV.
+*   `toggleRollingBars(enable, barHeight = this.config.rollingBarHeight, barSpeed = this.config.rollingBarSpeed)`: Activa/desactiva el efecto de barras de exploración.
+*   `toggleCrtPhosphorEffect(enable)`: Activa/desactiva el efecto de fósforo CRT.
+*   `toggleFlipHorizontal(enable)`: Activa/desactiva el volteo horizontal.
+*   `toggleFlipVertical(enable)`: Activa/desactiva el volteo vertical.
+*   `setPanelState(newState)`: (Sobrescrito) Además del comportamiento base, actualiza el color del efecto de fósforo CRT si está habilitado, según el `newState`.
+*   `destroy()`: (Sobrescrito) Además de la limpieza base, detiene la webcam si está activa.
+
+**Ejemplo de Uso:**
+```javascript
+// HTML: <div id="imageDemo" class="panel-container" style="height: 300px; width: 400px;"></div>
+// Para probar la webcam, este ejemplo puede necesitar que el logPanel esté instanciado.
+// const logPanel = new DynamicSciFiDashboardKit.LogDisplayPanel('#unLogPanelID');
+
+const imageDisplay = new DynamicSciFiDashboardKit.ImageDisplayPanel('#imageDemo', {
+    title: 'Canal de Vigilancia 7',
+    imageUrl: 'https://picsum.photos/seed/scifi1/400/300', // Imagen placeholder
+    imageFit: 'cover',
+    enableCrtPhosphorEffect: true,
+    initialState: 'normal' // El fósforo CRT será verde/normal por defecto
+});
+
+setTimeout(() => {
+    imageDisplay.setPanelState('warning'); // Fósforo cambiará a ámbar
+    imageDisplay.toggleTvNoise(true, 0.25);
+    imageDisplay.toggleFlipHorizontal(true);
+    imageDisplay.setImage('https://picsum.photos/seed/scifi2/400/300');
+}, 3000);
+
+setTimeout(() => {
+    imageDisplay.setPanelState('critical'); // Fósforo cambiará a rojo
+    imageDisplay.toggleInterference(true, 'high');
+    imageDisplay.toggleGlitch(true);
+    imageDisplay.toggleRollingBars(true, '3px', '2s');
+}, 6000);
+
+// Ejemplo de cómo iniciar la webcam después de un tiempo
+// Ten en cuenta que el navegador pedirá permiso al usuario
+setTimeout(async () => {
+    try {
+        // Limpiar efectos de imagen antes de mostrar la webcam
+        imageDisplay.toggleInterference(false);
+        imageDisplay.toggleGlitch(false);
+        imageDisplay.toggleTvNoise(false);
+        imageDisplay.toggleRollingBars(false);
+        imageDisplay.toggleFlipHorizontal(false); // Restaurar volteo
+        
+        await imageDisplay.startWebcam();
+        imageDisplay.setImageFit('contain'); // Ajustar para webcam
+        imageDisplay.setPanelState('stable'); // Fósforo cambiará a verde brillante/estable
+        // Si tienes un panel de log, podrías registrar esto:
+        // logPanel.addLog({text: 'Webcam activada en ImageDisplay.', level: 'info'});
+    } catch (err) {
+        // logPanel.addLog({text: 'Error al iniciar webcam: ' + err.message, level: 'error'});
+        // Mostrar imagen de error si falla la webcam
+        imageDisplay.setImage('https://picsum.photos/seed/error/400/300?text=WEBCAM+ERROR', 'Error de Webcam');
+        imageDisplay.setPanelState('critical');
+    }
+}, 9000);
+```
+
 
 ## 4. `DSDK_CLASSES` (Constantes CSS)
 
