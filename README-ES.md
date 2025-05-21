@@ -31,6 +31,8 @@ Aquí podrás ver una demo con todos los paneles (pulsa los botones para cambiar
 
 [**Enlace**](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/demo.html)
 
+## (Español)
+
 ## Paneles Disponibles
 
 Aquí tienes un vistazo rápido a los paneles que ofrece la librería. Haz clic en una imagen para ver un ejemplo en vivo.
@@ -49,6 +51,7 @@ Aquí tienes un vistazo rápido a los paneles que ofrece la librería. Haz clic 
 | **StatusIndicatorLedPanel** | [![StatusIndicatorLedPanel Screenshot][statusled-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/StatusIndicatorLedPanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/StatusIndicatorLedPanel.html) |
 | **HorizontalBarGaugePanel** | [![HorizontalBarGaugePanel Screenshot][hgauge-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/HorizontalBarGaugePanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/HorizontalBarGaugePanel.html) |
 | **TrueCanvasGraphPanel**    | [![TrueCanvasGraphPanel Screenshot][truecanvas-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/TrueCanvasGraphPanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/TrueCanvasGraphPanel.html) |
+| **ImageDisplayPanel**       | [![ImageDisplayPanel Screenshot][image-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/ImageDisplayPanel.html) | [Ver Ejemplo](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/ImageDisplayPanel.html) |
 
 <!-- Definiciones de enlaces para las imágenes (ponlas al final del archivo) -->
 [log-screenshot]: ./screenshots/LogDisplayPanel.png
@@ -63,7 +66,7 @@ Aquí tienes un vistazo rápido a los paneles que ofrece la librería. Haz clic 
 [statusled-screenshot]: ./screenshots/StatusIndicatorLedPanel.png
 [hgauge-screenshot]: ./screenshots/HorizontalBarGaugePanel.png
 [truecanvas-screenshot]: ./screenshots/TrueCanvasGraphPanel.png
-
+[image-screenshot]: ./screenshots/ImageDisplayPanel.png
 
 ## Instalación
 
