@@ -31,11 +31,13 @@ Here you can see a demo with all the panels (click the buttons to change states)
 
 [**Link**](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/demo.html)
 
+## (English)
+
 ## Available Panels
 
-Here's a quick overview of the panels offered by the library. Click on an image to see a live example.
+Here's a quick look at the panels offered by the library. Click on an image to see a live example.
 
-| Panel                         | Screenshot                                                                                         | Live Example (GitHub Pages)                                                |
+| Panel                         | Screenshot                                                                                         | Live Example (GitHub Pages)                                                   |
 | :---------------------------- | :-------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------: |
 | **LogDisplayPanel**           | [![LogDisplayPanel Screenshot][log-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/LogDisplayPanel.html) | [View Example](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/LogDisplayPanel.html) |
 | **CriticalWarningTextPanel**  | [![CriticalWarningTextPanel Screenshot][critwarn-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/CriticalWarningTextPanel.html) | [View Example](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/CriticalWarningTextPanel.html) |
@@ -49,8 +51,9 @@ Here's a quick overview of the panels offered by the library. Click on an image 
 | **StatusIndicatorLedPanel** | [![StatusIndicatorLedPanel Screenshot][statusled-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/StatusIndicatorLedPanel.html) | [View Example](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/StatusIndicatorLedPanel.html) |
 | **HorizontalBarGaugePanel** | [![HorizontalBarGaugePanel Screenshot][hgauge-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/HorizontalBarGaugePanel.html) | [View Example](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/HorizontalBarGaugePanel.html) |
 | **TrueCanvasGraphPanel**    | [![TrueCanvasGraphPanel Screenshot][truecanvas-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/TrueCanvasGraphPanel.html) | [View Example](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/TrueCanvasGraphPanel.html) |
+| **ImageDisplayPanel**       | [![ImageDisplayPanel Screenshot][image-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/ImageDisplayPanel.html) | [View Example](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/ImageDisplayPanel.html) |
 
-<!-- Image link definitions (place them at the end of the file) -->
+<!-- Link definitions for images (place them at the end of the file) -->
 [log-screenshot]: ./screenshots/LogDisplayPanel.png
 [critwarn-screenshot]: ./screenshots/CriticalWarningTextPanel.png
 [kv-screenshot]: ./screenshots/KeyValueListPanel.png
@@ -63,6 +66,7 @@ Here's a quick overview of the panels offered by the library. Click on an image 
 [statusled-screenshot]: ./screenshots/StatusIndicatorLedPanel.png
 [hgauge-screenshot]: ./screenshots/HorizontalBarGaugePanel.png
 [truecanvas-screenshot]: ./screenshots/TrueCanvasGraphPanel.png
+[image-screenshot]: ./screenshots/ImageDisplayPanel.png
 
 
 ## Installation
