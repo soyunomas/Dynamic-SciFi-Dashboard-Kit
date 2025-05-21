@@ -16,12 +16,12 @@ const DynamicSciFiDashboardKit = (function() {
         LED_DISPLAY_PANEL: 'dsdk-led-display-panel',
         DYNAMIC_TEXT_PANEL: 'dsdk-dynamic-text-panel',
         ACTION_BUTTONS_PANEL: 'dsdk-action-buttons-panel',
-        CANVAS_GRAPH_PANEL: 'dsdk-canvas-graph-panel', // Panel original de canvas
-        TRUE_CANVAS_GRAPH_PANEL: 'dsdk-true-canvas-graph-panel', // NUEVO: Para el panel de datos reales
+        CANVAS_GRAPH_PANEL: 'dsdk-canvas-graph-panel',
         INTEGRITY_PULSE_PANEL: 'dsdk-integrity-pulse-panel',
         CIRCULAR_GAUGE_PANEL: 'dsdk-circular-gauge-panel',
         STATUS_INDICATOR_PANEL: 'dsdk-status-indicator-panel',
         HORIZONTAL_BAR_GAUGE_PANEL: 'dsdk-horizontal-bar-gauge-panel',
+        IMAGE_DISPLAY_PANEL: 'dsdk-image-display-panel', 
 
         LOG_LIST: 'dsdk-log-list',
         LOG_INFO: 'dsdk-log-info', LOG_WARN: 'dsdk-log-warn', LOG_ERROR: 'dsdk-log-error', LOG_SUCCESS: 'dsdk-log-success',
@@ -31,7 +31,7 @@ const DynamicSciFiDashboardKit = (function() {
         DYNAMIC_TEXT_CONTAINER: 'dsdk-dynamic-text-container', DYNAMIC_TEXT: 'dsdk-dynamic-text',
         BLURRED_TEXT: 'dsdk-blurred-text', FLICKER_TEXT: 'dsdk-flicker-text', GLITCH_TEXT: 'dsdk-glitch-text',
         ACTION_BUTTONS_CONTAINER: 'dsdk-action-buttons-container', BUTTON: 'dsdk-button', BUTTON_STYLE_PREFIX: 'dsdk-button-',
-        CANVAS_GRAPH: 'dsdk-canvas-graph', // Para el elemento <canvas> en sí (reutilizado)
+        CANVAS_GRAPH: 'dsdk-canvas-graph',
         CRITICAL_WARNING_TEXT_CONTAINER: 'dsdk-critical-warning-text-container', CRITICAL_WARNING_TEXT: 'dsdk-critical-warning-text',
         WARNING_PANEL_STATE_PREFIX: 'dsdk-state-',
         TEXT_DANGER: 'dsdk-text-danger', TEXT_WARNING: 'dsdk-text-warning', TEXT_SUCCESS: 'dsdk-text-success', TEXT_INFO: 'dsdk-text-info',
@@ -61,10 +61,37 @@ const DynamicSciFiDashboardKit = (function() {
         GAUGE_HORIZONTAL_VALUE_TEXT: 'dsdk-gauge-horizontal-value-text',
         GAUGE_HORIZONTAL_TRACK: 'dsdk-gauge-horizontal-track',
         GAUGE_HORIZONTAL_BAR: 'dsdk-gauge-horizontal-bar',
+
+        IMAGE_WRAPPER: 'dsdk-image-wrapper',
+        IMAGE_EFFECTS_SUB_WRAPPER: 'dsdk-image-effects-sub-wrapper', // NUEVO para anidar filtros
+        IMAGE_ELEMENT: 'dsdk-image-element',
+        IMAGE_VIDEO_ELEMENT: 'dsdk-image-video-element',
+        IMAGE_FIT_PREFIX: 'dsdk-image-fit-',
+        IMAGE_INTERFERENCE_EFFECT: 'dsdk-image-interference-effect',
+        IMAGE_INTERFERENCE_INTENSITY_PREFIX: 'dsdk-interference-intensity-',
+        IMAGE_GLITCH_EFFECT: 'dsdk-image-glitch-effect',
+        IMAGE_PIXELATION_EFFECT: 'dsdk-image-pixelation-effect',
+        IMAGE_PIXELATION_LEVEL_PREFIX: 'dsdk-pixelation-level-',
+        IMAGE_TV_NOISE_OVERLAY: 'dsdk-image-tv-noise-overlay', 
+        IMAGE_TV_NOISE_ACTIVE: 'dsdk-tv-noise-active', 
+        IMAGE_ROLLING_BARS_OVERLAY: 'dsdk-image-rolling-bars-overlay',
+        IMAGE_ROLLING_BARS_ACTIVE: 'dsdk-rolling-bars-active',
+        // NUEVAS CLASES CRT (se aplican a IMAGE_WRAPPER)
+        IMAGE_CRT_PHOSPHOR_ACTIVE: 'dsdk-crt-phosphor-active',
+        IMAGE_CRT_PHOSPHOR_GREEN: 'dsdk-crt-phosphor-green',
+        IMAGE_CRT_PHOSPHOR_AMBER: 'dsdk-crt-phosphor-amber',
+        IMAGE_CRT_PHOSPHOR_RED: 'dsdk-crt-phosphor-red',
+        IMAGE_CRT_PHOSPHOR_STABLE: 'dsdk-crt-phosphor-stable', // Podría ser igual que green o ligeramente diferente
+        IMAGE_CRT_PHOSPHOR_NORMAL: 'dsdk-crt-phosphor-normal', // Podría ser igual que green
     };
     const VALID_PANEL_STATES = ['normal', 'warning', 'critical', 'stable'];
     const VALID_WARNING_PANEL_INTERNAL_STATES = ['critical', 'stabilizing', 'stable'];
     const VALID_LED_COLORS = ['green', 'yellow', 'red', 'blue', 'orange', 'purple', 'cyan', 'white', 'off'];
+    const VALID_IMAGE_FIT_MODES = ['contain', 'cover', 'fill', 'none', 'scale-down'];
+    const VALID_INTERFERENCE_INTENSITIES = ['low', 'medium', 'high'];
+    const VALID_PIXELATION_LEVELS = [1, 2, 3];
+    const VALID_IMAGE_SOURCE_TYPES = ['url', 'webcam']; 
+
 
     function getElement(s){if(typeof s==='string'){const e=document.querySelector(s);if(!e)console.error(`DSDK: Element "${s}" not found.`);return e;}return s;}
 
@@ -86,13 +113,13 @@ const DynamicSciFiDashboardKit = (function() {
             };
 
             this.dom = {};
-            this.currentState = null;
+            this.currentState = null; // Se establecerá en setPanelState
             this.currentScanlineHaloColor = this.config.scanlineHaloColor;
             this.panelTypeClass = panelTypeClass;
 
             this._initPanelShell();
             if (this.dom.panel) {
-                 this.setPanelState(this.config.initialState);
+                 this.setPanelState(this.config.initialState); // Llama a setPanelState para inicializar currentState
             }
         }
 
@@ -130,7 +157,7 @@ const DynamicSciFiDashboardKit = (function() {
 
             this.dom.panel.classList.add(`${DSDK_CLASSES.PANEL_STATE_PREFIX}${newState}`);
             
-            this.currentState = newState;
+            this.currentState = newState; // Actualizar el estado actual
 
             if (this.config.enableSparks) {
                 this.dom.panel.classList.toggle(DSDK_CLASSES.SPARKS_EFFECT, (newState === 'critical' || newState === 'warning'));
@@ -295,7 +322,7 @@ const DynamicSciFiDashboardKit = (function() {
             const defaults = { 
                 title: 'Integrity Pulse', 
                 initialState: 'normal', 
-                barCount: 5,
+                barCount: 5, 
                 enableSparks: false, 
                 enableScanlineHalo: false, 
             };
@@ -579,7 +606,7 @@ const DynamicSciFiDashboardKit = (function() {
             }
         }
         setIndicatorBlinking(id, isBlinking) { this.updateIndicator(id, { blinking: isBlinking }); }
-        setIndicatorColor(id, newColor) { this.updateIndicator(id, { color: newColor }); }
+        setIndicatorColor(id, newColor) { this.updateIndicator(id, { color: newColor });}
         setIndicatorText(id, newText) { this.updateIndicator(id, { text: newText }); }
         getIndicator(id) { const indicator = this.indicatorsMap.get(id); return indicator ? { ...indicator.currentData } : null; }
         getAllIndicators() { return this.config.indicators.map(ind => ({...ind})); }
@@ -587,29 +614,20 @@ const DynamicSciFiDashboardKit = (function() {
     class HorizontalBarGaugePanel extends BasePanel {
         constructor(containerSelector, options = {}) {
             const defaults = {
-                title: 'Horizontal Gauge',
-                minValue: 0,
-                maxValue: 100,
-                initialValue: 0,
-                units: '%',
-                label: '', 
-                barHeight: '16px',
-                showValueText: true,
+                title: 'Horizontal Gauge', minValue: 0, maxValue: 100, initialValue: 0,
+                units: '%', label: '', barHeight: '16px', showValueText: true,
                 valueTextFormat: (value, units) => `${Math.round(value)}${units}`,
-                animationDuration: 400,
-                enableSparks: false,
-                enableScanlineHalo: false,
+                animationDuration: 400, enableSparks: false, enableScanlineHalo: false,
             };
             super(containerSelector, { ...defaults, ...options }, DSDK_CLASSES.HORIZONTAL_BAR_GAUGE_PANEL);
             if (!this.dom.panel) return;
             this.currentValue = this.config.initialValue;
             this._renderContent();
-            this.setValue(this.config.initialValue, false); 
+            this.setValue(this.config.initialValue, false);
             this.dom.panel.style.setProperty('--dsdk-gauge-h-bar-height', this.config.barHeight);
         }
         _renderContent() {
-            if (!this.dom.content) return;
-            this.dom.content.innerHTML = ''; 
+            if (!this.dom.content) return; this.dom.content.innerHTML = '';
             this.dom.wrapper = document.createElement('div');
             this.dom.wrapper.classList.add(DSDK_CLASSES.GAUGE_HORIZONTAL_WRAPPER);
             if (this.config.label || this.config.showValueText) {
@@ -652,7 +670,7 @@ const DynamicSciFiDashboardKit = (function() {
                 this.dom.barElement.style.transition = 'none'; 
                 this.dom.barElement.style.width = `${percentage}%`;
                 void this.dom.barElement.offsetWidth; 
-                this.dom.barElement.style.transition = originalTransition; 
+                this.dom.barElement.style.transition = originalTransition;
             } else {
                 this.dom.barElement.style.width = `${percentage}%`;
             }
@@ -670,9 +688,7 @@ const DynamicSciFiDashboardKit = (function() {
                     default:         barColor = 'var(--dsdk-gauge-h-bar-normal)'; break;
                 }
             }
-            if (barColor) {
-                this.dom.barElement.style.backgroundColor = barColor;
-            }
+            if (barColor) this.dom.barElement.style.backgroundColor = barColor;
         }
         setValue(newValue, animate = true) {
             const clampedValue = Math.max(this.config.minValue, Math.min(this.config.maxValue, newValue));
@@ -681,213 +697,317 @@ const DynamicSciFiDashboardKit = (function() {
         }
         setPanelState(newState) {
             super.setPanelState(newState); 
-            if (this.dom.barElement && !this.config.colorScheme) { 
+            if (this.dom.barElement && !this.config.colorScheme) {
                  this._updateGaugeView(this.currentValue, false); 
             }
         }
     }
 
-    // NUEVO: TrueCanvasGraphPanel
-    class TrueCanvasGraphPanel extends BasePanel {
+
+    class ImageDisplayPanel extends BasePanel {
         constructor(containerSelector, options = {}) {
             const defaults = {
-                title: 'Realtime Data Graph',
-                maxDataPoints: 200,
-                dataRange: null, // { min: number, max: number } or null for auto-scaling
-                colorScheme: { // Similar to CanvasGraphPanel for consistency
-                    normal:   { stroke: '#00E5E5', lineWidth: 1.5 },
-                    warning:  { stroke: '#FFD700', lineWidth: 1.8 },
-                    critical: { stroke: '#FF4500', lineWidth: 2.0 },
-                    stable:   { stroke: '#32CD32', lineWidth: 1.5 }
-                },
-                enableSparks: true, // Inherited from BasePanel
-                enableScanlineHalo: true, // Inherited from BasePanel
+                title: 'Image Display',
+                sourceType: 'url', 
+                imageUrl: '',
+                imageAltText: 'Displayed image',
+                imageFit: 'contain',
+                enableInterferenceEffect: false,
+                interferenceIntensity: 'medium',
+                enableGlitchEffect: false,
+                enablePixelationEffect: false,
+                pixelationLevel: 1,
+                enableTvNoiseEffect: false,       
+                tvNoiseIntensity: 0.15,           
+                enableRollingBarsEffect: false,   
+                rollingBarHeight: '2px',          
+                rollingBarSpeed: '4s',            
+                webcamConstraints: { video: true, audio: false }, 
+                fallbackImageUrl: '', 
+                onError: null,
+                enableCrtPhosphorEffect: false, // NUEVO
+                flipHorizontal: false,          // NUEVO
+                flipVertical: false,            // NUEVO
             };
-            // Use DSDK_CLASSES.TRUE_CANVAS_GRAPH_PANEL for the main panel div
-            super(containerSelector, { ...defaults, ...options }, DSDK_CLASSES.TRUE_CANVAS_GRAPH_PANEL); 
+
+            super(containerSelector, { ...defaults, ...options }, DSDK_CLASSES.IMAGE_DISPLAY_PANEL);
             if (!this.dom.panel) return;
 
-            this.data = []; // Stores the Y-values of the data points
-            this.drawQueued = false; // To debounce draw calls with requestAnimationFrame
-
-            this._renderContent(); // Creates the canvas element
-            this._initCanvas();    // Sets up canvas dimensions and resize listener
-
-            // Perform an initial draw (likely an empty canvas or with initial data if provided)
-            requestAnimationFrame(() => this._drawGraph());
+            this.config = { // Re-merge to ensure all defaults and options are correctly set after BasePanel's constructor
+                ...defaults,
+                ...this.config, // Config from BasePanel (includes title, initialState etc.)
+                ...options      // User options override defaults and BasePanel's if there were name clashes
+            };
+            
+            this.config.imageFit = VALID_IMAGE_FIT_MODES.includes(this.config.imageFit) ? this.config.imageFit : defaults.imageFit;
+            this.config.interferenceIntensity = VALID_INTERFERENCE_INTENSITIES.includes(this.config.interferenceIntensity) ? this.config.interferenceIntensity : defaults.interferenceIntensity;
+            this.config.pixelationLevel = VALID_PIXELATION_LEVELS.includes(this.config.pixelationLevel) ? this.config.pixelationLevel : defaults.pixelationLevel;
+            this.config.sourceType = VALID_IMAGE_SOURCE_TYPES.includes(this.config.sourceType) ? this.config.sourceType : defaults.sourceType;
+            this.config.tvNoiseIntensity = Math.max(0, Math.min(1, parseFloat(this.config.tvNoiseIntensity) || 0));
+            
+            this.currentStream = null;
+            
+            this._renderContent();
+            this._updateActiveMediaElement();
+            this._applyEffects(); // Apply initial effects including flips and CRT
+            // Ensure panel state is applied, which might trigger CRT color
+            if (this.currentState) { // currentState is set by BasePanel's constructor calling setPanelState
+                this.setPanelState(this.currentState); 
+            }
         }
 
         _renderContent() {
             if (!this.dom.content) return;
-            this.dom.content.innerHTML = ''; // Clear any base content
-            this.dom.canvas = document.createElement('canvas');
-            // Use DSDK_CLASSES.CANVAS_GRAPH for the canvas element itself for consistent styling
-            this.dom.canvas.classList.add(DSDK_CLASSES.CANVAS_GRAPH); 
-            this.dom.content.appendChild(this.dom.canvas);
-            this.ctx = this.dom.canvas.getContext('2d');
-        }
+            this.dom.content.innerHTML = '';
 
-        _initCanvas() {
-            if (!this.dom.canvas || !this.ctx) return;
+            this.dom.imageWrapper = document.createElement('div');
+            this.dom.imageWrapper.classList.add(DSDK_CLASSES.IMAGE_WRAPPER);
 
-            const adjustCanvasResolution = () => {
-                // Ensure the panel and its content div are in the DOM and have dimensions
-                if (!this.dom.canvas || !this.dom.content || !this.dom.content.clientWidth || !this.dom.content.clientHeight) {
-                    // If not ready, try again on the next frame, but only if panel is still potentially valid
-                    if (this.dom.panel && this.dom.panel.offsetParent !== null) { 
-                        requestAnimationFrame(adjustCanvasResolution);
-                    }
-                    return;
-                }
+            // NUEVO: Sub-wrapper para filtros como pixelation, glitch, interference
+            this.dom.effectsSubWrapper = document.createElement('div');
+            this.dom.effectsSubWrapper.classList.add(DSDK_CLASSES.IMAGE_EFFECTS_SUB_WRAPPER);
 
-                const dpr = window.devicePixelRatio || 1;
-                this.dom.canvas.width = this.dom.content.clientWidth * dpr;
-                this.dom.canvas.height = this.dom.content.clientHeight * dpr;
-                this.ctx.scale(dpr, dpr); // Scale context for high-DPI displays
-                
-                this._drawGraph(); // Redraw graph with new dimensions
-            };
+            this.dom.imageElement = document.createElement('img');
+            this.dom.imageElement.classList.add(DSDK_CLASSES.IMAGE_ELEMENT);
+            this.dom.imageElement.style.display = 'none'; 
             
-            requestAnimationFrame(adjustCanvasResolution); // Initial setup
+            this.dom.videoElement = document.createElement('video');
+            this.dom.videoElement.classList.add(DSDK_CLASSES.IMAGE_VIDEO_ELEMENT);
+            this.dom.videoElement.autoplay = true;
+            this.dom.videoElement.playsInline = true; 
+            this.dom.videoElement.muted = true; 
+            this.dom.videoElement.style.display = 'none'; 
 
-            this.resizeListener = () => requestAnimationFrame(adjustCanvasResolution);
-            if (typeof window !== 'undefined') {
-                window.addEventListener('resize', this.resizeListener);
-            }
-        }
+            this.setImageFit(this.config.imageFit);
 
-        addDataPoint(yValue) {
-            if (typeof yValue !== 'number' || isNaN(yValue)) {
-                console.warn('TrueCanvasGraphPanel: addDataPoint expects a valid number. Received:', yValue);
-                return;
-            }
-            this.data.push(yValue);
-            // Maintain maxDataPoints
-            while (this.data.length > this.config.maxDataPoints) {
-                this.data.shift(); // Remove oldest data point
-            }
-            this._requestDraw(); // Request a redraw
-        }
+            this.dom.tvNoiseOverlayElement = document.createElement('div');
+            this.dom.tvNoiseOverlayElement.classList.add(DSDK_CLASSES.IMAGE_TV_NOISE_OVERLAY);
+            
+            this.dom.rollingBarsOverlayElement = document.createElement('div');
+            this.dom.rollingBarsOverlayElement.classList.add(DSDK_CLASSES.IMAGE_ROLLING_BARS_OVERLAY);
 
-        setData(newDataArray) {
-            if (!Array.isArray(newDataArray) || !newDataArray.every(p => typeof p === 'number' && !isNaN(p))) {
-                console.warn('TrueCanvasGraphPanel: setData expects an array of valid numbers.');
-                return;
-            }
-            // Take the last `maxDataPoints` from the new array, or fewer if array is shorter
-            this.data = newDataArray.slice(-this.config.maxDataPoints);
-            this._requestDraw(); // Request a redraw
+            this.dom.effectsSubWrapper.appendChild(this.dom.imageElement);
+            this.dom.effectsSubWrapper.appendChild(this.dom.videoElement);
+            this.dom.imageWrapper.appendChild(this.dom.effectsSubWrapper); // Sub-wrapper dentro del wrapper principal
+            this.dom.imageWrapper.appendChild(this.dom.tvNoiseOverlayElement);
+            this.dom.imageWrapper.appendChild(this.dom.rollingBarsOverlayElement);
+            this.dom.content.appendChild(this.dom.imageWrapper);
         }
         
-        clearData() {
-            this.data = [];
-            this._requestDraw();
-        }
-
-        _requestDraw() {
-            if (!this.drawQueued) {
-                this.drawQueued = true;
-                requestAnimationFrame(() => {
-                    this._drawGraph();
-                    this.drawQueued = false;
-                });
+        _updateActiveMediaElement() {
+            if (!this.dom.imageElement || !this.dom.videoElement) return;
+            const showVideo = this.config.sourceType === 'webcam' && this.currentStream;
+            this.dom.videoElement.style.display = showVideo ? 'block' : 'none';
+            this.dom.imageElement.style.display = showVideo ? 'none' : 'block';
+            if (!showVideo) {
+                const srcToShow = this.config.imageUrl || this.config.fallbackImageUrl;
+                if (this.dom.imageElement.getAttribute('src') !== srcToShow) {
+                    this.dom.imageElement.src = srcToShow;
+                }
+                this.dom.imageElement.alt = this.config.imageAltText;
             }
+            this.setImageFit(this.config.imageFit); // Re-apply fit
+            this._applyEffects(); // Re-apply transforms (flips) and other effects
         }
         
-        _drawGraph() {
-            if (!this.ctx || !this.dom.canvas || !this.dom.content || !this.dom.canvas.width || !this.dom.canvas.height) {
-                return; // Canvas not ready
-            }
-
-            const canvasWidth = this.dom.content.clientWidth; // Logical width for calculations
-            const canvasHeight = this.dom.content.clientHeight; // Logical height
-
-            if (canvasWidth <= 0 || canvasHeight <= 0) return; // No space to draw
-
-            this.ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-
-            if (this.data.length < 2) {
-                // Not enough data to draw a line (need at least 2 points)
-                return;
-            }
-
-            // Determine stroke style and line width from current panel state and color scheme
-            const cs = this.config.colorScheme[this.currentState] || this.config.colorScheme['normal'];
-            this.ctx.strokeStyle = cs.stroke;
-            this.ctx.lineWidth = cs.lineWidth;
-
-            let minY, maxY;
-            // Determine Y-axis range
-            if (this.config.dataRange && typeof this.config.dataRange.min === 'number' && typeof this.config.dataRange.max === 'number') {
-                minY = this.config.dataRange.min;
-                maxY = this.config.dataRange.max;
+        async startWebcam(constraints) {
+            if (this.currentStream) this.stopWebcam();
+            this.config.sourceType = 'webcam';
+            if (constraints) this.config.webcamConstraints = constraints;
+        
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                try {
+                    this.currentStream = await navigator.mediaDevices.getUserMedia(this.config.webcamConstraints);
+                    this.dom.videoElement.srcObject = this.currentStream;
+                    await this.dom.videoElement.play();
+                    this._updateActiveMediaElement(); 
+                    return this.currentStream; 
+                } catch (error) {
+                    console.error('DSDK ImageDisplayPanel: Error accessing/playing webcam.', error);
+                    this.currentStream = null;
+                    this.config.sourceType = 'url';
+                    this._updateActiveMediaElement();
+                    if (typeof this.config.onError === 'function') this.config.onError(error);
+                    throw error; 
+                }
             } else {
-                // Auto-scale based on current data
-                minY = Math.min(...this.data);
-                maxY = Math.max(...this.data);
+                const error = new Error('getUserMedia not supported in this browser.');
+                console.error('DSDK ImageDisplayPanel:', error.message);
+                this.currentStream = null; this.config.sourceType = 'url';
+                this._updateActiveMediaElement();
+                if (typeof this.config.onError === 'function') this.config.onError(error);
+                throw error;
             }
-            
-            // Handle cases where all data points are the same or range is zero
-            if (minY === maxY) {
-                minY -= 0.5; // Provide a small visible range
-                maxY += 0.5;
-            }
-             if (minY === maxY) { // Still equal (e.g. if dataRange forced it like {min:0, max:0})
-                if(maxY === 0) { maxY = 1; } // if 0,0 -> 0,1 range
-                else { minY = maxY - (Math.abs(maxY * 0.1) || 1); } // create a small default range around the value
-            }
-
-
-            const rangeY = maxY - minY;
-            // If range is still zero (should be rare now), draw a flat line in the middle to avoid division by zero.
-            if (rangeY === 0) {
-                this.ctx.beginPath();
-                this.ctx.moveTo(0, canvasHeight / 2);
-                this.ctx.lineTo(canvasWidth, canvasHeight / 2);
-                this.ctx.stroke();
-                return;
-            }
-            
-            const stepX = canvasWidth / (this.data.length - 1); // X-axis step
-
-            this.ctx.beginPath();
-            this.data.forEach((point, index) => {
-                const x = index * stepX;
-                // Scale point to canvas coordinates (invert Y-axis for typical cartesian plot)
-                const y = canvasHeight - ((point - minY) / rangeY) * canvasHeight;
-
-                if (index === 0) {
-                    this.ctx.moveTo(x, y);
-                } else {
-                    this.ctx.lineTo(x, y);
-                }
-            });
-            this.ctx.stroke();
         }
 
-        // Override setPanelState to trigger a redraw for color changes
+        stopWebcam() {
+            if (this.currentStream) {
+                this.currentStream.getTracks().forEach(track => track.stop());
+            }
+            this.currentStream = null;
+            if (this.dom.videoElement) {
+                this.dom.videoElement.srcObject = null; this.dom.videoElement.pause();
+                this.dom.videoElement.removeAttribute('src'); this.dom.videoElement.load();
+            }
+            if (this.config.sourceType === 'webcam') this.config.sourceType = 'url';
+            this._updateActiveMediaElement();
+        }
+        
+        _updateCrtPhosphorColor(panelState) {
+            if (!this.dom.imageWrapper || !this.config.enableCrtPhosphorEffect) {
+                 if(this.dom.imageWrapper) { // Clean up if effect disabled or no state
+                    [DSDK_CLASSES.IMAGE_CRT_PHOSPHOR_GREEN, DSDK_CLASSES.IMAGE_CRT_PHOSPHOR_AMBER, DSDK_CLASSES.IMAGE_CRT_PHOSPHOR_RED, DSDK_CLASSES.IMAGE_CRT_PHOSPHOR_NORMAL, DSDK_CLASSES.IMAGE_CRT_PHOSPHOR_STABLE]
+                        .forEach(cls => this.dom.imageWrapper.classList.remove(cls));
+                 }
+                return;
+            }
+
+            [DSDK_CLASSES.IMAGE_CRT_PHOSPHOR_GREEN, DSDK_CLASSES.IMAGE_CRT_PHOSPHOR_AMBER, DSDK_CLASSES.IMAGE_CRT_PHOSPHOR_RED, DSDK_CLASSES.IMAGE_CRT_PHOSPHOR_NORMAL, DSDK_CLASSES.IMAGE_CRT_PHOSPHOR_STABLE]
+                .forEach(cls => this.dom.imageWrapper.classList.remove(cls));
+
+            let phosphorClass = '';
+            switch (panelState) {
+                case 'critical': phosphorClass = DSDK_CLASSES.IMAGE_CRT_PHOSPHOR_RED; break;
+                case 'warning':  phosphorClass = DSDK_CLASSES.IMAGE_CRT_PHOSPHOR_AMBER; break;
+                case 'stable':   phosphorClass = DSDK_CLASSES.IMAGE_CRT_PHOSPHOR_STABLE; break;
+                case 'normal':
+                default:         phosphorClass = DSDK_CLASSES.IMAGE_CRT_PHOSPHOR_NORMAL; break;
+            }
+            if (phosphorClass) {
+                this.dom.imageWrapper.classList.add(phosphorClass);
+            }
+        }
+
+        _applyEffects() {
+            if (!this.dom.imageWrapper || !this.dom.effectsSubWrapper) return;
+
+            // Interference, Glitch, Pixelation en effectsSubWrapper
+            this.dom.effectsSubWrapper.classList.toggle(DSDK_CLASSES.IMAGE_INTERFERENCE_EFFECT, this.config.enableInterferenceEffect);
+            VALID_INTERFERENCE_INTENSITIES.forEach(intensity => 
+                this.dom.effectsSubWrapper.classList.remove(DSDK_CLASSES.IMAGE_INTERFERENCE_INTENSITY_PREFIX + intensity)
+            );
+            if (this.config.enableInterferenceEffect) {
+                this.dom.effectsSubWrapper.classList.add(DSDK_CLASSES.IMAGE_INTERFERENCE_INTENSITY_PREFIX + this.config.interferenceIntensity);
+            }
+
+            this.dom.effectsSubWrapper.classList.toggle(DSDK_CLASSES.IMAGE_GLITCH_EFFECT, this.config.enableGlitchEffect);
+            
+            this.dom.effectsSubWrapper.classList.toggle(DSDK_CLASSES.IMAGE_PIXELATION_EFFECT, this.config.enablePixelationEffect);
+            VALID_PIXELATION_LEVELS.forEach(level =>
+                this.dom.effectsSubWrapper.classList.remove(DSDK_CLASSES.IMAGE_PIXELATION_LEVEL_PREFIX + level)
+            );
+            if (this.config.enablePixelationEffect) {
+                this.dom.effectsSubWrapper.classList.add(DSDK_CLASSES.IMAGE_PIXELATION_LEVEL_PREFIX + this.config.pixelationLevel);
+            }
+
+            // TV Noise y Rolling Bars (Overlays en imageWrapper)
+            if (this.dom.tvNoiseOverlayElement) {
+                this.dom.tvNoiseOverlayElement.classList.toggle(DSDK_CLASSES.IMAGE_TV_NOISE_ACTIVE, this.config.enableTvNoiseEffect);
+                this.dom.tvNoiseOverlayElement.style.opacity = this.config.enableTvNoiseEffect ? this.config.tvNoiseIntensity.toString() : '0';
+            }
+            if (this.dom.rollingBarsOverlayElement) {
+                this.dom.rollingBarsOverlayElement.classList.toggle(DSDK_CLASSES.IMAGE_ROLLING_BARS_ACTIVE, this.config.enableRollingBarsEffect);
+                if (this.config.enableRollingBarsEffect) {
+                    this.dom.imageWrapper.style.setProperty('--dsdk-current-rolling-bar-height', this.config.rollingBarHeight);
+                    this.dom.imageWrapper.style.setProperty('--dsdk-current-rolling-bar-speed', this.config.rollingBarSpeed);
+                }
+            }
+
+            // CRT Phosphor en imageWrapper
+            this.dom.imageWrapper.classList.toggle(DSDK_CLASSES.IMAGE_CRT_PHOSPHOR_ACTIVE, !!this.config.enableCrtPhosphorEffect);
+            if (this.config.enableCrtPhosphorEffect) {
+                this._updateCrtPhosphorColor(this.currentState);
+            } else {
+                this._updateCrtPhosphorColor(null); // Limpia clases de color si se deshabilita
+            }
+            
+            // Flips (transform en img/video elements)
+            let transformValue = '';
+            if (this.config.flipHorizontal) transformValue += 'scaleX(-1) ';
+            if (this.config.flipVertical) transformValue += 'scaleY(-1) ';
+            
+            if (this.dom.imageElement) this.dom.imageElement.style.transform = transformValue.trim();
+            if (this.dom.videoElement) this.dom.videoElement.style.transform = transformValue.trim();
+        }
+
         setPanelState(newState) {
-            super.setPanelState(newState); // Call BasePanel's method
-            this._requestDraw(); // Redraw to apply new color scheme
+            super.setPanelState(newState); // Llama al método de BasePanel (actualiza this.currentState)
+            if (this.config.enableCrtPhosphorEffect && this.dom.imageWrapper) {
+                this._updateCrtPhosphorColor(this.currentState);
+            }
+        }
+
+        setImage(newImageUrl, newAltText = this.config.imageAltText) {
+            this.stopWebcam(); 
+            this.config.sourceType = 'url'; 
+            this.config.imageUrl = newImageUrl;
+            this.config.imageAltText = newAltText;
+            this._updateActiveMediaElement(); 
+        }
+
+        setImageFit(fitMode) {
+            if (!VALID_IMAGE_FIT_MODES.includes(fitMode)) {
+                console.warn(`DSDK ImageDisplayPanel: Invalid imageFit mode "${fitMode}". Using default.`);
+                fitMode = 'contain';
+            }
+            this.config.imageFit = fitMode;
+            const applyFitClass = (element) => {
+                if (element) {
+                    VALID_IMAGE_FIT_MODES.forEach(mode => 
+                        element.classList.remove(DSDK_CLASSES.IMAGE_FIT_PREFIX + mode)
+                    );
+                    element.classList.add(DSDK_CLASSES.IMAGE_FIT_PREFIX + this.config.imageFit);
+                }
+            };
+            applyFitClass(this.dom.imageElement);
+            applyFitClass(this.dom.videoElement);
+        }
+
+        toggleInterference(enable, intensity = this.config.interferenceIntensity) {
+            this.config.enableInterferenceEffect = !!enable;
+            if (VALID_INTERFERENCE_INTENSITIES.includes(intensity)) this.config.interferenceIntensity = intensity;
+            this._applyEffects();
+        }
+        toggleGlitch(enable) {
+            this.config.enableGlitchEffect = !!enable; this._applyEffects();
+        }
+        togglePixelation(enable, level = this.config.pixelationLevel) {
+            this.config.enablePixelationEffect = !!enable;
+            if (VALID_PIXELATION_LEVELS.includes(parseInt(level, 10))) this.config.pixelationLevel = parseInt(level, 10);
+            this._applyEffects();
+        }
+        toggleTvNoise(enable, intensity = this.config.tvNoiseIntensity) {
+            this.config.enableTvNoiseEffect = !!enable;
+            this.config.tvNoiseIntensity = Math.max(0, Math.min(1, parseFloat(intensity) || 0));
+            this._applyEffects();
+        }
+        toggleRollingBars(enable, barHeight = this.config.rollingBarHeight, barSpeed = this.config.rollingBarSpeed) {
+            this.config.enableRollingBarsEffect = !!enable;
+            this.config.rollingBarHeight = barHeight; this.config.rollingBarSpeed = barSpeed;
+            this._applyEffects();
+        }
+        toggleCrtPhosphorEffect(enable) {
+            this.config.enableCrtPhosphorEffect = !!enable; this._applyEffects();
+        }
+        toggleFlipHorizontal(enable) {
+            this.config.flipHorizontal = !!enable; this._applyEffects();
+        }
+        toggleFlipVertical(enable) {
+            this.config.flipVertical = !!enable; this._applyEffects();
         }
         
         destroy() {
-            if (this.resizeListener && typeof window !== 'undefined') {
-                window.removeEventListener('resize', this.resizeListener);
-            }
-            this.resizeListener = null;
-            // Any other specific cleanup for TrueCanvasGraphPanel can go here
-            super.destroy(); // Call BasePanel's destroy method
+            this.stopWebcam(); super.destroy();
         }
     }
 
 
     return {
+        ImageDisplayPanel,
         LogDisplayPanel, CriticalWarningTextPanel, KeyValueListPanel, LedDisplayPanel,
         DynamicTextPanel, ActionButtonsPanel, CanvasGraphPanel,
         IntegrityPulsePanel, CircularGaugePanel, StatusIndicatorLedPanel,
-        HorizontalBarGaugePanel,
-        TrueCanvasGraphPanel, // Export the new panel
+        HorizontalBarGaugePanel, 
         DSDK_CLASSES: DSDK_CLASSES 
     };
 })();

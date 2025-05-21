@@ -1,6 +1,6 @@
 /* DynamicSciFiDashboardKit.css */
 :root {
-    /* ... (tus variables existentes sin cambios) ... */
+    /* ... (variables existentes sin cambios) ... */
     --dsdk-font-sans: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     --dsdk-font-mono: 'Consolas', 'Menlo', 'Monaco', monospace;
     
@@ -41,7 +41,6 @@
     --dsdk-scanline-halo-color-default: rgba(var(--dsdk-rgb-danger-color), 0.15);
     --dsdk-scanline-thickness-default: 4px; 
     
-    /* Variables para IntegrityPulsePanel */
     --dsdk-pulse-bar-color: var(--dsdk-accent-color-secondary);
     --dsdk-pulse-bar-min-height: 20%;
     --dsdk-pulse-bar-max-height: 80%;
@@ -49,7 +48,6 @@
     --dsdk-pulse-bar-opacity-max: 1;
     --dsdk-pulse-bar-shadow-intensity: 3px;
 
-    /* Variables para CircularGaugePanel */
     --dsdk-gauge-bg-color: rgba(0, 0, 0, 0.1); 
     --dsdk-gauge-arc-background: rgba(255, 255, 255, 0.08);
     --dsdk-gauge-arc-normal: var(--dsdk-accent-color-secondary);
@@ -64,7 +62,6 @@
     --dsdk-gauge-units-color: var(--dsdk-text-color-darker);
     --dsdk-gauge-target-marker-color: rgba(255, 255, 255, 0.6);
 
-    /* Variables para StatusIndicatorLedPanel */
     --dsdk-status-led-size: 10px;
     --dsdk-status-led-shadow-intensity: 4px;
     --dsdk-status-led-color-green: var(--dsdk-success-color);
@@ -86,7 +83,6 @@
     --dsdk-status-led-rgb-white: 255, 255, 255;
     --dsdk-status-led-rgb-off: 74, 74, 82;
 
-    /* Variables para HorizontalBarGaugePanel */
     --dsdk-gauge-h-track-bg: rgba(255, 255, 255, 0.08);
     --dsdk-gauge-h-bar-normal: var(--dsdk-accent-color-secondary);
     --dsdk-gauge-h-bar-warning: var(--dsdk-warning-color);
@@ -95,6 +91,11 @@
     --dsdk-gauge-h-value-color: var(--dsdk-text-color);
     --dsdk-gauge-h-label-color: var(--dsdk-text-color-dim);
     --dsdk-gauge-h-units-color: var(--dsdk-text-color-darker);
+
+    --dsdk-tv-noise-svg-uri: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cfilter id='dsdk-noise' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23dsdk-noise)'/%3E%3C/svg%3E");
+    --dsdk-rolling-bar-color: rgba(0, 0, 0, 0.6);
+    --dsdk-current-rolling-bar-height: 2px; 
+    --dsdk-current-rolling-bar-speed: 4s;   
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -137,13 +138,12 @@
     max-height: 250px; 
 }
 
-/* Excepciones para paneles que gestionan su propio padding/altura interna de forma diferente */
 .dsdk-integrity-pulse-panel .dsdk-panel-content,
 .dsdk-canvas-graph-panel .dsdk-panel-content,
 .dsdk-critical-warning-text-panel .dsdk-panel-content,
 .dsdk-circular-gauge-panel .dsdk-panel-content,
 .dsdk-horizontal-bar-gauge-panel .dsdk-panel-content,
-.dsdk-true-canvas-graph-panel .dsdk-panel-content { /* AÑADIDO .dsdk-true-canvas-graph-panel .dsdk-panel-content */
+.dsdk-image-display-panel .dsdk-panel-content { 
     padding: 0 !important; 
     max-height: none !important; 
     display: flex; 
@@ -390,3 +390,188 @@
 .dsdk-horizontal-bar-gauge-panel.dsdk-panel-warning .dsdk-gauge-horizontal-bar { background-color: var(--dsdk-gauge-h-bar-warning); }
 .dsdk-horizontal-bar-gauge-panel.dsdk-panel-critical .dsdk-gauge-horizontal-bar { background-color: var(--dsdk-gauge-h-bar-critical); }
 .dsdk-horizontal-bar-gauge-panel.dsdk-panel-stable .dsdk-gauge-horizontal-bar { background-color: var(--dsdk-gauge-h-bar-stable); }
+
+
+/* --- ImageDisplayPanel Styles --- */
+.dsdk-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex; /* Necesario para centrar el sub-wrapper */
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(5,5,10,0.8); 
+  transition: filter 0.4s ease-in-out; /* Para transiciones suaves del filtro CRT */
+}
+
+/* NUEVO: Sub-wrapper para efectos que usan 'filter' o 'transform' que no sean CRT o flips */
+.dsdk-image-effects-sub-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative; /* Para que los pseudo-elementos de interferencia se posicionen correctamente */
+    overflow: hidden; /* Para clip-path de glitch */
+}
+
+.dsdk-image-element,
+.dsdk-image-video-element {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-position: center center;
+  transition: transform 0.3s ease; /* Solo transform para flips, filter se maneja en wrappers */
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: pixelated;
+  background-color: transparent; /* Para que no oculte el fondo del wrapper si la imagen es más pequeña */
+}
+
+/* Image Fit styles (aplicados a img/video) */
+.dsdk-image-element.dsdk-image-fit-contain,
+.dsdk-image-video-element.dsdk-image-fit-contain { object-fit: contain; }
+.dsdk-image-element.dsdk-image-fit-cover,
+.dsdk-image-video-element.dsdk-image-fit-cover { object-fit: cover; width:100%; height:100%; }
+.dsdk-image-element.dsdk-image-fit-fill,
+.dsdk-image-video-element.dsdk-image-fit-fill { object-fit: fill; width:100%; height:100%;}
+.dsdk-image-element.dsdk-image-fit-none,
+.dsdk-image-video-element.dsdk-image-fit-none { object-fit: none; }
+.dsdk-image-element.dsdk-image-fit-scale-down,
+.dsdk-image-video-element.dsdk-image-fit-scale-down { object-fit: scale-down; }
+
+/* Pixelation Effect (aplicado a effectsSubWrapper) */
+.dsdk-image-effects-sub-wrapper.dsdk-image-pixelation-effect.dsdk-pixelation-level-1 {
+  filter: brightness(0.95) contrast(1.1) blur(0.5px);
+}
+.dsdk-image-effects-sub-wrapper.dsdk-image-pixelation-effect.dsdk-pixelation-level-2 {
+  filter: brightness(0.85) contrast(1.3) blur(1px);
+}
+.dsdk-image-effects-sub-wrapper.dsdk-image-pixelation-effect.dsdk-pixelation-level-3 {
+  filter: brightness(0.75) contrast(1.5) blur(1.8px);
+}
+
+/* Interference Effect (aplicado a effectsSubWrapper) */
+.dsdk-image-effects-sub-wrapper.dsdk-image-interference-effect::before { 
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: repeating-linear-gradient(
+    transparent,
+    transparent 2px,
+    var(--dsdk-interference-line-color, rgba(0, 200, 200, 0.04)) 2.5px,
+    var(--dsdk-interference-line-color, rgba(0, 200, 200, 0.04)) 3.5px
+  );
+  animation: dsdk-interference-scanlines-anim 0.3s linear infinite;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1; /* Encima del contenido del sub-wrapper */
+  will-change: background-position, opacity;
+}
+@keyframes dsdk-interference-scanlines-anim {
+  0% { background-position-y: 0px; }
+  100% { background-position-y: 10px; }
+}
+.dsdk-image-effects-sub-wrapper.dsdk-image-interference-effect { /* Aplicado a sub-wrapper para que la animación afecte su contenido */
+  animation-name: dsdk-interference-img-shift-anim;
+  animation-timing-function: steps(3, jump-none);
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+.dsdk-image-effects-sub-wrapper.dsdk-image-interference-effect.dsdk-interference-intensity-low::before { opacity: 0.4; --dsdk-interference-line-color: rgba(150, 255, 255, 0.02); }
+.dsdk-image-effects-sub-wrapper.dsdk-image-interference-effect.dsdk-interference-intensity-low { animation-duration: 0.9s; }
+.dsdk-image-effects-sub-wrapper.dsdk-image-interference-effect.dsdk-interference-intensity-medium::before { opacity: 0.6; --dsdk-interference-line-color: rgba(100, 255, 255, 0.04); }
+.dsdk-image-effects-sub-wrapper.dsdk-image-interference-effect.dsdk-interference-intensity-medium { animation-duration: 0.5s; }
+.dsdk-image-effects-sub-wrapper.dsdk-image-interference-effect.dsdk-interference-intensity-high::before { opacity: 0.8; --dsdk-interference-line-color: rgba(50, 220, 220, 0.06); }
+.dsdk-image-effects-sub-wrapper.dsdk-image-interference-effect.dsdk-interference-intensity-high { animation-duration: 0.25s; }
+
+@keyframes dsdk-interference-img-shift-anim {
+  0%, 100% { transform: translate(0,0) skew(0); }
+  20% { transform: translate(1px, -0.5px) skewX(-0.2deg); }
+  40% { transform: translate(-0.5px, 1px) skewY(0.1deg); }
+  60% { transform: translate(0.5px, 0.5px) skewX(0.1deg); }
+  80% { transform: translate(-1px, -0.5px) skewY(-0.2deg); }
+}
+
+/* Glitch Effect (aplicado a effectsSubWrapper) */
+.dsdk-image-effects-sub-wrapper.dsdk-image-glitch-effect {
+  animation: dsdk-glitch-main-img-anim 1s linear infinite alternate;
+}
+@keyframes dsdk-glitch-main-img-anim {
+  0% { transform: translate(0,0) skew(0); clip-path: inset(0% 0% 0% 0%); }
+  5% { transform: translate(-3px, 1px) skewX(-2deg); clip-path: inset(5% 2% 10% 3%); }
+  10% { transform: translate(3px, -2px) skewY(1deg); clip-path: inset(12% 4% 8% 1%); }
+  15% { transform: translate(-2px, 3px) skewX(3deg); clip-path: inset(3% 1% 15% 5%); }
+  20% { transform: translate(1px, -1px) skewY(-2deg); clip-path: inset(10% 5% 5% 2%); }
+  25%, 100% { transform: translate(0,0) skew(0); clip-path: inset(0% 0% 0% 0%); }
+}
+
+/* TV Noise Overlay (overlay en imageWrapper) */
+.dsdk-image-tv-noise-overlay {
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  background-image: var(--dsdk-tv-noise-svg-uri);
+  background-repeat: repeat;
+  opacity: 0; 
+  transition: opacity 0.3s ease;
+  z-index: 2; 
+  display: none; 
+}
+.dsdk-image-tv-noise-overlay.dsdk-tv-noise-active {
+  display: block;
+  animation: dsdk-tv-noise-anim 0.15s linear infinite; 
+}
+@keyframes dsdk-tv-noise-anim {
+  0% { background-position: 0 0; } 25% { background-position: 10px 5px; }
+  50% { background-position: 5px 10px; } 75% { background-position: -5px 0px; }
+  100% { background-position: 0 0; }
+}
+
+/* Rolling Bars Overlay (overlay en imageWrapper) */
+.dsdk-image-rolling-bars-overlay {
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  background-color: transparent;
+  opacity: 0; 
+  transition: opacity 0.3s ease;
+  z-index: 3; 
+  display: none;
+}
+.dsdk-image-rolling-bars-overlay.dsdk-rolling-bars-active {
+  display: block; opacity: 1;
+  background-image: repeating-linear-gradient(
+    var(--dsdk-rolling-bar-color) 0,
+    var(--dsdk-rolling-bar-color) var(--dsdk-current-rolling-bar-height),
+    transparent var(--dsdk-current-rolling-bar-height),
+    transparent calc(2 * var(--dsdk-current-rolling-bar-height)) 
+  );
+  background-size: 100% calc(2 * var(--dsdk-current-rolling-bar-height));
+  animation: dsdk-rolling-bars-anim var(--dsdk-current-rolling-bar-speed) linear infinite;
+}
+@keyframes dsdk-rolling-bars-anim {
+  0% { background-position-y: 0; }
+  100% { background-position-y: calc(4 * var(--dsdk-current-rolling-bar-height)); }
+}
+
+/* NUEVO: CRT Phosphor Effect (aplicado a imageWrapper) */
+.dsdk-image-wrapper.dsdk-crt-phosphor-active {
+    /* Base filter, se combinará con los específicos de color */
+    /* Puede añadir efectos de "bloom" o "scanlines" sutiles si se desea */
+}
+.dsdk-image-wrapper.dsdk-crt-phosphor-active.dsdk-crt-phosphor-green,
+.dsdk-image-wrapper.dsdk-crt-phosphor-active.dsdk-crt-phosphor-normal {
+    filter: sepia(60%) hue-rotate(50deg) saturate(150%) brightness(90%) contrast(110%);
+}
+.dsdk-image-wrapper.dsdk-crt-phosphor-active.dsdk-crt-phosphor-amber {
+    filter: sepia(80%) hue-rotate(-35deg) saturate(250%) brightness(100%) contrast(120%);
+}
+.dsdk-image-wrapper.dsdk-crt-phosphor-active.dsdk-crt-phosphor-red {
+    filter: sepia(70%) hue-rotate(315deg) saturate(400%) brightness(80%) contrast(130%); /* Ajustado hue-rotate para rojo */
+}
+.dsdk-image-wrapper.dsdk-crt-phosphor-active.dsdk-crt-phosphor-stable {
+    filter: sepia(50%) hue-rotate(60deg) saturate(200%) brightness(95%) contrast(100%); /* Ligeramente más vibrante que el verde normal */
+}
