@@ -16,7 +16,8 @@ const DynamicSciFiDashboardKit = (function() {
         LED_DISPLAY_PANEL: 'dsdk-led-display-panel',
         DYNAMIC_TEXT_PANEL: 'dsdk-dynamic-text-panel',
         ACTION_BUTTONS_PANEL: 'dsdk-action-buttons-panel',
-        CANVAS_GRAPH_PANEL: 'dsdk-canvas-graph-panel',
+        CANVAS_GRAPH_PANEL: 'dsdk-canvas-graph-panel', // Para el panel de efectos ECG/Sine
+        TRUE_CANVAS_GRAPH_PANEL: 'dsdk-true-canvas-graph-panel', // NUEVO: Para el panel de datos reales
         INTEGRITY_PULSE_PANEL: 'dsdk-integrity-pulse-panel',
         CIRCULAR_GAUGE_PANEL: 'dsdk-circular-gauge-panel',
         STATUS_INDICATOR_PANEL: 'dsdk-status-indicator-panel',
@@ -31,7 +32,7 @@ const DynamicSciFiDashboardKit = (function() {
         DYNAMIC_TEXT_CONTAINER: 'dsdk-dynamic-text-container', DYNAMIC_TEXT: 'dsdk-dynamic-text',
         BLURRED_TEXT: 'dsdk-blurred-text', FLICKER_TEXT: 'dsdk-flicker-text', GLITCH_TEXT: 'dsdk-glitch-text',
         ACTION_BUTTONS_CONTAINER: 'dsdk-action-buttons-container', BUTTON: 'dsdk-button', BUTTON_STYLE_PREFIX: 'dsdk-button-',
-        CANVAS_GRAPH: 'dsdk-canvas-graph',
+        CANVAS_GRAPH: 'dsdk-canvas-graph', // Para el elemento <canvas> en sí (reutilizado)
         CRITICAL_WARNING_TEXT_CONTAINER: 'dsdk-critical-warning-text-container', CRITICAL_WARNING_TEXT: 'dsdk-critical-warning-text',
         WARNING_PANEL_STATE_PREFIX: 'dsdk-state-',
         TEXT_DANGER: 'dsdk-text-danger', TEXT_WARNING: 'dsdk-text-warning', TEXT_SUCCESS: 'dsdk-text-success', TEXT_INFO: 'dsdk-text-info',
@@ -63,7 +64,7 @@ const DynamicSciFiDashboardKit = (function() {
         GAUGE_HORIZONTAL_BAR: 'dsdk-gauge-horizontal-bar',
 
         IMAGE_WRAPPER: 'dsdk-image-wrapper',
-        IMAGE_EFFECTS_SUB_WRAPPER: 'dsdk-image-effects-sub-wrapper', // NUEVO para anidar filtros
+        IMAGE_EFFECTS_SUB_WRAPPER: 'dsdk-image-effects-sub-wrapper',
         IMAGE_ELEMENT: 'dsdk-image-element',
         IMAGE_VIDEO_ELEMENT: 'dsdk-image-video-element',
         IMAGE_FIT_PREFIX: 'dsdk-image-fit-',
@@ -76,13 +77,12 @@ const DynamicSciFiDashboardKit = (function() {
         IMAGE_TV_NOISE_ACTIVE: 'dsdk-tv-noise-active', 
         IMAGE_ROLLING_BARS_OVERLAY: 'dsdk-image-rolling-bars-overlay',
         IMAGE_ROLLING_BARS_ACTIVE: 'dsdk-rolling-bars-active',
-        // NUEVAS CLASES CRT (se aplican a IMAGE_WRAPPER)
         IMAGE_CRT_PHOSPHOR_ACTIVE: 'dsdk-crt-phosphor-active',
         IMAGE_CRT_PHOSPHOR_GREEN: 'dsdk-crt-phosphor-green',
         IMAGE_CRT_PHOSPHOR_AMBER: 'dsdk-crt-phosphor-amber',
         IMAGE_CRT_PHOSPHOR_RED: 'dsdk-crt-phosphor-red',
-        IMAGE_CRT_PHOSPHOR_STABLE: 'dsdk-crt-phosphor-stable', // Podría ser igual que green o ligeramente diferente
-        IMAGE_CRT_PHOSPHOR_NORMAL: 'dsdk-crt-phosphor-normal', // Podría ser igual que green
+        IMAGE_CRT_PHOSPHOR_STABLE: 'dsdk-crt-phosphor-stable',
+        IMAGE_CRT_PHOSPHOR_NORMAL: 'dsdk-crt-phosphor-normal',
     };
     const VALID_PANEL_STATES = ['normal', 'warning', 'critical', 'stable'];
     const VALID_WARNING_PANEL_INTERNAL_STATES = ['critical', 'stabilizing', 'stable'];
@@ -113,13 +113,13 @@ const DynamicSciFiDashboardKit = (function() {
             };
 
             this.dom = {};
-            this.currentState = null; // Se establecerá en setPanelState
+            this.currentState = null; 
             this.currentScanlineHaloColor = this.config.scanlineHaloColor;
             this.panelTypeClass = panelTypeClass;
 
             this._initPanelShell();
             if (this.dom.panel) {
-                 this.setPanelState(this.config.initialState); // Llama a setPanelState para inicializar currentState
+                 this.setPanelState(this.config.initialState); 
             }
         }
 
@@ -157,7 +157,7 @@ const DynamicSciFiDashboardKit = (function() {
 
             this.dom.panel.classList.add(`${DSDK_CLASSES.PANEL_STATE_PREFIX}${newState}`);
             
-            this.currentState = newState; // Actualizar el estado actual
+            this.currentState = newState; 
 
             if (this.config.enableSparks) {
                 this.dom.panel.classList.toggle(DSDK_CLASSES.SPARKS_EFFECT, (newState === 'critical' || newState === 'warning'));
@@ -702,8 +702,6 @@ const DynamicSciFiDashboardKit = (function() {
             }
         }
     }
-
-
     class ImageDisplayPanel extends BasePanel {
         constructor(containerSelector, options = {}) {
             const defaults = {
@@ -725,18 +723,18 @@ const DynamicSciFiDashboardKit = (function() {
                 webcamConstraints: { video: true, audio: false }, 
                 fallbackImageUrl: '', 
                 onError: null,
-                enableCrtPhosphorEffect: false, // NUEVO
-                flipHorizontal: false,          // NUEVO
-                flipVertical: false,            // NUEVO
+                enableCrtPhosphorEffect: false, 
+                flipHorizontal: false,          
+                flipVertical: false,            
             };
 
             super(containerSelector, { ...defaults, ...options }, DSDK_CLASSES.IMAGE_DISPLAY_PANEL);
             if (!this.dom.panel) return;
 
-            this.config = { // Re-merge to ensure all defaults and options are correctly set after BasePanel's constructor
+            this.config = { 
                 ...defaults,
-                ...this.config, // Config from BasePanel (includes title, initialState etc.)
-                ...options      // User options override defaults and BasePanel's if there were name clashes
+                ...this.config, 
+                ...options      
             };
             
             this.config.imageFit = VALID_IMAGE_FIT_MODES.includes(this.config.imageFit) ? this.config.imageFit : defaults.imageFit;
@@ -749,9 +747,8 @@ const DynamicSciFiDashboardKit = (function() {
             
             this._renderContent();
             this._updateActiveMediaElement();
-            this._applyEffects(); // Apply initial effects including flips and CRT
-            // Ensure panel state is applied, which might trigger CRT color
-            if (this.currentState) { // currentState is set by BasePanel's constructor calling setPanelState
+            this._applyEffects(); 
+            if (this.currentState) { 
                 this.setPanelState(this.currentState); 
             }
         }
@@ -763,7 +760,6 @@ const DynamicSciFiDashboardKit = (function() {
             this.dom.imageWrapper = document.createElement('div');
             this.dom.imageWrapper.classList.add(DSDK_CLASSES.IMAGE_WRAPPER);
 
-            // NUEVO: Sub-wrapper para filtros como pixelation, glitch, interference
             this.dom.effectsSubWrapper = document.createElement('div');
             this.dom.effectsSubWrapper.classList.add(DSDK_CLASSES.IMAGE_EFFECTS_SUB_WRAPPER);
 
@@ -788,7 +784,7 @@ const DynamicSciFiDashboardKit = (function() {
 
             this.dom.effectsSubWrapper.appendChild(this.dom.imageElement);
             this.dom.effectsSubWrapper.appendChild(this.dom.videoElement);
-            this.dom.imageWrapper.appendChild(this.dom.effectsSubWrapper); // Sub-wrapper dentro del wrapper principal
+            this.dom.imageWrapper.appendChild(this.dom.effectsSubWrapper); 
             this.dom.imageWrapper.appendChild(this.dom.tvNoiseOverlayElement);
             this.dom.imageWrapper.appendChild(this.dom.rollingBarsOverlayElement);
             this.dom.content.appendChild(this.dom.imageWrapper);
@@ -806,8 +802,8 @@ const DynamicSciFiDashboardKit = (function() {
                 }
                 this.dom.imageElement.alt = this.config.imageAltText;
             }
-            this.setImageFit(this.config.imageFit); // Re-apply fit
-            this._applyEffects(); // Re-apply transforms (flips) and other effects
+            this.setImageFit(this.config.imageFit);
+            this._applyEffects();
         }
         
         async startWebcam(constraints) {
@@ -855,7 +851,7 @@ const DynamicSciFiDashboardKit = (function() {
         
         _updateCrtPhosphorColor(panelState) {
             if (!this.dom.imageWrapper || !this.config.enableCrtPhosphorEffect) {
-                 if(this.dom.imageWrapper) { // Clean up if effect disabled or no state
+                 if(this.dom.imageWrapper) { 
                     [DSDK_CLASSES.IMAGE_CRT_PHOSPHOR_GREEN, DSDK_CLASSES.IMAGE_CRT_PHOSPHOR_AMBER, DSDK_CLASSES.IMAGE_CRT_PHOSPHOR_RED, DSDK_CLASSES.IMAGE_CRT_PHOSPHOR_NORMAL, DSDK_CLASSES.IMAGE_CRT_PHOSPHOR_STABLE]
                         .forEach(cls => this.dom.imageWrapper.classList.remove(cls));
                  }
@@ -881,7 +877,6 @@ const DynamicSciFiDashboardKit = (function() {
         _applyEffects() {
             if (!this.dom.imageWrapper || !this.dom.effectsSubWrapper) return;
 
-            // Interference, Glitch, Pixelation en effectsSubWrapper
             this.dom.effectsSubWrapper.classList.toggle(DSDK_CLASSES.IMAGE_INTERFERENCE_EFFECT, this.config.enableInterferenceEffect);
             VALID_INTERFERENCE_INTENSITIES.forEach(intensity => 
                 this.dom.effectsSubWrapper.classList.remove(DSDK_CLASSES.IMAGE_INTERFERENCE_INTENSITY_PREFIX + intensity)
@@ -900,7 +895,6 @@ const DynamicSciFiDashboardKit = (function() {
                 this.dom.effectsSubWrapper.classList.add(DSDK_CLASSES.IMAGE_PIXELATION_LEVEL_PREFIX + this.config.pixelationLevel);
             }
 
-            // TV Noise y Rolling Bars (Overlays en imageWrapper)
             if (this.dom.tvNoiseOverlayElement) {
                 this.dom.tvNoiseOverlayElement.classList.toggle(DSDK_CLASSES.IMAGE_TV_NOISE_ACTIVE, this.config.enableTvNoiseEffect);
                 this.dom.tvNoiseOverlayElement.style.opacity = this.config.enableTvNoiseEffect ? this.config.tvNoiseIntensity.toString() : '0';
@@ -913,15 +907,13 @@ const DynamicSciFiDashboardKit = (function() {
                 }
             }
 
-            // CRT Phosphor en imageWrapper
             this.dom.imageWrapper.classList.toggle(DSDK_CLASSES.IMAGE_CRT_PHOSPHOR_ACTIVE, !!this.config.enableCrtPhosphorEffect);
             if (this.config.enableCrtPhosphorEffect) {
                 this._updateCrtPhosphorColor(this.currentState);
             } else {
-                this._updateCrtPhosphorColor(null); // Limpia clases de color si se deshabilita
+                this._updateCrtPhosphorColor(null); 
             }
             
-            // Flips (transform en img/video elements)
             let transformValue = '';
             if (this.config.flipHorizontal) transformValue += 'scaleX(-1) ';
             if (this.config.flipVertical) transformValue += 'scaleY(-1) ';
@@ -931,7 +923,7 @@ const DynamicSciFiDashboardKit = (function() {
         }
 
         setPanelState(newState) {
-            super.setPanelState(newState); // Llama al método de BasePanel (actualiza this.currentState)
+            super.setPanelState(newState); 
             if (this.config.enableCrtPhosphorEffect && this.dom.imageWrapper) {
                 this._updateCrtPhosphorColor(this.currentState);
             }
@@ -1001,6 +993,183 @@ const DynamicSciFiDashboardKit = (function() {
         }
     }
 
+    // NUEVO: TrueCanvasGraphPanel (incorporado de la versión anterior)
+    class TrueCanvasGraphPanel extends BasePanel {
+        constructor(containerSelector, options = {}) {
+            const defaults = {
+                title: 'Realtime Data Graph',
+                maxDataPoints: 200,
+                dataRange: null, // { min: number, max: number } or null for auto-scaling
+                colorScheme: { 
+                    normal:   { stroke: '#00E5E5', lineWidth: 1.5 },
+                    warning:  { stroke: '#FFD700', lineWidth: 1.8 },
+                    critical: { stroke: '#FF4500', lineWidth: 2.0 },
+                    stable:   { stroke: '#32CD32', lineWidth: 1.5 }
+                },
+                enableSparks: true,
+                enableScanlineHalo: true, 
+            };
+            super(containerSelector, { ...defaults, ...options }, DSDK_CLASSES.TRUE_CANVAS_GRAPH_PANEL); 
+            if (!this.dom.panel) return;
+
+            this.data = []; 
+            this.drawQueued = false; 
+
+            this._renderContent(); 
+            this._initCanvas();    
+
+            requestAnimationFrame(() => this._drawGraph());
+        }
+
+        _renderContent() {
+            if (!this.dom.content) return;
+            this.dom.content.innerHTML = ''; 
+            this.dom.canvas = document.createElement('canvas');
+            this.dom.canvas.classList.add(DSDK_CLASSES.CANVAS_GRAPH); 
+            this.dom.content.appendChild(this.dom.canvas);
+            this.ctx = this.dom.canvas.getContext('2d');
+        }
+
+        _initCanvas() {
+            if (!this.dom.canvas || !this.ctx) return;
+
+            const adjustCanvasResolution = () => {
+                if (!this.dom.canvas || !this.dom.content || !this.dom.content.clientWidth || !this.dom.content.clientHeight) {
+                    if (this.dom.panel && this.dom.panel.offsetParent !== null) { 
+                        requestAnimationFrame(adjustCanvasResolution);
+                    }
+                    return;
+                }
+
+                const dpr = window.devicePixelRatio || 1;
+                this.dom.canvas.width = this.dom.content.clientWidth * dpr;
+                this.dom.canvas.height = this.dom.content.clientHeight * dpr;
+                this.ctx.scale(dpr, dpr); 
+                
+                this._drawGraph(); 
+            };
+            
+            requestAnimationFrame(adjustCanvasResolution); 
+
+            this.resizeListener = () => requestAnimationFrame(adjustCanvasResolution);
+            if (typeof window !== 'undefined') {
+                window.addEventListener('resize', this.resizeListener);
+            }
+        }
+
+        addDataPoint(yValue) {
+            if (typeof yValue !== 'number' || isNaN(yValue)) {
+                console.warn('TrueCanvasGraphPanel: addDataPoint expects a valid number. Received:', yValue);
+                return;
+            }
+            this.data.push(yValue);
+            while (this.data.length > this.config.maxDataPoints) {
+                this.data.shift(); 
+            }
+            this._requestDraw(); 
+        }
+
+        setData(newDataArray) {
+            if (!Array.isArray(newDataArray) || !newDataArray.every(p => typeof p === 'number' && !isNaN(p))) {
+                console.warn('TrueCanvasGraphPanel: setData expects an array of valid numbers.');
+                return;
+            }
+            this.data = newDataArray.slice(-this.config.maxDataPoints);
+            this._requestDraw(); 
+        }
+        
+        clearData() {
+            this.data = [];
+            this._requestDraw();
+        }
+
+        _requestDraw() {
+            if (!this.drawQueued) {
+                this.drawQueued = true;
+                requestAnimationFrame(() => {
+                    this._drawGraph();
+                    this.drawQueued = false;
+                });
+            }
+        }
+        
+        _drawGraph() {
+            if (!this.ctx || !this.dom.canvas || !this.dom.content || !this.dom.canvas.width || !this.dom.canvas.height) {
+                return; 
+            }
+
+            const canvasWidth = this.dom.content.clientWidth; 
+            const canvasHeight = this.dom.content.clientHeight;
+
+            if (canvasWidth <= 0 || canvasHeight <= 0) return; 
+
+            this.ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+            if (this.data.length < 2) {
+                return;
+            }
+
+            const cs = this.config.colorScheme[this.currentState] || this.config.colorScheme['normal'];
+            this.ctx.strokeStyle = cs.stroke;
+            this.ctx.lineWidth = cs.lineWidth;
+
+            let minY, maxY;
+            if (this.config.dataRange && typeof this.config.dataRange.min === 'number' && typeof this.config.dataRange.max === 'number') {
+                minY = this.config.dataRange.min;
+                maxY = this.config.dataRange.max;
+            } else {
+                minY = Math.min(...this.data);
+                maxY = Math.max(...this.data);
+            }
+            
+            if (minY === maxY) {
+                minY -= 0.5; 
+                maxY += 0.5;
+            }
+             if (minY === maxY) { 
+                if(maxY === 0) { maxY = 1; } 
+                else { minY = maxY - (Math.abs(maxY * 0.1) || 1); } 
+            }
+
+            const rangeY = maxY - minY;
+            if (rangeY === 0) {
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, canvasHeight / 2);
+                this.ctx.lineTo(canvasWidth, canvasHeight / 2);
+                this.ctx.stroke();
+                return;
+            }
+            
+            const stepX = canvasWidth / (this.data.length - 1); 
+
+            this.ctx.beginPath();
+            this.data.forEach((point, index) => {
+                const x = index * stepX;
+                const y = canvasHeight - ((point - minY) / rangeY) * canvasHeight;
+
+                if (index === 0) {
+                    this.ctx.moveTo(x, y);
+                } else {
+                    this.ctx.lineTo(x, y);
+                }
+            });
+            this.ctx.stroke();
+        }
+
+        setPanelState(newState) {
+            super.setPanelState(newState); 
+            this._requestDraw(); 
+        }
+        
+        destroy() {
+            if (this.resizeListener && typeof window !== 'undefined') {
+                window.removeEventListener('resize', this.resizeListener);
+            }
+            this.resizeListener = null;
+            super.destroy(); 
+        }
+    }
+
 
     return {
         ImageDisplayPanel,
@@ -1008,6 +1177,7 @@ const DynamicSciFiDashboardKit = (function() {
         DynamicTextPanel, ActionButtonsPanel, CanvasGraphPanel,
         IntegrityPulsePanel, CircularGaugePanel, StatusIndicatorLedPanel,
         HorizontalBarGaugePanel, 
+        TrueCanvasGraphPanel, // Exportar la nueva clase
         DSDK_CLASSES: DSDK_CLASSES 
     };
 })();
