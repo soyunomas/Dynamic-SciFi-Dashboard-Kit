@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>DSDK - ImageDisplayPanel Examples (4 Panels)</title>
+    <link rel="stylesheet" href="../DynamicSciFiDashboardKit.css">
+    <style>
+        body {
+            background-color: #000000;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            margin: 0;
+            overflow-x: hidden; /* Evitar scroll horizontal si los paneles se desbordan un poco */
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); /* Mínimo 380px, se ajusta */
+            gap: 20px;
+            width: 100%;
+        }
+
+        .panel-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 320px; /* Altura para que quepan bien las imágenes y títulos */
+            /* border: 1px dashed #333; /* Para depuración visual */
+        }
+
+        .panel-container > .dsdk-panel {
+            flex-grow: 1; /* El panel DSDK ocupa todo el espacio del contenedor */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-grid">
+        <div id="imagePanel1" class="panel-container"></div>
+        <div id="imagePanel2" class="panel-container"></div>
+        <div id="imagePanel3" class="panel-container"></div>
+        <div id="imagePanel4" class="panel-container"></div>
+    </div>
+
+      
+<script src="../DynamicSciFiDashboardKit.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const DSDK = DynamicSciFiDashboardKit;
+
+            const imagePaths = {
+                normal: '../screenshots/logo.svg',
+                warning: '../screenshots/logo-1.svg',
+                stable: '../screenshots/logo-2.svg',
+                critical: '../screenshots/logo-3.svg',
+                // AÑADIMOS LA NUEVA IMAGEN PARA EL PANEL 2
+                destruction: '../screenshots/destruccion.png', 
+                alt: '../screenshots/logo-alt.svg' // Mantenemos para otros paneles si es necesario
+            };
+            
+            // Si no tienes logo-alt.svg, puedes reusar otro o quitarlo de las secuencias.
+            if (!imagePaths.alt) imagePaths.alt = imagePaths.normal;
+
+
+            // --- Panel 1: Foco en Estados y CRT Phosphor ---
+            const panel1 = new DSDK.ImageDisplayPanel('#imagePanel1', {
+                title: 'Feed Alpha: Status Cycle',
+                imageUrl: imagePaths.normal,
+                imageFit: 'contain',
+                enableCrtPhosphorEffect: true,
+                initialState: 'normal',
+                enableScanlineHalo: true,
+                scanlineStates: ['critical', 'warning', 'stable', 'normal']
+            });
+
+            // --- Panel 2: Foco en Interferencias y Pixelación con imagen de destrucción ---
+            const panel2 = new DSDK.ImageDisplayPanel('#imagePanel2', {
+                title: 'Feed Beta: City Ruins (Signal Disrupted)', // Título actualizado
+                imageUrl: imagePaths.destruction, // IMAGEN INICIAL PARA PANEL 2
+                imageFit: 'cover', // Cover suele ir bien para imágenes de escena
+                initialState: 'critical', // Empezamos en crítico para que coincida con la imagen
+                enableSparks: true,
+                enableCrtPhosphorEffect: true // Para que el tinte rojo aplique a la destrucción
+            });
+
+            // --- Panel 3: Foco en Glitch, Ruido TV y Barras ---
+            const panel3 = new DSDK.ImageDisplayPanel('#imagePanel3', {
+                title: 'Feed Gamma: Data Corruption',
+                imageUrl: imagePaths.warning, // Puedes cambiar esta si quieres más variedad
+                imageFit: 'fill',
+                initialState: 'warning'
+            });
+
+            // --- Panel 4: Foco en Flips y Modos de Ajuste ---
+            const panel4 = new DSDK.ImageDisplayPanel('#imagePanel4', {
+                title: 'Feed Delta: Orientation & Fit',
+                imageUrl: imagePaths.stable, // Puedes cambiar esta
+                imageFit: 'scale-down',
+                initialState: 'stable',
+                enableCrtPhosphorEffect: true 
+            });
+
+            // Secuencias de demostración para cada panel
+            let step1 = 0;
+            const seq1 = [
+                () => { panel1.setPanelState('normal'); panel1.setImage(imagePaths.normal); panel1.config.title = "Alpha: Normal"; panel1.dom.header.textContent = panel1.config.title; },
+                () => { panel1.setPanelState('warning'); panel1.setImage(imagePaths.warning); panel1.config.title = "Alpha: Warning"; panel1.dom.header.textContent = panel1.config.title; },
+                () => { panel1.setPanelState('critical'); panel1.setImage(imagePaths.critical); panel1.config.title = "Alpha: Critical"; panel1.dom.header.textContent = panel1.config.title; },
+                () => { panel1.setPanelState('stable'); panel1.setImage(imagePaths.stable); panel1.config.title = "Alpha: Stable"; panel1.dom.header.textContent = panel1.config.title; }
+            ];
+
+            let step2 = 0;
+            const seq2 = [ // Secuencia para PANEL 2 (destrucción)
+                () => { 
+                    panel2.setPanelState('critical'); // Mantener estado crítico inicialmente
+                    panel2.setImage(imagePaths.destruction); // Asegurar la imagen de destrucción
+                    panel2.toggleInterference(true, 'high'); 
+                    panel2.togglePixelation(true, 2); 
+                    panel2.config.title = "Beta: Ruins - High Interference & Pixel (2)"; 
+                    panel2.dom.header.textContent = panel2.config.title;
+                },
+                () => { 
+                    panel2.setPanelState('warning'); // Simular una ligera estabilización, pero aún mal
+                    panel2.toggleInterference(true, 'medium'); 
+                    panel2.togglePixelation(true, 1); 
+                    panel2.config.title = "Beta: Ruins - Med Interference & Pixel (1)"; 
+                    panel2.dom.header.textContent = panel2.config.title;
+                },
+                () => { 
+                    panel2.setPanelState('critical'); // Volver a muy crítico
+                    panel2.toggleInterference(true, 'high'); 
+                    panel2.togglePixelation(true, 3); // Pixelación máxima
+                    panel2.toggleTvNoise(true, 0.2); // Añadir un poco de ruido de TV
+                    panel2.config.title = "Beta: Ruins - Max Disruption"; 
+                    panel2.dom.header.textContent = panel2.config.title;
+                },
+                () => { 
+                    panel2.setPanelState('warning');
+                    panel2.toggleInterference(false); // Intentar limpiar interferencia
+                    panel2.togglePixelation(true, 1); // Solo pixelación leve
+                    panel2.toggleTvNoise(false); // Sin ruido
+                    panel2.config.title = "Beta: Ruins - Signal Improving?"; 
+                    panel2.dom.header.textContent = panel2.config.title;
+                }
+            ];
+
+            let step3 = 0;
+            const seq3 = [
+                () => { panel3.toggleGlitch(false); panel3.toggleTvNoise(false); panel3.toggleRollingBars(false); panel3.setImage(imagePaths.warning); panel3.config.title = "Gamma: Minor Corruption"; panel3.dom.header.textContent = panel3.config.title;},
+                () => { panel3.toggleGlitch(true); panel3.config.title = "Gamma: Glitch Active"; panel3.dom.header.textContent = panel3.config.title;},
+                () => { panel3.toggleGlitch(false); panel3.toggleTvNoise(true, 0.25); panel3.config.title = "Gamma: TV Noise (0.25)"; panel3.dom.header.textContent = panel3.config.title;},
+                () => { panel3.toggleTvNoise(true, 0.5); panel3.toggleRollingBars(true, '2px', '3s'); panel3.config.title = "Gamma: TV Noise (0.5) & Rolling Bars"; panel3.dom.header.textContent = panel3.config.title;},
+                () => { panel3.toggleGlitch(true); panel3.toggleTvNoise(true, 0.1); panel3.toggleRollingBars(true, '4px', '1s'); panel3.config.title = "Gamma: All Effects Max"; panel3.dom.header.textContent = panel3.config.title;}
+            ];
+            
+            let step4 = 0;
+            const seq4 = [
+                () => { panel4.setImageFit('contain'); panel4.toggleFlipHorizontal(false); panel4.toggleFlipVertical(false); panel4.setImage(imagePaths.stable); panel4.config.title = "Delta: Fit Contain"; panel4.dom.header.textContent = panel4.config.title;},
+                () => { panel4.setImageFit('cover'); panel4.toggleFlipHorizontal(true); panel4.config.title = "Delta: Fit Cover, Flip H"; panel4.dom.header.textContent = panel4.config.title;},
+                () => { panel4.setImageFit('fill'); panel4.toggleFlipHorizontal(false); panel4.toggleFlipVertical(true); panel4.config.title = "Delta: Fit Fill, Flip V"; panel4.dom.header.textContent = panel4.config.title;},
+                () => { panel4.setImageFit('none'); panel4.toggleFlipHorizontal(true); panel4.toggleFlipVertical(true); panel4.setImage(imagePaths.critical); panel4.config.title = "Delta: Fit None, Flip HV, Critical Img"; panel4.dom.header.textContent = panel4.config.title;}, // Cambié a critical image para más contraste
+                () => { panel4.setImageFit('scale-down'); panel4.setImage(imagePaths.normal); panel4.config.title = "Delta: Fit Scale-Down, Normal Img"; panel4.dom.header.textContent = panel4.config.title;} // Y normal aquí
+            ];
+
+            function runDemo() {
+                // Panel 1
+                if (step1 >= seq1.length) step1 = 0;
+                seq1[step1]();
+                step1++;
+
+                // Panel 2
+                if (step2 >= seq2.length) step2 = 0;
+                seq2[step2]();
+                step2++;
+                
+                // Panel 3
+                if (step3 >= seq3.length) step3 = 0;
+                seq3[step3]();
+                step3++;
+
+                // Panel 4
+                if (step4 >= seq4.length) step4 = 0;
+                seq4[step4]();
+                step4++;
+
+                setTimeout(runDemo, 5000); // Cambiar cada 5 segundos
+            }
+
+            runDemo(); // Iniciar la secuencia
+        });
+    </script>
+
+    
+
+</body>
+</html>
