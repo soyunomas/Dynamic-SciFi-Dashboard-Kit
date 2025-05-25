@@ -6,7 +6,6 @@ const DynamicSciFiDashboardKit = (function() {
         PANEL: 'dsdk-panel',
         PANEL_HEADER: 'dsdk-panel-header',
         PANEL_CONTENT: 'dsdk-panel-content',
-        SPARKS_EFFECT: 'dsdk-sparks-effect',
         SCANLINE_HALO_ACTIVE: 'dsdk-scanline-halo-active',
         PANEL_STATE_PREFIX: 'dsdk-panel-',
         
@@ -16,13 +15,14 @@ const DynamicSciFiDashboardKit = (function() {
         LED_DISPLAY_PANEL: 'dsdk-led-display-panel',
         DYNAMIC_TEXT_PANEL: 'dsdk-dynamic-text-panel',
         ACTION_BUTTONS_PANEL: 'dsdk-action-buttons-panel',
-        CANVAS_GRAPH_PANEL: 'dsdk-canvas-graph-panel', // Para el panel de efectos ECG/Sine
-        TRUE_CANVAS_GRAPH_PANEL: 'dsdk-true-canvas-graph-panel', // NUEVO: Para el panel de datos reales
+        CANVAS_GRAPH_PANEL: 'dsdk-canvas-graph-panel',
+        TRUE_CANVAS_GRAPH_PANEL: 'dsdk-true-canvas-graph-panel',
         INTEGRITY_PULSE_PANEL: 'dsdk-integrity-pulse-panel',
         CIRCULAR_GAUGE_PANEL: 'dsdk-circular-gauge-panel',
         STATUS_INDICATOR_PANEL: 'dsdk-status-indicator-panel',
         HORIZONTAL_BAR_GAUGE_PANEL: 'dsdk-horizontal-bar-gauge-panel',
         IMAGE_DISPLAY_PANEL: 'dsdk-image-display-panel', 
+        RADAR_DISPLAY_PANEL: 'dsdk-radar-display-panel',
 
         LOG_LIST: 'dsdk-log-list',
         LOG_INFO: 'dsdk-log-info', LOG_WARN: 'dsdk-log-warn', LOG_ERROR: 'dsdk-log-error', LOG_SUCCESS: 'dsdk-log-success',
@@ -32,7 +32,10 @@ const DynamicSciFiDashboardKit = (function() {
         DYNAMIC_TEXT_CONTAINER: 'dsdk-dynamic-text-container', DYNAMIC_TEXT: 'dsdk-dynamic-text',
         BLURRED_TEXT: 'dsdk-blurred-text', FLICKER_TEXT: 'dsdk-flicker-text', GLITCH_TEXT: 'dsdk-glitch-text',
         ACTION_BUTTONS_CONTAINER: 'dsdk-action-buttons-container', BUTTON: 'dsdk-button', BUTTON_STYLE_PREFIX: 'dsdk-button-',
-        CANVAS_GRAPH: 'dsdk-canvas-graph', // Para el elemento <canvas> en sí (reutilizado)
+        
+        CANVAS_GRAPH: 'dsdk-canvas-graph', 
+        RADAR_CANVAS: 'dsdk-radar-canvas', 
+
         CRITICAL_WARNING_TEXT_CONTAINER: 'dsdk-critical-warning-text-container', CRITICAL_WARNING_TEXT: 'dsdk-critical-warning-text',
         WARNING_PANEL_STATE_PREFIX: 'dsdk-state-',
         TEXT_DANGER: 'dsdk-text-danger', TEXT_WARNING: 'dsdk-text-warning', TEXT_SUCCESS: 'dsdk-text-success', TEXT_INFO: 'dsdk-text-info',
@@ -83,6 +86,9 @@ const DynamicSciFiDashboardKit = (function() {
         IMAGE_CRT_PHOSPHOR_RED: 'dsdk-crt-phosphor-red',
         IMAGE_CRT_PHOSPHOR_STABLE: 'dsdk-crt-phosphor-stable',
         IMAGE_CRT_PHOSPHOR_NORMAL: 'dsdk-crt-phosphor-normal',
+
+        PARTICLE_EFFECT_PREFIX: 'dsdk-particle-effect-',
+        VALID_PARTICLE_EFFECT_TYPES: ['1', '2', '3', '4', '5', '6'],
     };
     const VALID_PANEL_STATES = ['normal', 'warning', 'critical', 'stable'];
     const VALID_WARNING_PANEL_INTERNAL_STATES = ['critical', 'stabilizing', 'stable'];
@@ -103,7 +109,8 @@ const DynamicSciFiDashboardKit = (function() {
             this.config = {
                 title: 'Panel',
                 initialState: 'normal',
-                enableSparks: true,
+                particleEffectType: null, 
+                particleEffectStates: ['critical', 'warning'], 
                 enableScanlineHalo: false,
                 scanlineHaloColor: null,
                 scanlineThickness: '4px',
@@ -158,12 +165,7 @@ const DynamicSciFiDashboardKit = (function() {
             this.dom.panel.classList.add(`${DSDK_CLASSES.PANEL_STATE_PREFIX}${newState}`);
             
             this.currentState = newState; 
-
-            if (this.config.enableSparks) {
-                this.dom.panel.classList.toggle(DSDK_CLASSES.SPARKS_EFFECT, (newState === 'critical' || newState === 'warning'));
-            } else {
-                 this.dom.panel.classList.remove(DSDK_CLASSES.SPARKS_EFFECT);
-            }
+            this._applyParticleEffectSettings(); 
             this._applyScanlineHaloSettings();
         }
         
@@ -189,6 +191,24 @@ const DynamicSciFiDashboardKit = (function() {
             }
         }
 
+        _applyParticleEffectSettings() { 
+            if (!this.dom.panel) return;
+
+            DSDK_CLASSES.VALID_PARTICLE_EFFECT_TYPES.forEach(typeSuffix => {
+                this.dom.panel.classList.remove(`${DSDK_CLASSES.PARTICLE_EFFECT_PREFIX}${typeSuffix}`);
+            });
+
+            const effectType = this.config.particleEffectType;
+            
+            if (effectType && DSDK_CLASSES.VALID_PARTICLE_EFFECT_TYPES.includes(String(effectType))) {
+                if (this.config.particleEffectStates.includes(this.currentState)) {
+                     this.dom.panel.classList.add(`${DSDK_CLASSES.PARTICLE_EFFECT_PREFIX}${effectType}`);
+                }
+            } else if (effectType) { 
+                console.warn(`DSDK: Invalid or unknown particleEffectType "${effectType}". No particle effect applied.`);
+            }
+        }
+
         setScanlineHalo(enabled, options = {}) {
             if (!this.dom.panel) return;
             this.config.enableScanlineHalo = !!enabled;
@@ -201,19 +221,36 @@ const DynamicSciFiDashboardKit = (function() {
                 this._applyScanlineHaloSettings();
             }
         }
+
+        setParticleEffect(type, options = {}) { 
+            if (!this.dom.panel) return;
+    
+            if (type === null || type === undefined || type === 'none' || DSDK_CLASSES.VALID_PARTICLE_EFFECT_TYPES.includes(String(type))) {
+                this.config.particleEffectType = (type === 'none' || type === undefined || type === null) ? null : String(type);
+            } else {
+                console.warn(`DSDK: Invalid particleEffectType "${type}". Must be null, 'none', or a string '1' through '6'. Effect not changed.`);
+            }
+    
+            if (options.states !== undefined && Array.isArray(options.states)) {
+                this.config.particleEffectStates = options.states.filter(s => VALID_PANEL_STATES.includes(s));
+            }
+            
+            this._applyParticleEffectSettings();
+        }
         
         destroy() { 
             if(this.animationFrameId)cancelAnimationFrame(this.animationFrameId); if(this.intervalId)clearInterval(this.intervalId);
             if(this.dom.panel)this.dom.panel.remove(); this.dom={};
             if (this.indicatorsMap) this.indicatorsMap.clear();
             if (this.buttonsMap) this.buttonsMap.clear();
+            if (this.points) this.points = []; 
             if (this.resizeListener && typeof window !== 'undefined') window.removeEventListener('resize', this.resizeListener);
             this.resizeListener = null; 
         }
     }
 
     class LogDisplayPanel extends BasePanel { constructor(containerSelector, options = {}) { const defaults = { title: 'Log Display', maxEntries: 20 }; super(containerSelector, { ...defaults, ...options }, DSDK_CLASSES.LOG_DISPLAY_PANEL); if (!this.dom.panel) return; this.logEntries = []; this._renderContent(); } _renderContent() { if (!this.dom.content) return; this.dom.content.innerHTML = ''; this.dom.logList = document.createElement('ul'); this.dom.logList.classList.add(DSDK_CLASSES.LOG_LIST); this.dom.content.appendChild(this.dom.logList); this.logEntries.forEach(e => this._appendLogToList(e)); } _appendLogToList(e) { const i = document.createElement('li'); const m = { info: DSDK_CLASSES.LOG_INFO, warn: DSDK_CLASSES.LOG_WARN, error: DSDK_CLASSES.LOG_ERROR, success: DSDK_CLASSES.LOG_SUCCESS, }; if (e.level && m[e.level]) { i.classList.add(m[e.level]); } i.textContent = e.text; this.dom.logList.prepend(i); } addLog(e) { if (!this.dom.logList) this._renderContent(); this.logEntries.unshift(e); if (this.logEntries.length > this.config.maxEntries) { this.logEntries.pop(); if (this.dom.logList.lastChild) { this.dom.logList.removeChild(this.dom.logList.lastChild); } } this._appendLogToList(e); this.dom.content.scrollTop = 0; } clearLogs() { this.logEntries = []; if (this.dom.logList) { this.dom.logList.innerHTML = ''; } } }
-    class CriticalWarningTextPanel extends BasePanel { constructor(containerSelector, options = {}) { const defaults = { title: '', initialText: 'WARNING', initialWarningState: 'critical', fontSize: '2.2rem', enableSparks: true, enableScanlineHalo: true, scanlineThickness: '3px', scanlineOpacity: 0.1, }; const mergedOptions = { ...defaults, ...options }; super(containerSelector, mergedOptions, DSDK_CLASSES.CRITICAL_WARNING_TEXT_PANEL); if (!this.dom.panel) return; if (!options.title && this.dom.header) { this.dom.header.remove(); this.dom.header = null; } this.currentWarningText = this.config.initialText; this._renderContent(); this.setWarningState(this.config.initialWarningState, this.config.initialText); } _renderContent() { if (!this.dom.content) return; this.dom.content.innerHTML = ''; this.dom.content.classList.add(DSDK_CLASSES.CRITICAL_WARNING_TEXT_CONTAINER); this.dom.warningTextElement = document.createElement('div'); this.dom.warningTextElement.classList.add(DSDK_CLASSES.CRITICAL_WARNING_TEXT); this.dom.warningTextElement.style.fontSize = this.config.fontSize; this.dom.content.appendChild(this.dom.warningTextElement); } setWarningState(newState, newText) { if (!this.dom.warningTextElement || !this.dom.content) return; if (!VALID_WARNING_PANEL_INTERNAL_STATES.includes(newState)) { newState = 'critical'; } if (newText !== undefined) { this.currentWarningText = newText; } this.dom.warningTextElement.textContent = this.currentWarningText; VALID_WARNING_PANEL_INTERNAL_STATES.forEach(s => { this.dom.content.classList.remove(`${DSDK_CLASSES.WARNING_PANEL_STATE_PREFIX}${s}`); this.dom.warningTextElement.classList.remove(`${DSDK_CLASSES.WARNING_PANEL_STATE_PREFIX}${s}`); }); this.dom.content.classList.add(`${DSDK_CLASSES.WARNING_PANEL_STATE_PREFIX}${newState}`); this.dom.warningTextElement.classList.add(`${DSDK_CLASSES.WARNING_PANEL_STATE_PREFIX}${newState}`); let basePanelState = 'critical'; if (newState === 'stabilizing') basePanelState = 'warning'; else if (newState === 'stable') basePanelState = 'stable'; super.setPanelState(basePanelState); } setText(newText) { if (this.dom.warningTextElement && newText !== undefined) { this.currentWarningText = newText; this.dom.warningTextElement.textContent = this.currentWarningText; } } }
+    class CriticalWarningTextPanel extends BasePanel { constructor(containerSelector, options = {}) { const defaults = { title: '', initialText: 'WARNING', initialWarningState: 'critical', fontSize: '2.2rem', particleEffectType: '3', particleEffectStates: ['critical', 'stabilizing'], enableScanlineHalo: true, scanlineThickness: '3px', scanlineOpacity: 0.1, }; const mergedOptions = { ...defaults, ...options }; super(containerSelector, mergedOptions, DSDK_CLASSES.CRITICAL_WARNING_TEXT_PANEL); if (!this.dom.panel) return; if (!options.title && this.dom.header) { this.dom.header.remove(); this.dom.header = null; } this.currentWarningText = this.config.initialText; this._renderContent(); this.setWarningState(this.config.initialWarningState, this.config.initialText); } _renderContent() { if (!this.dom.content) return; this.dom.content.innerHTML = ''; this.dom.content.classList.add(DSDK_CLASSES.CRITICAL_WARNING_TEXT_CONTAINER); this.dom.warningTextElement = document.createElement('div'); this.dom.warningTextElement.classList.add(DSDK_CLASSES.CRITICAL_WARNING_TEXT); this.dom.warningTextElement.style.fontSize = this.config.fontSize; this.dom.content.appendChild(this.dom.warningTextElement); } setWarningState(newState, newText) { if (!this.dom.warningTextElement || !this.dom.content) return; if (!VALID_WARNING_PANEL_INTERNAL_STATES.includes(newState)) { newState = 'critical'; } if (newText !== undefined) { this.currentWarningText = newText; } this.dom.warningTextElement.textContent = this.currentWarningText; VALID_WARNING_PANEL_INTERNAL_STATES.forEach(s => { this.dom.content.classList.remove(`${DSDK_CLASSES.WARNING_PANEL_STATE_PREFIX}${s}`); this.dom.warningTextElement.classList.remove(`${DSDK_CLASSES.WARNING_PANEL_STATE_PREFIX}${s}`); }); this.dom.content.classList.add(`${DSDK_CLASSES.WARNING_PANEL_STATE_PREFIX}${newState}`); this.dom.warningTextElement.classList.add(`${DSDK_CLASSES.WARNING_PANEL_STATE_PREFIX}${newState}`); let basePanelState = 'critical'; if (newState === 'stabilizing') basePanelState = 'warning'; else if (newState === 'stable') basePanelState = 'stable'; super.setPanelState(basePanelState); } setText(newText) { if (this.dom.warningTextElement && newText !== undefined) { this.currentWarningText = newText; this.dom.warningTextElement.textContent = this.currentWarningText; } } }
     class KeyValueListPanel extends BasePanel { constructor(containerSelector, options = {}) { const defaults = { title: 'Data List', }; super(containerSelector, { ...defaults, ...options }, DSDK_CLASSES.KEY_VALUE_LIST_PANEL); if (!this.dom.panel) return; this.items = []; this._renderContent(); } _renderContent() { if (!this.dom.content) return; this.dom.content.innerHTML = ''; this.dom.list = document.createElement('ul'); this.dom.list.classList.add(DSDK_CLASSES.KEY_VALUE_LIST); this.dom.content.appendChild(this.dom.list); this.items.forEach(i => this._appendItemToList(i)); } _appendItemToList(i) { const l = document.createElement('li'); const k = document.createElement('span'); k.classList.add(DSDK_CLASSES.KEY_VALUE_KEY); k.textContent = i.key; const v = document.createElement('span'); v.classList.add(DSDK_CLASSES.KEY_VALUE_VALUE); v.textContent = i.value; if (i.statusClass) { const VALID_STATUS_CLASSES = [DSDK_CLASSES.TEXT_SUCCESS, DSDK_CLASSES.TEXT_WARNING, DSDK_CLASSES.TEXT_DANGER, DSDK_CLASSES.TEXT_INFO]; if (VALID_STATUS_CLASSES.includes(i.statusClass)) { v.classList.add(i.statusClass); } else { console.warn(`KVLP: Invalid statusClass "${i.statusClass}" for item "${i.key}".`); } } l.appendChild(k); l.appendChild(v); this.dom.list.appendChild(l); } setItems(iA) { this.items = iA || []; this._renderContent(); } updateItem(k, nV, nS) { const i = this.items.find(x => x.key === k); if (i) { i.value = nV; if (nS !== undefined) i.statusClass = nS; this._renderContent(); } else { console.warn(`KVLP: Item with key "${k}" not found.`); } } addItem(i) { if (i && i.key && typeof i.value !== 'undefined') { const e = this.items.find(x => x.key === i.key); if (e) { this.updateItem(i.key, i.value, i.statusClass); } else { this.items.push(i); this._appendItemToList(i); } } else { console.warn('KVLP: Attempted to add invalid item.', i); } } }
     class LedDisplayPanel extends BasePanel { constructor(containerSelector, options = {}) { const defaults = { title: '', label: 'VALUE', initialValue: 0, initialStatus: 'normal', units: '' }; super(containerSelector, { ...defaults, ...options }, DSDK_CLASSES.LED_DISPLAY_PANEL); if (!this.dom.panel) return; if (!options.title && this.dom.header) { this.dom.header.remove(); this.dom.header = null; } this.currentLedValue = this.config.initialValue; this.currentLedStatus = this.config.initialStatus; this._renderContent(); this.setValue(this.config.initialValue); this.setStatus(this.config.initialStatus); } _renderContent() { if (!this.dom.content) return; this.dom.content.innerHTML = ''; const g = document.createElement('div'); g.classList.add(DSDK_CLASSES.LED_COUNTER_GROUP); this.dom.label = document.createElement('span'); this.dom.label.classList.add(DSDK_CLASSES.LED_LABEL); this.dom.label.textContent = this.config.label; this.dom.display = document.createElement('div'); this.dom.display.classList.add(DSDK_CLASSES.LED_DISPLAY); g.appendChild(this.dom.label); g.appendChild(this.dom.display); this.dom.content.appendChild(g); } setValue(v) { this.currentLedValue = v; let dV = String(v); if (this.config.units) { dV += this.config.units; } if (this.dom.display) { this.dom.display.textContent = typeof v === 'number' ? dV.padStart(4, '0') : dV; } } setStatus(s) { if (!this.dom.display) return; this.currentLedStatus = s; this.dom.display.classList.remove(DSDK_CLASSES.LED_CRITICAL, DSDK_CLASSES.LED_WARNING); if (s === 'critical') { this.dom.display.classList.add(DSDK_CLASSES.LED_CRITICAL); } else if (s === 'warning') { this.dom.display.classList.add(DSDK_CLASSES.LED_WARNING); } } }
     class DynamicTextPanel extends BasePanel { constructor(containerSelector, options = {}) { const defaults = { title: 'Dynamic Text Display', initialText: 'Awaiting data...', initialEffects: { blur: false, flicker: false, glitch: false, textColorClass: null }, }; super(containerSelector, { ...defaults, ...options }, DSDK_CLASSES.DYNAMIC_TEXT_PANEL); if (!this.dom.panel) return; this.currentText = this.config.initialText; this.currentEffects = { ...this.config.initialEffects }; this._renderContent(); } _renderContent() { if (!this.dom.content) return; this.dom.content.innerHTML = ''; this.dom.content.classList.add(DSDK_CLASSES.DYNAMIC_TEXT_CONTAINER); this.dom.textElement = document.createElement('span'); this.dom.textElement.classList.add(DSDK_CLASSES.DYNAMIC_TEXT); this.dom.content.appendChild(this.dom.textElement); this.setText(this.currentText); this.setEffects(this.currentEffects); } setText(t) { this.currentText = t; if (this.dom.textElement) { this.dom.textElement.textContent = this.currentText; } } setEffects(e = {}) { if (!this.dom.textElement) return; this.currentEffects = { ...this.currentEffects, ...e }; this.dom.textElement.classList.toggle(DSDK_CLASSES.BLURRED_TEXT, !!this.currentEffects.blur); this.dom.textElement.classList.toggle(DSDK_CLASSES.FLICKER_TEXT, !!this.currentEffects.flicker); this.dom.textElement.classList.toggle(DSDK_CLASSES.GLITCH_TEXT, !!this.currentEffects.glitch);[DSDK_CLASSES.TEXT_DANGER, DSDK_CLASSES.TEXT_WARNING, DSDK_CLASSES.TEXT_SUCCESS, DSDK_CLASSES.TEXT_INFO].forEach(c => { this.dom.textElement.classList.remove(c); }); if (this.currentEffects.textColorClass) { this.dom.textElement.classList.add(this.currentEffects.textColorClass); } } }
@@ -316,14 +353,13 @@ const DynamicSciFiDashboardKit = (function() {
             this.updateButton(buttonId, { newDisabledState: isDisabled });
         }
     }
-    class CanvasGraphPanel extends BasePanel { constructor(containerSelector, options = {}) { const defaults = { title: 'Graph Panel', graphType: 'ecg', colorScheme: { normal: { stroke: '#00E5E5', lineWidth: 1.5, noiseFactor: 0.05 }, warning: { stroke: '#FFD700', lineWidth: 1.5, noiseFactor: 0.15 }, critical: { stroke: '#FF4500', lineWidth: 2, noiseFactor: 0.3 }, stable: { stroke: '#32CD32', lineWidth: 1.5, noiseFactor: 0.02 }, }, animationSpeed: 0.05, ecgDataLength: 200, ecgSpikeChance: 0.08, }; super(containerSelector, { ...defaults, ...options }, DSDK_CLASSES.CANVAS_GRAPH_PANEL); if (!this.dom.panel) return; this.animationFrameId = null; this.lastTimestamp = 0; this.ecgData = []; this.sineTime = 0; this._renderContent(); this._initCanvas(); this.loop = this.loop.bind(this); this.animationFrameId = requestAnimationFrame(this.loop); } _renderContent() { if (!this.dom.content) return; this.dom.content.innerHTML = ''; this.dom.canvas = document.createElement('canvas'); this.dom.canvas.classList.add(DSDK_CLASSES.CANVAS_GRAPH); this.dom.content.appendChild(this.dom.canvas); this.ctx = this.dom.canvas.getContext('2d'); } _initCanvas() { if (!this.dom.canvas || !this.ctx) return; const aR = () => { if (!this.dom.canvas || !this.dom.content.clientWidth || !this.dom.content.clientHeight) { if (this.dom.panel && this.dom.panel.offsetParent !== null) { requestAnimationFrame(aR); } return; } const d = window.devicePixelRatio || 1; this.dom.canvas.width = this.dom.content.clientWidth * d; this.dom.canvas.height = this.dom.content.clientHeight * d; this.ctx.scale(d, d); if (this.config.graphType === 'ecg') { this.config.ecgDataLength = Math.max(50, Math.floor(this.dom.content.clientWidth / 2.5)); this.ecgData = Array(this.config.ecgDataLength).fill(this.dom.content.clientHeight / 2); } }; requestAnimationFrame(aR); this.resizeListener = () => requestAnimationFrame(aR); if (typeof window !== 'undefined') window.addEventListener('resize', this.resizeListener); } loop(t) { if (!this.ctx || !this.dom.canvas || !this.dom.canvas.width || !this.dom.canvas.height) { this.animationFrameId = requestAnimationFrame(this.loop); return; } this.ctx.clearRect(0, 0, this.dom.canvas.width, this.dom.canvas.height); const cCS = this.config.colorScheme[this.currentState] || this.config.colorScheme['normal']; if (this.config.graphType === 'ecg') { this._drawECG(cCS); } else if (this.config.graphType === 'sine') { this._drawSineWaves(cCS); } this.animationFrameId = requestAnimationFrame(this.loop); } _drawECG(cs) { const cH = this.dom.content.clientHeight; const cW = this.dom.content.clientWidth; if (cW <=0 || cH <=0) return; this.ctx.strokeStyle = cs.stroke; this.ctx.lineWidth = cs.lineWidth; this.ctx.beginPath(); let nV = cH / 2; let sF = 0.45; if (this.currentState === 'stable') sF = 0.1; else if (this.currentState === 'warning') sF = 0.25; else if (this.currentState === 'normal') sF = 0.15; const eSC = this.config.ecgSpikeChance * ((this.currentState === 'critical' || this.currentState === 'warning') ? 1.5 : 0.5); if (Math.random() < eSC) { nV += (Math.random() * 2 - 1) * cH * sF; } else if (Math.random() < eSC * 2) { nV += (Math.random() * 2 - 1) * cH * (sF * 0.33); } this.ecgData.push(nV); if (this.ecgData.length > this.config.ecgDataLength) this.ecgData.shift(); while (this.ecgData.length < this.config.ecgDataLength) { this.ecgData.unshift(cH / 2); } const sX = cW / this.config.ecgDataLength; for (let i = 0; i < this.ecgData.length; i++) { this.ctx.lineTo(i * sX, this.ecgData[i]); } this.ctx.stroke(); } _drawSineWaves(cs) { this.sineTime += this.config.animationSpeed; const cH = this.dom.content.clientHeight; const cW = this.dom.content.clientWidth; if (cW <=0 || cH <=0) return; const dW = (a, f, p, cl, lW, nF) => { this.ctx.beginPath(); this.ctx.strokeStyle = cl; this.ctx.lineWidth = lW; for (let x = 0; x < cW; x++) { const n = (Math.random() - 0.5) * a * nF; const y = cH / 2 + a * Math.sin((x * f / cW) * 2 * Math.PI + this.sineTime + p) + n; if (x === 0) this.ctx.moveTo(x, y); else this.ctx.lineTo(x, y); } this.ctx.stroke(); }; dW(cH * 0.30, 5, 0, cs.stroke, cs.lineWidth, cs.noiseFactor); if (this.currentState === 'critical') { dW(cH * 0.20, 8, Math.PI / 3, 'rgba(255,0,0,0.5)', 1, cs.noiseFactor * 1.5); } else if (this.currentState === 'warning') { dW(cH * 0.15, 6, Math.PI / 2, 'rgba(255,165,0,0.6)', 1, cs.noiseFactor); } } destroy() { if (this.resizeListener && typeof window !== 'undefined') window.removeEventListener('resize', this.resizeListener); this.resizeListener = null; super.destroy(); } }
+    class CanvasGraphPanel extends BasePanel { constructor(containerSelector, options = {}) { const defaults = { title: 'Graph Panel', graphType: 'ecg', colorScheme: { normal: { stroke: '#00E5E5', lineWidth: 1.5, noiseFactor: 0.05 }, warning: { stroke: '#FFD700', lineWidth: 1.5, noiseFactor: 0.15 }, critical: { stroke: '#FF4500', lineWidth: 2, noiseFactor: 0.3 }, stable: { stroke: '#32CD32', lineWidth: 1.5, noiseFactor: 0.02 }, }, animationSpeed: 0.05, ecgDataLength: 200, ecgSpikeChance: 0.08, particleEffectType: '1', }; super(containerSelector, { ...defaults, ...options }, DSDK_CLASSES.CANVAS_GRAPH_PANEL); if (!this.dom.panel) return; this.animationFrameId = null; this.lastTimestamp = 0; this.ecgData = []; this.sineTime = 0; this._renderContent(); this._initCanvas(); this.loop = this.loop.bind(this); this.animationFrameId = requestAnimationFrame(this.loop); } _renderContent() { if (!this.dom.content) return; this.dom.content.innerHTML = ''; this.dom.canvas = document.createElement('canvas'); this.dom.canvas.classList.add(DSDK_CLASSES.CANVAS_GRAPH); this.dom.content.appendChild(this.dom.canvas); this.ctx = this.dom.canvas.getContext('2d'); } _initCanvas() { if (!this.dom.canvas || !this.ctx) return; const aR = () => { if (!this.dom.canvas || !this.dom.content.clientWidth || !this.dom.content.clientHeight) { if (this.dom.panel && this.dom.panel.offsetParent !== null) { requestAnimationFrame(aR); } return; } const d = window.devicePixelRatio || 1; this.dom.canvas.width = this.dom.content.clientWidth * d; this.dom.canvas.height = this.dom.content.clientHeight * d; this.ctx.scale(d, d); if (this.config.graphType === 'ecg') { this.config.ecgDataLength = Math.max(50, Math.floor(this.dom.content.clientWidth / 2.5)); this.ecgData = Array(this.config.ecgDataLength).fill(this.dom.content.clientHeight / 2); } }; requestAnimationFrame(aR); this.resizeListener = () => requestAnimationFrame(aR); if (typeof window !== 'undefined') window.addEventListener('resize', this.resizeListener); } loop(t) { if (!this.ctx || !this.dom.canvas || !this.dom.canvas.width || !this.dom.canvas.height) { this.animationFrameId = requestAnimationFrame(this.loop); return; } this.ctx.clearRect(0, 0, this.dom.canvas.width, this.dom.canvas.height); const cCS = this.config.colorScheme[this.currentState] || this.config.colorScheme['normal']; if (this.config.graphType === 'ecg') { this._drawECG(cCS); } else if (this.config.graphType === 'sine') { this._drawSineWaves(cCS); } this.animationFrameId = requestAnimationFrame(this.loop); } _drawECG(cs) { const cH = this.dom.content.clientHeight; const cW = this.dom.content.clientWidth; if (cW <=0 || cH <=0) return; this.ctx.strokeStyle = cs.stroke; this.ctx.lineWidth = cs.lineWidth; this.ctx.beginPath(); let nV = cH / 2; let sF = 0.45; if (this.currentState === 'stable') sF = 0.1; else if (this.currentState === 'warning') sF = 0.25; else if (this.currentState === 'normal') sF = 0.15; const eSC = this.config.ecgSpikeChance * ((this.currentState === 'critical' || this.currentState === 'warning') ? 1.5 : 0.5); if (Math.random() < eSC) { nV += (Math.random() * 2 - 1) * cH * sF; } else if (Math.random() < eSC * 2) { nV += (Math.random() * 2 - 1) * cH * (sF * 0.33); } this.ecgData.push(nV); if (this.ecgData.length > this.config.ecgDataLength) this.ecgData.shift(); while (this.ecgData.length < this.config.ecgDataLength) { this.ecgData.unshift(cH / 2); } const sX = cW / this.config.ecgDataLength; for (let i = 0; i < this.ecgData.length; i++) { this.ctx.lineTo(i * sX, this.ecgData[i]); } this.ctx.stroke(); } _drawSineWaves(cs) { this.sineTime += this.config.animationSpeed; const cH = this.dom.content.clientHeight; const cW = this.dom.content.clientWidth; if (cW <=0 || cH <=0) return; const dW = (a, f, p, cl, lW, nF) => { this.ctx.beginPath(); this.ctx.strokeStyle = cl; this.ctx.lineWidth = lW; for (let x = 0; x < cW; x++) { const n = (Math.random() - 0.5) * a * nF; const y = cH / 2 + a * Math.sin((x * f / cW) * 2 * Math.PI + this.sineTime + p) + n; if (x === 0) this.ctx.moveTo(x, y); else this.ctx.lineTo(x, y); } this.ctx.stroke(); }; dW(cH * 0.30, 5, 0, cs.stroke, cs.lineWidth, cs.noiseFactor); if (this.currentState === 'critical') { dW(cH * 0.20, 8, Math.PI / 3, 'rgba(255,0,0,0.5)', 1, cs.noiseFactor * 1.5); } else if (this.currentState === 'warning') { dW(cH * 0.15, 6, Math.PI / 2, 'rgba(255,165,0,0.6)', 1, cs.noiseFactor); } } destroy() { if (this.resizeListener && typeof window !== 'undefined') window.removeEventListener('resize', this.resizeListener); this.resizeListener = null; super.destroy(); } }
     class IntegrityPulsePanel extends BasePanel {
         constructor(containerSelector, options = {}) {
             const defaults = { 
                 title: 'Integrity Pulse', 
                 initialState: 'normal', 
                 barCount: 5, 
-                enableSparks: false, 
                 enableScanlineHalo: false, 
             };
             super(containerSelector, { ...defaults, ...options }, DSDK_CLASSES.INTEGRITY_PULSE_PANEL);
@@ -383,7 +419,6 @@ const DynamicSciFiDashboardKit = (function() {
                 startAngle: -135, 
                 endAngle: 135,    
                 animationDuration: 400, 
-                enableSparks: false,
                 enableScanlineHalo: false,
             };
             super(containerSelector, { ...defaults, ...options }, DSDK_CLASSES.CIRCULAR_GAUGE_PANEL);
@@ -483,7 +518,6 @@ const DynamicSciFiDashboardKit = (function() {
             const defaults = {
                 title: 'System Status',
                 indicators: [],
-                enableSparks: false,
                 enableScanlineHalo: false,
             };
             super(containerSelector, { ...defaults, ...options }, DSDK_CLASSES.STATUS_INDICATOR_PANEL);
@@ -617,7 +651,8 @@ const DynamicSciFiDashboardKit = (function() {
                 title: 'Horizontal Gauge', minValue: 0, maxValue: 100, initialValue: 0,
                 units: '%', label: '', barHeight: '16px', showValueText: true,
                 valueTextFormat: (value, units) => `${Math.round(value)}${units}`,
-                animationDuration: 400, enableSparks: false, enableScanlineHalo: false,
+                animationDuration: 400, 
+                enableScanlineHalo: false,
             };
             super(containerSelector, { ...defaults, ...options }, DSDK_CLASSES.HORIZONTAL_BAR_GAUGE_PANEL);
             if (!this.dom.panel) return;
@@ -992,21 +1027,19 @@ const DynamicSciFiDashboardKit = (function() {
             this.stopWebcam(); super.destroy();
         }
     }
-
-    // NUEVO: TrueCanvasGraphPanel (incorporado de la versión anterior)
     class TrueCanvasGraphPanel extends BasePanel {
         constructor(containerSelector, options = {}) {
             const defaults = {
                 title: 'Realtime Data Graph',
                 maxDataPoints: 200,
-                dataRange: null, // { min: number, max: number } or null for auto-scaling
+                dataRange: null, 
                 colorScheme: { 
                     normal:   { stroke: '#00E5E5', lineWidth: 1.5 },
                     warning:  { stroke: '#FFD700', lineWidth: 1.8 },
                     critical: { stroke: '#FF4500', lineWidth: 2.0 },
                     stable:   { stroke: '#32CD32', lineWidth: 1.5 }
                 },
-                enableSparks: true,
+                particleEffectType: '1', 
                 enableScanlineHalo: true, 
             };
             super(containerSelector, { ...defaults, ...options }, DSDK_CLASSES.TRUE_CANVAS_GRAPH_PANEL); 
@@ -1122,7 +1155,7 @@ const DynamicSciFiDashboardKit = (function() {
                 maxY = Math.max(...this.data);
             }
             
-            if (minY === maxY) {
+            if (minY === maxY) { 
                 minY -= 0.5; 
                 maxY += 0.5;
             }
@@ -1170,6 +1203,345 @@ const DynamicSciFiDashboardKit = (function() {
         }
     }
 
+    class RadarDisplayPanel extends BasePanel {
+        constructor(containerSelector, options = {}) {
+            const defaults = {
+                title: 'Radar Display',
+                numCircles: 5,
+                radarSpeed: 10, // RPM (rotations per minute) - Aumentado para mejor demo
+                maxRadarRange: 100, // Max abstract range for x,y coordinates
+                pointSize: 3, // pixels
+                pointHighlightDuration: 500, // milliseconds - Duración del resaltado
+                pointFadeOutDuration: 2500, // milliseconds - Duración del desvanecimiento
+                pointInitialDetectionBoost: 1, // Factor de tamaño al detectar por primera vez (1 = sin boost)
+                pointMinOpacityAfterFade: 0.0, // Opacidad mínima después del desvanecimiento (0 = desaparece)
+                sweepWidthDegrees: 20, // Angular width of the sweep
+                particleEffectType: '6',
+                particleEffectStates: ['critical', 'warning', 'normal'],
+                enableScanlineHalo: true,
+            };
+            super(containerSelector, { ...defaults, ...options }, DSDK_CLASSES.RADAR_DISPLAY_PANEL);
+            if (!this.dom.panel) return;
+
+            this.points = []; // { id, x, y, data, canvasX, canvasY, angle, distance, detectedAt }
+            this.currentSweepAngle = 0; // radians
+            this.lastTimestamp = 0;
+            this.animationFrameId = null;
+
+            this._renderContent();
+            this._initCanvas();
+            
+            this._animationLoop = this._animationLoop.bind(this);
+            this.animationFrameId = requestAnimationFrame(this._animationLoop);
+        }
+
+        _renderContent() {
+            if (!this.dom.content) return;
+            this.dom.content.innerHTML = '';
+            this.dom.canvas = document.createElement('canvas');
+            this.dom.canvas.classList.add(DSDK_CLASSES.RADAR_CANVAS);
+            this.dom.content.appendChild(this.dom.canvas);
+            this.ctx = this.dom.canvas.getContext('2d');
+        }
+
+        _initCanvas() {
+            if (!this.dom.canvas || !this.ctx) return;
+            
+            const adjustCanvasResolution = () => {
+                if (!this.dom.canvas || !this.dom.content || !this.dom.content.clientWidth || !this.dom.content.clientHeight) {
+                     if (this.dom.panel && this.dom.panel.offsetParent !== null) {
+                        requestAnimationFrame(adjustCanvasResolution);
+                    }
+                    return;
+                }
+
+                const dpr = window.devicePixelRatio || 1;
+                this.dom.canvas.width = this.dom.content.clientWidth * dpr;
+                this.dom.canvas.height = this.dom.content.clientHeight * dpr;
+                this.ctx.scale(dpr, dpr);
+                
+                this._updateAllPointCanvasCoordinates();
+            };
+
+            requestAnimationFrame(adjustCanvasResolution);
+            this.resizeListener = () => requestAnimationFrame(adjustCanvasResolution);
+            if (typeof window !== 'undefined') {
+                window.addEventListener('resize', this.resizeListener);
+            }
+        }
+        
+        _getStylePropertyValue(propName) {
+            if (!this.dom.panel) return '';
+            return getComputedStyle(this.dom.panel).getPropertyValue(propName).trim();
+        }
+
+        _animationLoop(timestamp) {
+            if (!this.ctx || !this.dom.canvas || !this.dom.canvas.width || !this.dom.canvas.height) {
+                this.animationFrameId = requestAnimationFrame(this._animationLoop);
+                return;
+            }
+            const deltaTime = (timestamp - (this.lastTimestamp || timestamp)) / 1000; // seconds
+            this.lastTimestamp = timestamp;
+
+            const rotationsPerSecond = this.config.radarSpeed / 60;
+            this.currentSweepAngle += (rotationsPerSecond * 2 * Math.PI) * deltaTime;
+            this.currentSweepAngle %= (2 * Math.PI);
+
+            const canvasWidth = this.dom.content.clientWidth;
+            const canvasHeight = this.dom.content.clientHeight;
+            this.ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+            this._drawRadarBackground(canvasWidth, canvasHeight);
+            this._drawRadarSweep(canvasWidth, canvasHeight);
+            this._drawPoints(canvasWidth, canvasHeight, timestamp);
+
+            this.animationFrameId = requestAnimationFrame(this._animationLoop);
+        }
+
+        _drawRadarBackground(width, height) {
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const outerContinuousRadius = Math.min(width, height) / 2 * 0.92;
+            const gridMaxRadius = outerContinuousRadius * 0.95; 
+
+            const gridColor = this._getStylePropertyValue('--dsdk-current-radar-grid-color') || 'rgba(0, 229, 229, 0.3)';
+            const gridLineWidth = parseFloat(this._getStylePropertyValue('--dsdk-radar-grid-line-width')) || 0.5;
+            const gridDashString = this._getStylePropertyValue('--dsdk-radar-grid-dash') || '2,3';
+            const gridDash = gridDashString.split(',').map(Number);
+            const outerCircleLineWidth = parseFloat(this._getStylePropertyValue('--dsdk-radar-outer-circle-line-width')) || 1.5;
+
+            this.ctx.strokeStyle = gridColor;
+            
+            this.ctx.lineWidth = outerCircleLineWidth;
+            this.ctx.setLineDash([]);
+            this.ctx.beginPath();
+            this.ctx.arc(centerX, centerY, outerContinuousRadius, 0, 2 * Math.PI);
+            this.ctx.stroke();
+
+            this.ctx.lineWidth = gridLineWidth;
+            this.ctx.setLineDash(gridDash);
+            
+            for (let i = 1; i <= this.config.numCircles; i++) {
+                const radius = gridMaxRadius * (i / this.config.numCircles);
+                this.ctx.beginPath();
+                this.ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+                this.ctx.stroke();
+            }
+            
+            this.ctx.setLineDash([]); 
+            for (let i = 0; i < 8; i++) { 
+                const angle = (i * Math.PI) / 4; 
+                this.ctx.beginPath();
+                this.ctx.moveTo(centerX, centerY);
+                this.ctx.lineTo(centerX + gridMaxRadius * Math.cos(angle), centerY + gridMaxRadius * Math.sin(angle));
+                this.ctx.stroke();
+            }
+        }
+
+        _drawRadarSweep(width, height) {
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const outerContinuousRadius = Math.min(width, height) / 2 * 0.92; // Sweep hasta el círculo exterior
+            const sweepColor = this._getStylePropertyValue('--dsdk-current-radar-sweep-color') || 'rgba(0, 229, 229, 0.25)';
+            const sweepOpacity = parseFloat(this._getStylePropertyValue('--dsdk-radar-sweep-opacity')) || 0.25;
+
+            let finalSweepColor = sweepColor;
+            if (sweepColor.startsWith('rgb(') || sweepColor.startsWith('hsl(')) {
+                finalSweepColor = sweepColor.replace(')', `, ${sweepOpacity})`).replace('rgb(', 'rgba(').replace('hsl(','hsla(');
+            } else if (sweepColor.startsWith('#')) {
+                const r = parseInt(sweepColor.slice(1, 3), 16);
+                const g = parseInt(sweepColor.slice(3, 5), 16);
+                const b = parseInt(sweepColor.slice(5, 7), 16);
+                finalSweepColor = `rgba(${r}, ${g}, ${b}, ${sweepOpacity})`;
+            }
+          
+            this.ctx.fillStyle = finalSweepColor;
+            const sweepWidthRadians = (this.config.sweepWidthDegrees * Math.PI) / 180;
+            
+            this.ctx.beginPath();
+            this.ctx.moveTo(centerX, centerY);
+            this.ctx.arc(
+                centerX, centerY, outerContinuousRadius, // Usar el radio del círculo exterior
+                this.currentSweepAngle - sweepWidthRadians / 2,
+                this.currentSweepAngle + sweepWidthRadians / 2
+            );
+            this.ctx.closePath();
+            this.ctx.fill();
+        }
+        
+        _isPointUnderSweep(point) {
+            if (!point.hasOwnProperty('angle')) return false;
+            
+            const sweepWidthRadians = (this.config.sweepWidthDegrees * Math.PI) / 180;
+            let pointAngle = point.angle;
+            let sweepStartAngle = (this.currentSweepAngle - sweepWidthRadians / 2);
+            
+            pointAngle = (pointAngle % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+            sweepStartAngle = (sweepStartAngle % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+            const sweepEndAngle = (sweepStartAngle + sweepWidthRadians);
+
+            if (sweepEndAngle > 2 * Math.PI) {
+                return (pointAngle >= sweepStartAngle && pointAngle < 2 * Math.PI) || 
+                       (pointAngle >= 0 && pointAngle < (sweepEndAngle % (2 * Math.PI)));
+            } else {
+                return pointAngle >= sweepStartAngle && pointAngle < sweepEndAngle;
+            }
+        }
+
+        _drawPoints(width, height, timestamp) {
+            const pointBaseColor = this._getStylePropertyValue('--dsdk-current-radar-point-color') || '#e0e0e0';
+            const pointHighlightColor = this._getStylePropertyValue('--dsdk-radar-point-highlight-color') || '#FFFFFF';
+
+            this.points.forEach(point => {
+                if (!point.hasOwnProperty('canvasX') || !point.hasOwnProperty('canvasY')) return;
+
+                const underSweep = this._isPointUnderSweep(point);
+                let currentOpacity = 0;
+                let colorToUse = pointBaseColor;
+                let currentPointSize = this.config.pointSize;
+
+                if (underSweep) {
+                    point.detectedAt = timestamp; 
+                }
+
+                if (point.detectedAt === 0) { 
+                    return; 
+                }
+
+                const timeSinceDetectionMs = timestamp - point.detectedAt;
+
+                if (timeSinceDetectionMs <= this.config.pointHighlightDuration) {
+                    currentOpacity = 1.0;
+                    colorToUse = pointHighlightColor;
+                    const highlightProgress = timeSinceDetectionMs / this.config.pointHighlightDuration; // 0 to 1
+                    if (this.config.pointInitialDetectionBoost > 1) {
+                         const pulseFactor = 1 + (this.config.pointInitialDetectionBoost - 1) * Math.sin(highlightProgress * Math.PI);
+                         currentPointSize = this.config.pointSize * pulseFactor;
+                    } else {
+                         currentPointSize = this.config.pointSize;
+                    }
+                } else {
+                    const timeIntoFadeMs = timeSinceDetectionMs - this.config.pointHighlightDuration;
+                    if (timeIntoFadeMs < this.config.pointFadeOutDuration) {
+                        const fadeProgress = timeIntoFadeMs / this.config.pointFadeOutDuration; // 0 to 1
+                        currentOpacity = 1.0 - fadeProgress;
+                        currentOpacity = Math.max(this.config.pointMinOpacityAfterFade, currentOpacity);
+                    } else {
+                        currentOpacity = this.config.pointMinOpacityAfterFade;
+                    }
+                    currentPointSize = this.config.pointSize; // Size normalizes after highlight
+                }
+
+                if (currentOpacity <= 0 && this.config.pointMinOpacityAfterFade <=0) {
+                    return; 
+                }
+                
+                this.ctx.globalAlpha = currentOpacity;
+                this.ctx.fillStyle = colorToUse;
+                this.ctx.beginPath();
+                this.ctx.arc(point.canvasX, point.canvasY, currentPointSize, 0, 2 * Math.PI);
+                this.ctx.fill();
+                this.ctx.globalAlpha = 1.0; 
+            });
+        }
+        
+        _mapToCanvasCoords(x, y) {
+            if (!this.dom.content || !this.dom.content.clientWidth || !this.dom.content.clientHeight) {
+                return { canvasX: 0, canvasY: 0, angle: 0, distance: 0, valid: false };
+            }
+            const width = this.dom.content.clientWidth;
+            const height = this.dom.content.clientHeight;
+            const centerX = width / 2;
+            const centerY = height / 2;
+            
+            const outerContinuousRadius = Math.min(width, height) / 2 * 0.92;
+            const maxCanvasRadius = outerContinuousRadius * 0.95; // Points map within the grid area
+
+            const normalizedX = x / this.config.maxRadarRange;
+            const normalizedY = y / this.config.maxRadarRange;
+
+            const canvasX = centerX + normalizedX * maxCanvasRadius;
+            const canvasY = centerY - normalizedY * maxCanvasRadius; 
+
+            const dx = canvasX - centerX;
+            const dy = canvasY - centerY;
+            const angle = Math.atan2(dy, dx);
+            const distance = Math.sqrt(dx*dx + dy*dy);
+            
+            return { canvasX, canvasY, angle, distance, valid: true };
+        }
+        
+        _updatePointCanvasCoordinates(point) {
+            const { canvasX, canvasY, angle, distance, valid } = this._mapToCanvasCoords(point.x, point.y);
+            if (valid) {
+                point.canvasX = canvasX;
+                point.canvasY = canvasY;
+                point.angle = angle;
+                point.distance = distance;
+            }
+        }
+
+        _updateAllPointCanvasCoordinates() {
+            this.points.forEach(p => this._updatePointCanvasCoordinates(p));
+        }
+
+        addPoint(id, x, y, data = {}) {
+            if (this.points.find(p => p.id === id)) {
+                this.updatePoint(id, x, y, data);
+                return;
+            }
+            const point = { id, x, y, data, detectedAt: 0 };
+            this._updatePointCanvasCoordinates(point);
+            this.points.push(point);
+        }
+
+        updatePoint(id, newX, newY, newData) {
+            const point = this.points.find(p => p.id === id);
+            if (point) {
+                if (newX !== undefined) point.x = newX;
+                if (newY !== undefined) point.y = newY;
+                if (newData !== undefined) point.data = { ...point.data, ...newData };
+                this._updatePointCanvasCoordinates(point);
+                // No reset de detectedAt aquí, para que mantenga su estado de visibilidad/fade
+            } else {
+                console.warn(`RadarDisplayPanel: Point with ID "${id}" not found for update.`);
+            }
+        }
+
+        removePoint(id) {
+            this.points = this.points.filter(p => p.id !== id);
+        }
+
+        clearPoints() {
+            this.points = [];
+        }
+
+        setRadarSpeed(rpm) {
+            if (typeof rpm === 'number' && rpm >= 0) {
+                this.config.radarSpeed = rpm;
+            } else {
+                console.warn(`RadarDisplayPanel: Invalid radar speed "${rpm}". Must be a non-negative number.`);
+            }
+        }
+        
+        setPanelState(newState) {
+            super.setPanelState(newState);
+        }
+
+        destroy() {
+            if (this.animationFrameId) {
+                cancelAnimationFrame(this.animationFrameId);
+                this.animationFrameId = null;
+            }
+            if (this.resizeListener && typeof window !== 'undefined') {
+                window.removeEventListener('resize', this.resizeListener);
+            }
+            this.resizeListener = null;
+            this.points = [];
+            super.destroy();
+        }
+    }
+
 
     return {
         ImageDisplayPanel,
@@ -1177,7 +1549,8 @@ const DynamicSciFiDashboardKit = (function() {
         DynamicTextPanel, ActionButtonsPanel, CanvasGraphPanel,
         IntegrityPulsePanel, CircularGaugePanel, StatusIndicatorLedPanel,
         HorizontalBarGaugePanel, 
-        TrueCanvasGraphPanel, // Exportar la nueva clase
+        TrueCanvasGraphPanel,
+        RadarDisplayPanel,
         DSDK_CLASSES: DSDK_CLASSES 
     };
 })();
