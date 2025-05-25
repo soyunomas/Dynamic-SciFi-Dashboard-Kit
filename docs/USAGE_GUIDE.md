@@ -22,15 +22,19 @@ To use `DynamicSciFiDashboardKit`, you need to include two files in your project
     <link rel="stylesheet" href="path/to/DynamicSciFiDashboardKit.css">
     <style>
         /* Your custom styles here, if needed */
-        body { background-color: #05080d; padding: 20px; }
-        .panel-container { min-height: 200px; margin-bottom: 20px; display: flex; flex-direction: column; }
-        .panel-container > .dsdk-panel { flex-grow: 1; } /* For the panel to occupy the space */
+        body { background-color: #05080d; padding: 20px; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .panel-container { min-height: 200px; display: flex; flex-direction: column; }
+        /* Ensure the panel expands if the container is flexible */
+        .panel-container > .dsdk-panel { flex-grow: 1; }
     </style>
 </head>
 <body>
-    <!-- Containers for your panels -->
-    <div id="myLogPanel" class="panel-container"></div>
-    <div id="myGaugePanel" class="panel-container" style="height: 250px;"></div>
+    <div class="dashboard-grid">
+        <div id="myLogPanel" class="panel-container"></div>
+        <div id="myGaugePanel" class="panel-container" style="height: 280px;"></div>
+        <div id="myRadarPanel" class="panel-container" style="height: 350px;"></div>
+    </div>
 
     <script src="path/to/DynamicSciFiDashboardKit.js"></script>
     <script>
@@ -49,6 +53,13 @@ To use `DynamicSciFiDashboardKit`, you need to include two files in your project
                 label: 'Main Reactor',
                 units: '%'
             });
+
+            const radarPanel = new DSDK.RadarDisplayPanel('#myRadarPanel', {
+                title: 'Proximity Sensor',
+                radarSpeed: 15 // RPM
+            });
+            radarPanel.addPoint('contact_alpha', 30, 50); // x, y
+            radarPanel.addPoint('contact_beta', -60, 20);
         });
     </script>
 </body>
@@ -69,7 +80,8 @@ All specific panels inherit from a base class called `BasePanel`. This class pro
 
 *   `title` (`string`): Title displayed in the panel header. Default: `'Panel'` (or a specific title if the child class defines it). If an empty string or `null` and the class has no default title, the header is not rendered.
 *   `initialState` (`string`): Initial visual state of the panel. Valid values: `'normal'`, `'warning'`, `'critical'`, `'stable'`. Default: `'normal'`.
-*   `enableSparks` (`boolean`): Enables a sparks effect on the panel borders for `'critical'` and `'warning'` states. Default: `true` (can be overridden by the child class).
+*   `particleEffectType` (`string | null`): Type of particle effect to apply. Valid values: `'1'` to `'6'`, or `null` to disable. Default: `null`.
+*   `particleEffectStates` (`array`): Array of strings defining in which panel states the particle effect will be shown (if `particleEffectType` is set). Default: `['critical', 'warning']`.
 *   `enableScanlineHalo` (`boolean`): Enables a visual "scanlines" effect over the panel. Default: `false` (can be overridden by the child class).
 *   `scanlineHaloColor` (`string | null`): Specific CSS color for the scanline effect. If `null`, the color is automatically determined based on the panel state. Default: `null`.
 *   `scanlineThickness` (`string`): Thickness of the scanlines (e.g., `'4px'`). Default: `'4px'`.
@@ -86,6 +98,10 @@ All specific panels inherit from a base class called `BasePanel`. This class pro
         *   `color` (`string`, optional): CSS color for the scanlines.
         *   `thickness` (`string`, optional): Thickness of the scanlines.
         *   `opacity` (`number`, optional): Opacity of the scanlines.
+*   `setParticleEffect(type, options = {})`: Configures or changes the particle effect type and its activation states.
+    *   `type` (`string | null`): New effect type (`'1'`-`'6'`, `'none'`, or `null`).
+    *   `options` (`object`, optional):
+        *   `states` (`array`, optional): Array of panel states (`'normal'`, `'warning'`, `'critical'`, `'stable'`) in which the effect will be active.
 *   `destroy()`: Removes the panel from the DOM and cleans up associated resources (event listeners, animation timers). **It is very important to call this method** when a panel is no longer needed to prevent memory leaks.
 
 ### 2.2. Panel Initialization
@@ -137,7 +153,8 @@ const logPanel = new DynamicSciFiDashboardKit.LogDisplayPanel('#logDemo', {
     title: 'Activity Log',
     maxEntries: 5,
     enableScanlineHalo: true,
-    scanlineStates: ['critical', 'warning']
+    particleEffectType: '1',
+    particleEffectStates: ['critical', 'warning']
 });
 
 logPanel.addLog({ text: 'System boot sequence initiated.', level: 'info' });
@@ -173,7 +190,8 @@ const warningPanel = new DynamicSciFiDashboardKit.CriticalWarningTextPanel('#war
 *   `initialText` (`string`): The text to be displayed initially. Default: `'WARNING'`.
 *   `initialWarningState` (`string`): Internal state of the text, which affects its animation and the base state of the panel. Valid values: `'critical'`, `'stabilizing'`, `'stable'`. Default: `'critical'`.
 *   `fontSize` (`string`): CSS font size for the warning text. Default: `'2.2rem'`.
-*   `enableSparks` (`boolean`): Default: `true`.
+*   `particleEffectType` (`string`): Default: `'3'`.
+*   `particleEffectStates` (`array`): Default: `['critical', 'stabilizing']`.
 *   `enableScanlineHalo` (`boolean`): Default: `true`.
 *   `scanlineThickness` (`string`): Default: `'3px'`.
 *   `scanlineOpacity` (`number`): Default: `0.1`.
@@ -428,7 +446,7 @@ setTimeout(() => {
 
 ### 3.7. `CanvasGraphPanel`
 
-Displays an animated graph on a canvas, like an ECG or a sine wave.
+Displays an animated graph on a canvas, like an ECG or a sine wave. **Note:** This panel generates its own simulated data animation. For graphing external real-time data, use `TrueCanvasGraphPanel`.
 
 **Initialization:**
 ```javascript
@@ -448,6 +466,7 @@ const graphPanel = new DynamicSciFiDashboardKit.CanvasGraphPanel('#graphContaine
 *   `animationSpeed` (`number`): Animation speed for the `'sine'` type graph. Default: `0.05`.
 *   `ecgDataLength` (`number`): Number of data points for the `'ecg'` graph. Affects the "length" of the wave on screen. Default: `200` (adjusts slightly based on panel width).
 *   `ecgSpikeChance` (`number`): Probability of a "spike" occurring in the ECG graph. Default: `0.08`.
+*   `particleEffectType` (`string`): Type of particle effect. Default: `'1'`.
 
 **Specific Methods:**
 *   Has no specific public methods other than inherited ones. The graph updates automatically based on `panelState` and its options.
@@ -460,7 +479,7 @@ const canvasPanel = new DynamicSciFiDashboardKit.CanvasGraphPanel('#canvasDemo',
     title: 'Energy Fluctuations',
     graphType: 'sine',
     initialState: 'normal',
-    enableSparks: true
+    particleEffectType: '2'
 });
 
 setTimeout(() => {
@@ -492,7 +511,6 @@ const pulsePanel = new DynamicSciFiDashboardKit.IntegrityPulsePanel('#pulseConta
 *   `title` (`string`): Panel title. Default: `'Integrity Pulse'`.
 *   `initialState` (`string`): Initial state. Default: `'normal'`.
 *   `barCount` (`number`): Number of bars to display. Default: `5`. A number between 1 and 100 is reasonable.
-*   `enableSparks` (`boolean`): Default: `false`.
 *   `enableScanlineHalo` (`boolean`): Default: `false`.
 
 **Specific Methods:**
@@ -505,7 +523,9 @@ const pulsePanel = new DynamicSciFiDashboardKit.IntegrityPulsePanel('#pulseConta
 const pulsePanel = new DynamicSciFiDashboardKit.IntegrityPulsePanel('#pulseDemo', {
     title: 'Shield Harmonics',
     barCount: 12, // More bars
-    initialState: 'stable'
+    initialState: 'stable',
+    particleEffectType: '4',
+    particleEffectStates: ['critical', 'warning']
 });
 
 setTimeout(() => {
@@ -552,7 +572,7 @@ const gaugePanel = new DynamicSciFiDashboardKit.CircularGaugePanel('#gaugeContai
 *   `startAngle` (`number`): Start angle of the arc in degrees (0 is top, 90 right, etc.). Default: `-135`.
 *   `endAngle` (`number`): End angle of the arc in degrees. Default: `135`.
 *   `animationDuration` (`number`): Duration of value change animation in milliseconds. Default: `400`.
-*   `enableSparks`, `enableScanlineHalo` (`boolean`): Default: `false`.
+*   `enableScanlineHalo` (`boolean`): Default: `false`.
 
 **Specific Methods:**
 *   `setValue(newValue, animate = true)`: Sets the gauge value.
@@ -617,7 +637,7 @@ const statusPanel = new DynamicSciFiDashboardKit.StatusIndicatorLedPanel('#statu
     *   `text` (`string`, **required**): Descriptive text.
     *   `color` (`string`, optional): LED color. Values: `'green'`, `'yellow'`, `'red'`, `'blue'`, `'orange'`, `'purple'`, `'cyan'`, `'white'`, `'off'`. Default: `'off'`.
     *   `blinking` (`boolean`, optional): Whether the LED should blink. Default: `false`.
-*   `enableSparks`, `enableScanlineHalo` (`boolean`): Default: `false`.
+*   `enableScanlineHalo` (`boolean`): Default: `false`.
 
 **Specific Methods:**
 *   `addIndicator(indicatorData, atBeginning = false)`: Adds a new indicator.
@@ -682,7 +702,7 @@ const hGaugePanel = new DynamicSciFiDashboardKit.HorizontalBarGaugePanel('#hGaug
 *   `showValueText` (`boolean`): Whether to display the current numeric value next to the label. Default: `true`.
 *   `valueTextFormat` (`function`): Function to format the value text. Receives `(value, units)` and should return a string. Default: `(value, units) => \`${Math.round(value)}${units}\``.
 *   `animationDuration` (`number`): Duration of value change animation in milliseconds. `0` to disable width animation. Default: `400`.
-*   `enableSparks`, `enableScanlineHalo` (`boolean`): Default: `false`.
+*   `enableScanlineHalo` (`boolean`): Default: `false`.
 *   `colorScheme` (`object`, optional): Allows defining specific colors for the bar based on panel state (e.g., `{ normal: '#00E5E5', warning: '#FFD700', ... }`). If not provided, colors are taken from CSS variables (`--dsdk-gauge-h-bar-normal`, etc.) based on `panelState`.
 
 **Specific Methods:**
@@ -719,10 +739,6 @@ setTimeout(() => {
 setTimeout(() => {
     hGaugePanel.setValue(10);
     hGaugePanel.setPanelState('critical');
-    // As enableSparks is false by default for this panel, if you want it activated
-    // you must configure it in the initial options or modify the instance
-    // hGaugePanel.config.enableSparks = true; // and then call setPanelState again if needed
-    // or let the base panel manage this when the state changes
 }, 6000);
 ```
 
@@ -748,9 +764,8 @@ const realtimeGraph = new DynamicSciFiDashboardKit.TrueCanvasGraphPanel('#realti
 *   `colorScheme` (`object`): Object defining the line style for each panel state (`normal`, `warning`, `critical`, `stable`). Each state has:
     *   `stroke` (`string`): Line stroke color.
     *   `lineWidth` (`number`): Line width.
-    *   *Note: `noiseFactor` does not apply directly as in `CanvasGraphPanel` since data is external.*
-*   `enableSparks` (`boolean`): Whether to activate spark effects on panel borders based on state. Default: `true`.
-*   `enableScanlineHalo` (`boolean`): Whether to activate the scanline effect over the panel based on state. Default: `true`.
+*   `particleEffectType` (`string`): Default: `'1'`.
+*   `enableScanlineHalo` (`boolean`): Default: `true`.
 
 **Specific Methods:**
 *   `addDataPoint(yValue)`: Adds a new data point (Y value) to the end of the graph. If `maxDataPoints` is exceeded, the oldest point is removed.
@@ -800,6 +815,7 @@ setInterval(() => {
     time += 0.1;
 }, 200); // Add a new point every 200ms
 ```
+
 ### 3.13. `ImageDisplayPanel`
 
 Displays an image or a video stream (webcam) with various optional Sci-Fi style visual effects, such as interference, "glitch," pixelation, TV noise, rolling bars, and a CRT phosphor effect. It also allows flipping the image horizontally or vertically.
@@ -837,7 +853,7 @@ const imagePanel = new DynamicSciFiDashboardKit.ImageDisplayPanel('#myImageViewe
 *   `enableCrtPhosphorEffect` (`boolean`): Enables a "CRT phosphor" effect that tints the image/video. The specific color (`red`, `amber`, `green/normal`, `green/stable`) is based on the current `panelState`. Default: `false`.
 *   `flipHorizontal` (`boolean`): Flips the image/video horizontally. Default: `false`.
 *   `flipVertical` (`boolean`): Flips the image/video vertically. Default: `false`.
-*   `enableSparks` (`boolean`): Inherited from `BasePanel`. Default: `true`.
+*   `particleEffectType` (`string | null`): Inherited from `BasePanel`. Default: `null`.
 *   `enableScanlineHalo` (`boolean`): Inherited from `BasePanel`. Default: `false`.
 
 **Specific Methods:**
@@ -861,7 +877,7 @@ const imagePanel = new DynamicSciFiDashboardKit.ImageDisplayPanel('#myImageViewe
 *   `setPanelState(newState)`: (Overridden) In addition to base behavior, updates the CRT phosphor effect color if enabled, based on `newState`.
 *   `destroy()`: (Overridden) In addition to base cleanup, stops the webcam if active.
 
-**Example Usage:**
+**Usage Example:**
 ```javascript
 // HTML: <div id="imageDemo" class="panel-container" style="height: 300px; width: 400px;"></div>
 // To test the webcam, this example might need logPanel to be instantiated.
@@ -914,6 +930,96 @@ setTimeout(async () => {
 }, 9000);
 ```
 
+### 3.14. `RadarDisplayPanel`
+
+Displays an animated radar screen with a rotating sweep and the ability to show points (contacts). Points are highlighted when the sweep passes over them and then gradually fade out.
+
+**Initialization:**
+```javascript
+const radarPanel = new DynamicSciFiDashboardKit.RadarDisplayPanel('#radarContainer', {
+    title: 'Long Range Radar',
+    radarSpeed: 20, // RPM
+    numCircles: 4,
+    maxRadarRange: 150
+});
+```
+
+**Specific Options:**
+*   `title` (`string`): Panel title. Default: `'Radar Display'`.
+*   `numCircles` (`number`): Number of concentric circles in the radar grid. Default: `5`.
+*   `radarSpeed` (`number`): Rotation speed of the radar sweep in RPM (rotations per minute). Default: `10`.
+*   `maxRadarRange` (`number`): Maximum abstract range for the X and Y coordinates of points. Points are mapped within the radar's radius based on this value. Default: `100`.
+*   `pointSize` (`number`): Base size of points in pixels. Default: `3`.
+*   `pointHighlightDuration` (`number`): Duration in milliseconds that a point remains highlighted after being detected by the sweep. Default: `500`.
+*   `pointFadeOutDuration` (`number`): Duration in milliseconds of a point's fade-out after highlighting. Default: `2500`.
+*   `pointInitialDetectionBoost` (`number`): Size multiplication factor for a point when first detected by the sweep (pulse effect). `1` means no boost. Default: `1`.
+*   `pointMinOpacityAfterFade` (`number`): Minimum opacity (0.0 to 1.0) to which a point fades before potentially disappearing (if 0). Default: `0.0`.
+*   `sweepWidthDegrees` (`number`): Angular width of the radar sweep in degrees. Default: `20`.
+*   `particleEffectType` (`string | null`): Default: `'6'`.
+*   `particleEffectStates` (`array`): Default: `['critical', 'warning', 'normal']`.
+*   `enableScanlineHalo` (`boolean`): Default: `true`.
+
+**Specific Methods:**
+*   `addPoint(id, x, y, data = {})`: Adds a new point to the radar or updates an existing one if the `id` already exists.
+    *   `id` (`string`): Unique identifier for the point.
+    *   `x` (`number`): X coordinate of the point, relative to `maxRadarRange`. The radar center is (0,0).
+    *   `y` (`number`): Y coordinate of the point, relative to `maxRadarRange`.
+    *   `data` (`object`, optional): Custom data object associated with the point.
+*   `updatePoint(id, newX, newY, newData)`: Updates the position and/or data of an existing point.
+    *   `id` (`string`): ID of the point to update.
+    *   `newX` (`number`, optional): New X coordinate.
+    *   `newY` (`number`, optional): New Y coordinate.
+    *   `newData` (`object`, optional): New data to merge with existing data.
+*   `removePoint(id)`: Removes a point from the radar by its ID.
+    *   `id` (`string`): ID of the point to remove.
+*   `clearPoints()`: Removes all points from the radar.
+*   `setRadarSpeed(rpm)`: Sets the rotation speed of the radar sweep.
+    *   `rpm` (`number`): New speed in Rotations Per Minute.
+*   `setPanelState(newState)`: (Overridden) In addition to base behavior, the panel state affects the colors of the radar sweep, grid, and points via CSS variables.
+*   `destroy()`: (Overridden) Stops the radar animation, cleans up listeners and points before calling the base `destroy`.
+
+**Usage Example:**
+```javascript
+// HTML: <div id="myRadarScreen" class="panel-container" style="height: 350px;"></div>
+
+const radarScreen = new DynamicSciFiDashboardKit.RadarDisplayPanel('#myRadarScreen', {
+    title: 'Tactical Detection System',
+    radarSpeed: 15,
+    maxRadarRange: 200, // A larger range
+    pointSize: 4,
+    pointHighlightDuration: 700,
+    pointFadeOutDuration: 4000,
+    sweepWidthDegrees: 15,
+    initialState: 'normal'
+});
+
+// Add some initial contacts
+radarScreen.addPoint('hostile_01', 80, 120, { type: 'fighter', allegiance: 'unknown' });
+radarScreen.addPoint('friendly_01', -50, 70, { type: 'transport', allegiance: 'federation' });
+radarScreen.addPoint('asteroid_belt_edge', 0, 180, { type: 'hazard' });
+
+setTimeout(() => {
+    radarScreen.updatePoint('hostile_01', 70, 100); // Move the contact
+    radarScreen.addPoint('hostile_02', 90, -60, { type: 'frigate', allegiance: 'klingon' });
+    radarScreen.setPanelState('warning');
+}, 5000);
+
+setTimeout(() => {
+    radarScreen.removePoint('asteroid_belt_edge');
+    radarScreen.setRadarSpeed(25); // Increase radar speed
+    radarScreen.setPanelState('critical');
+}, 10000);
+
+// Simulate a new contact appearing and disappearing
+let tempContactId = 'transient_signal';
+setTimeout(() => {
+    radarScreen.addPoint(tempContactId, Math.random() * 100 - 50, Math.random() * 100 - 50);
+}, 12000);
+setTimeout(() => {
+    radarScreen.removePoint(tempContactId);
+}, 18000); // The point will fade and then be removed
+```
+
 ## 4. `DSDK_CLASSES` (CSS Constants)
 
 The library exposes a `DynamicSciFiDashboardKit.DSDK_CLASSES` object containing mappings of logical names to the actual CSS classes used internally. This is useful for applying styles consistently, especially for status text classes.
@@ -939,6 +1045,8 @@ Commonly used text classes:
 *   `DSDK_CLASSES.TEXT_SUCCESS`
 *   `DSDK_CLASSES.TEXT_INFO`
 
+It also contains the base classes for panels and their internal components, which can be useful for more advanced styling or for interacting with specific elements if necessary (although interaction is generally done through panel methods).
+
 ## 5. Advanced Customization (CSS)
 
 The appearance of the panels is primarily controlled by CSS variables (Custom Properties) defined in `DynamicSciFiDashboardKit.css` within the `:root` selector. You can override these variables in your own CSS file to customize the color palette, fonts, etc.
@@ -950,6 +1058,10 @@ The appearance of the panels is primarily controlled by CSS variables (Custom Pr
     --dsdk-accent-color-secondary: #FF8C00; /* Dark orange as secondary accent */
     --dsdk-panel-bg: rgba(30, 10, 10, 0.85); /* A more reddish and opaque background */
     --dsdk-font-sans: 'Orbitron', sans-serif; /* Change the main font to a more SciFi one */
+    
+    /* Radar-specific variables, if you want to customize them beyond the state */
+    --dsdk-radar-sweep-color-base-normal: #FF8C00; /* Orange sweep in normal state */
+    --dsdk-radar-grid-dash: 5, 5; /* Change the grid pattern */
 }
 ```
 Review the `DynamicSciFiDashboardKit.css` file for a complete list of available variables for customization.
@@ -958,8 +1070,8 @@ Review the `DynamicSciFiDashboardKit.css` file for a complete list of available 
 
 *   **Instance Management:** Keep references to your panel instances if you need to interact with them after creation (e.g., `logPanel.addLog(...)`).
 *   **Unique IDs:** Ensure each panel is initialized in a container with a unique ID in your HTML.
-*   **Cleanup (`destroy()`):** Always call the `destroy()` method on a panel instance when you no longer need it (e.g., when changing views in a Single Page Application). This is crucial for releasing resources and preventing memory leaks, especially with panels that use animations (`CanvasGraphPanel`, `IntegrityPulsePanel`).
-*   **Container Height:** Some panels (like `CanvasGraphPanel`, `IntegrityPulsePanel`, `CircularGaugePanel`, `CriticalWarningTextPanel`) look better or function optimally if their container has a defined height. You can use CSS for this:
+*   **Cleanup (`destroy()`):** Always call the `destroy()` method on a panel instance when you no longer need it (e.g., when changing views in a Single Page Application - SPA). This is crucial for releasing resources and preventing memory leaks, especially with panels that use animations (`CanvasGraphPanel`, `IntegrityPulsePanel`, `RadarDisplayPanel`, `TrueCanvasGraphPanel`) or event listeners.
+*   **Container Height:** Some panels (like `CanvasGraphPanel`, `IntegrityPulsePanel`, `CircularGaugePanel`, `CriticalWarningTextPanel`, `ImageDisplayPanel`, `RadarDisplayPanel`, `TrueCanvasGraphPanel`) look better or function optimally if their container has a defined height. You can use CSS for this:
     ```css
     .my-graph-container {
         height: 250px; /* Or the height you need */
@@ -969,4 +1081,6 @@ Review the `DynamicSciFiDashboardKit.css` file for a complete list of available 
     ```html
     <div id="myGraph" class="panel-container" style="height: 250px;"></div>
     ```
-*   **Performance:** If you have many panels with complex animations (especially `CanvasGraphPanel` with high update frequency or `IntegrityPulsePanel` with many bars), consider the performance impact on low-resource devices.
+*   **Performance:** If you have many panels with complex animations (especially `CanvasGraphPanel` or `TrueCanvasGraphPanel` with high update frequency, `IntegrityPulsePanel` with many bars, or `RadarDisplayPanel` with many points), consider the performance impact on low-resource devices. Use `destroy()` judiciously for panels that are not visible.
+*   **Webcam Permissions:** For `ImageDisplayPanel` with `sourceType: 'webcam'`, the browser will request user permission. Handle potential errors in the promise returned by `startWebcam()`.
+*   **Radar Coordinates:** Remember that for `RadarDisplayPanel`, the `x` and `y` coordinates of points are relative to the radar's center (0,0) and are scaled according to `maxRadarRange`.
