@@ -50,8 +50,12 @@ Here's a quick look at the panels offered by the library. Click on an image to s
 | **CircularGaugePanel**      | [![CircularGaugePanel Screenshot][circgauge-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/CircularGaugePanel.html) | [View Example](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/CircularGaugePanel.html) |
 | **StatusIndicatorLedPanel** | [![StatusIndicatorLedPanel Screenshot][statusled-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/StatusIndicatorLedPanel.html) | [View Example](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/StatusIndicatorLedPanel.html) |
 | **HorizontalBarGaugePanel** | [![HorizontalBarGaugePanel Screenshot][hgauge-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/HorizontalBarGaugePanel.html) | [View Example](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/HorizontalBarGaugePanel.html) |
-| **TrueCanvasGraphPanel**    | [![TrueCanvasGraphPanel Screenshot][truecanvas-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/TrueCanvasGraphPanel.html) | [View Example](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/TrueCanvasGraphPanel.html) |
 | **ImageDisplayPanel**       | [![ImageDisplayPanel Screenshot][image-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/ImageDisplayPanel.html) | [View Example](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/ImageDisplayPanel.html) |
+| **TrueCanvasGraphPanel**    | [![TrueCanvasGraphPanel Screenshot][truecanvas-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/TrueCanvasGraphPanel.html) | [View Example](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/TrueCanvasGraphPanel.html) |
+| **TrueIntegrityPulsePanel** | [![TrueIntegrityPulsePanel Screenshot][truepulse-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/TrueIntegrityPulsePanel.html) | [View Example](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/TrueIntegrityPulsePanel.html) |
+| **RadarDisplayPanel**       | [![RadarDisplayPanel Screenshot][radar-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/RadarDisplayPanel.html) | [View Example](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/RadarDisplayPanel.html) |
+| **HeatmapPanel**            | [![HeatmapPanel Screenshot][heatmap-screenshot]](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/HeatmapPanel.html) | [View Example](https://soyunomas.github.io/Dynamic-SciFi-Dashboard-Kit/examples/HeatmapPanel.html) |
+
 
 <!-- Link definitions for images (place them at the end of the file) -->
 [log-screenshot]: ./screenshots/LogDisplayPanel.png
@@ -65,8 +69,11 @@ Here's a quick look at the panels offered by the library. Click on an image to s
 [circgauge-screenshot]: ./screenshots/CircularGaugePanel.png
 [statusled-screenshot]: ./screenshots/StatusIndicatorLedPanel.png
 [hgauge-screenshot]: ./screenshots/HorizontalBarGaugePanel.png
-[truecanvas-screenshot]: ./screenshots/TrueCanvasGraphPanel.png
 [image-screenshot]: ./screenshots/ImageDisplayPanel.png
+[truecanvas-screenshot]: ./screenshots/TrueCanvasGraphPanel.png
+[truepulse-screenshot]: ./screenshots/TrueIntegrityPulsePanel.png
+[radar-screenshot]: ./screenshots/RadarDisplayPanel.png
+[heatmap-screenshot]: ./screenshots/HeatmapPanel.png
 
 
 ## Installation
