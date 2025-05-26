@@ -23,6 +23,8 @@ const DynamicSciFiDashboardKit = (function() {
         HORIZONTAL_BAR_GAUGE_PANEL: 'dsdk-horizontal-bar-gauge-panel',
         IMAGE_DISPLAY_PANEL: 'dsdk-image-display-panel', 
         RADAR_DISPLAY_PANEL: 'dsdk-radar-display-panel',
+        TRUE_INTEGRITY_PULSE_PANEL: 'dsdk-true-integrity-pulse-panel',
+        HEATMAP_PANEL: 'dsdk-heatmap-panel',
 
         LOG_LIST: 'dsdk-log-list',
         LOG_INFO: 'dsdk-log-info', LOG_WARN: 'dsdk-log-warn', LOG_ERROR: 'dsdk-log-error', LOG_SUCCESS: 'dsdk-log-success',
@@ -35,6 +37,7 @@ const DynamicSciFiDashboardKit = (function() {
         
         CANVAS_GRAPH: 'dsdk-canvas-graph', 
         RADAR_CANVAS: 'dsdk-radar-canvas', 
+        HEATMAP_CANVAS: 'dsdk-heatmap-canvas',
 
         CRITICAL_WARNING_TEXT_CONTAINER: 'dsdk-critical-warning-text-container', CRITICAL_WARNING_TEXT: 'dsdk-critical-warning-text',
         WARNING_PANEL_STATE_PREFIX: 'dsdk-state-',
@@ -42,6 +45,11 @@ const DynamicSciFiDashboardKit = (function() {
         
         INTEGRITY_PULSE_CONTAINER: 'dsdk-integrity-pulse-container',
         PULSE_BAR: 'dsdk-pulse-bar',
+
+        TRUE_INTEGRITY_PULSE_CONTAINER: 'dsdk-true-integrity-pulse-container',
+        TRUE_PULSE_BAR_WRAPPER: 'dsdk-true-pulse-bar-wrapper',
+        TRUE_PULSE_BAR_LABEL: 'dsdk-true-pulse-bar-label',
+        TRUE_PULSE_BAR_ELEMENT: 'dsdk-true-pulse-bar-element',
 
         GAUGE_SVG_CONTAINER: 'dsdk-gauge-svg-container',
         GAUGE_SVG: 'dsdk-gauge-svg',
@@ -98,6 +106,63 @@ const DynamicSciFiDashboardKit = (function() {
     const VALID_PIXELATION_LEVELS = [1, 2, 3];
     const VALID_IMAGE_SOURCE_TYPES = ['url', 'webcam']; 
 
+    // --- Helper Functions for Color Manipulation ---
+    function parseColor(colorString) {
+        if (!colorString) return { r: 0, g: 0, b: 0, a: 0 };
+        if (colorString.startsWith('rgba')) {
+            const parts = colorString.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/i);
+            return parts ? { r: parseInt(parts[1]), g: parseInt(parts[2]), b: parseInt(parts[3]), a: parts[4] !== undefined ? parseFloat(parts[4]) : 1 } : { r: 0, g: 0, b: 0, a: 1 };
+        } else if (colorString.startsWith('#')) {
+            const hex = colorString.slice(1);
+            const size = hex.length;
+            if (size === 3 || size === 4) {
+                const r = parseInt(hex[0] + hex[0], 16);
+                const g = parseInt(hex[1] + hex[1], 16);
+                const b = parseInt(hex[2] + hex[2], 16);
+                const a = size === 4 ? parseInt(hex[3] + hex[3], 16) / 255 : 1;
+                return { r, g, b, a };
+            } else if (size === 6 || size === 8) {
+                const r = parseInt(hex.substring(0, 2), 16);
+                const g = parseInt(hex.substring(2, 4), 16);
+                const b = parseInt(hex.substring(4, 6), 16);
+                const a = size === 8 ? parseInt(hex.substring(6, 8), 16) / 255 : 1;
+                return { r, g, b, a };
+            }
+        }
+        // Attempt to parse CSS variable name if any
+        if (colorString.startsWith('var(--dsdk-')) {
+            try {
+                // This is a bit of a hack for helpers; ideally, pass computed values
+                // For demo purposes, we'll resolve a few common ones, otherwise fallback
+                let actualColor = colorString;
+                if (typeof document !== 'undefined' && document.body) { // Check if in browser
+                     actualColor = getComputedStyle(document.body).getPropertyValue(colorString.slice(4,-1)).trim();
+                     if (actualColor) return parseColor(actualColor); // Recursive call with resolved color
+                }
+            } catch (e) { /* ignore if cannot resolve */ }
+        }
+        console.warn(`DSDK Color Util: Could not parse color string: ${colorString}. Defaulting to black.`);
+        return { r: 0, g: 0, b: 0, a: 1 };
+    }
+
+    function interpolateColors(color1, color2, factor) {
+        const r = Math.round(color1.r + factor * (color2.r - color1.r));
+        const g = Math.round(color1.g + factor * (color2.g - color1.g));
+        const b = Math.round(color1.b + factor * (color2.b - color1.b));
+        const a = color1.a + factor * (color2.a - color1.a);
+        return `rgba(${r},${g},${b},${a.toFixed(3)})`;
+    }
+    
+    function getLuminance(r_srgb, g_srgb, b_srgb) { // Inputs 0-1
+        // Convert sRGB to linear
+        const toLinear = c => (c <= 0.04045) ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+        const r_lin = toLinear(r_srgb);
+        const g_lin = toLinear(g_srgb);
+        const b_lin = toLinear(b_srgb);
+        // Calculate luminance
+        return 0.2126 * r_lin + 0.7152 * g_lin + 0.0722 * b_lin; // Luminance (0-1)
+    }
+    // --- Fin Helper Functions ---
 
     function getElement(s){if(typeof s==='string'){const e=document.querySelector(s);if(!e)console.error(`DSDK: Element "${s}" not found.`);return e;}return s;}
 
@@ -179,11 +244,11 @@ const DynamicSciFiDashboardKit = (function() {
 
             if (shouldShowScanlines) {
                 let colorToApply = this.currentScanlineHaloColor;
-                if (!colorToApply) {
+                if (!colorToApply) { // Auto-detect color based on state if not explicitly set
                     if (this.currentState === 'critical') colorToApply = 'rgba(var(--dsdk-rgb-danger-color), 0.15)';
                     else if (this.currentState === 'warning') colorToApply = 'rgba(var(--dsdk-rgb-warning-color), 0.15)';
                     else if (this.currentState === 'stable') colorToApply = 'rgba(var(--dsdk-rgb-success-color), 0.1)';
-                    else colorToApply = 'var(--dsdk-scanline-halo-color-default)';
+                    else colorToApply = 'var(--dsdk-scanline-halo-color-default)'; // Fallback
                 }
                 this.dom.panel.style.setProperty('--dsdk-current-scanline-halo-color', colorToApply);
                 this.dom.panel.style.setProperty('--dsdk-current-scanline-thickness', this.config.scanlineThickness);
@@ -218,24 +283,26 @@ const DynamicSciFiDashboardKit = (function() {
             if (!enabled) {
                 this.dom.panel.classList.remove(DSDK_CLASSES.SCANLINE_HALO_ACTIVE);
             } else {
-                this._applyScanlineHaloSettings();
+                this._applyScanlineHaloSettings(); // Apply immediately based on current state
             }
         }
 
         setParticleEffect(type, options = {}) { 
             if (!this.dom.panel) return;
     
+            // Allow null or 'none' to disable, or a valid type number as string
             if (type === null || type === undefined || type === 'none' || DSDK_CLASSES.VALID_PARTICLE_EFFECT_TYPES.includes(String(type))) {
                 this.config.particleEffectType = (type === 'none' || type === undefined || type === null) ? null : String(type);
             } else {
                 console.warn(`DSDK: Invalid particleEffectType "${type}". Must be null, 'none', or a string '1' through '6'. Effect not changed.`);
+                // Do not change this.config.particleEffectType if invalid
             }
     
             if (options.states !== undefined && Array.isArray(options.states)) {
                 this.config.particleEffectStates = options.states.filter(s => VALID_PANEL_STATES.includes(s));
             }
             
-            this._applyParticleEffectSettings();
+            this._applyParticleEffectSettings(); // Apply immediately based on current state
         }
         
         destroy() { 
@@ -244,11 +311,14 @@ const DynamicSciFiDashboardKit = (function() {
             if (this.indicatorsMap) this.indicatorsMap.clear();
             if (this.buttonsMap) this.buttonsMap.clear();
             if (this.points) this.points = []; 
+            if (this.barsMap) this.barsMap.clear(); 
             if (this.resizeListener && typeof window !== 'undefined') window.removeEventListener('resize', this.resizeListener);
             this.resizeListener = null; 
+            this.gridData = []; // For HeatmapPanel
         }
     }
 
+    // ... (Clases LogDisplayPanel hasta TrueIntegrityPulsePanel SIN CAMBIOS) ...
     class LogDisplayPanel extends BasePanel { constructor(containerSelector, options = {}) { const defaults = { title: 'Log Display', maxEntries: 20 }; super(containerSelector, { ...defaults, ...options }, DSDK_CLASSES.LOG_DISPLAY_PANEL); if (!this.dom.panel) return; this.logEntries = []; this._renderContent(); } _renderContent() { if (!this.dom.content) return; this.dom.content.innerHTML = ''; this.dom.logList = document.createElement('ul'); this.dom.logList.classList.add(DSDK_CLASSES.LOG_LIST); this.dom.content.appendChild(this.dom.logList); this.logEntries.forEach(e => this._appendLogToList(e)); } _appendLogToList(e) { const i = document.createElement('li'); const m = { info: DSDK_CLASSES.LOG_INFO, warn: DSDK_CLASSES.LOG_WARN, error: DSDK_CLASSES.LOG_ERROR, success: DSDK_CLASSES.LOG_SUCCESS, }; if (e.level && m[e.level]) { i.classList.add(m[e.level]); } i.textContent = e.text; this.dom.logList.prepend(i); } addLog(e) { if (!this.dom.logList) this._renderContent(); this.logEntries.unshift(e); if (this.logEntries.length > this.config.maxEntries) { this.logEntries.pop(); if (this.dom.logList.lastChild) { this.dom.logList.removeChild(this.dom.logList.lastChild); } } this._appendLogToList(e); this.dom.content.scrollTop = 0; } clearLogs() { this.logEntries = []; if (this.dom.logList) { this.dom.logList.innerHTML = ''; } } }
     class CriticalWarningTextPanel extends BasePanel { constructor(containerSelector, options = {}) { const defaults = { title: '', initialText: 'WARNING', initialWarningState: 'critical', fontSize: '2.2rem', particleEffectType: '3', particleEffectStates: ['critical', 'stabilizing'], enableScanlineHalo: true, scanlineThickness: '3px', scanlineOpacity: 0.1, }; const mergedOptions = { ...defaults, ...options }; super(containerSelector, mergedOptions, DSDK_CLASSES.CRITICAL_WARNING_TEXT_PANEL); if (!this.dom.panel) return; if (!options.title && this.dom.header) { this.dom.header.remove(); this.dom.header = null; } this.currentWarningText = this.config.initialText; this._renderContent(); this.setWarningState(this.config.initialWarningState, this.config.initialText); } _renderContent() { if (!this.dom.content) return; this.dom.content.innerHTML = ''; this.dom.content.classList.add(DSDK_CLASSES.CRITICAL_WARNING_TEXT_CONTAINER); this.dom.warningTextElement = document.createElement('div'); this.dom.warningTextElement.classList.add(DSDK_CLASSES.CRITICAL_WARNING_TEXT); this.dom.warningTextElement.style.fontSize = this.config.fontSize; this.dom.content.appendChild(this.dom.warningTextElement); } setWarningState(newState, newText) { if (!this.dom.warningTextElement || !this.dom.content) return; if (!VALID_WARNING_PANEL_INTERNAL_STATES.includes(newState)) { newState = 'critical'; } if (newText !== undefined) { this.currentWarningText = newText; } this.dom.warningTextElement.textContent = this.currentWarningText; VALID_WARNING_PANEL_INTERNAL_STATES.forEach(s => { this.dom.content.classList.remove(`${DSDK_CLASSES.WARNING_PANEL_STATE_PREFIX}${s}`); this.dom.warningTextElement.classList.remove(`${DSDK_CLASSES.WARNING_PANEL_STATE_PREFIX}${s}`); }); this.dom.content.classList.add(`${DSDK_CLASSES.WARNING_PANEL_STATE_PREFIX}${newState}`); this.dom.warningTextElement.classList.add(`${DSDK_CLASSES.WARNING_PANEL_STATE_PREFIX}${newState}`); let basePanelState = 'critical'; if (newState === 'stabilizing') basePanelState = 'warning'; else if (newState === 'stable') basePanelState = 'stable'; super.setPanelState(basePanelState); } setText(newText) { if (this.dom.warningTextElement && newText !== undefined) { this.currentWarningText = newText; this.dom.warningTextElement.textContent = this.currentWarningText; } } }
     class KeyValueListPanel extends BasePanel { constructor(containerSelector, options = {}) { const defaults = { title: 'Data List', }; super(containerSelector, { ...defaults, ...options }, DSDK_CLASSES.KEY_VALUE_LIST_PANEL); if (!this.dom.panel) return; this.items = []; this._renderContent(); } _renderContent() { if (!this.dom.content) return; this.dom.content.innerHTML = ''; this.dom.list = document.createElement('ul'); this.dom.list.classList.add(DSDK_CLASSES.KEY_VALUE_LIST); this.dom.content.appendChild(this.dom.list); this.items.forEach(i => this._appendItemToList(i)); } _appendItemToList(i) { const l = document.createElement('li'); const k = document.createElement('span'); k.classList.add(DSDK_CLASSES.KEY_VALUE_KEY); k.textContent = i.key; const v = document.createElement('span'); v.classList.add(DSDK_CLASSES.KEY_VALUE_VALUE); v.textContent = i.value; if (i.statusClass) { const VALID_STATUS_CLASSES = [DSDK_CLASSES.TEXT_SUCCESS, DSDK_CLASSES.TEXT_WARNING, DSDK_CLASSES.TEXT_DANGER, DSDK_CLASSES.TEXT_INFO]; if (VALID_STATUS_CLASSES.includes(i.statusClass)) { v.classList.add(i.statusClass); } else { console.warn(`KVLP: Invalid statusClass "${i.statusClass}" for item "${i.key}".`); } } l.appendChild(k); l.appendChild(v); this.dom.list.appendChild(l); } setItems(iA) { this.items = iA || []; this._renderContent(); } updateItem(k, nV, nS) { const i = this.items.find(x => x.key === k); if (i) { i.value = nV; if (nS !== undefined) i.statusClass = nS; this._renderContent(); } else { console.warn(`KVLP: Item with key "${k}" not found.`); } } addItem(i) { if (i && i.key && typeof i.value !== 'undefined') { const e = this.items.find(x => x.key === i.key); if (e) { this.updateItem(i.key, i.value, i.statusClass); } else { this.items.push(i); this._appendItemToList(i); } } else { console.warn('KVLP: Attempted to add invalid item.', i); } } }
@@ -1165,7 +1235,7 @@ const DynamicSciFiDashboardKit = (function() {
             }
 
             const rangeY = maxY - minY;
-            if (rangeY === 0) {
+            if (rangeY === 0) { 
                 this.ctx.beginPath();
                 this.ctx.moveTo(0, canvasHeight / 2);
                 this.ctx.lineTo(canvasWidth, canvasHeight / 2);
@@ -1202,20 +1272,19 @@ const DynamicSciFiDashboardKit = (function() {
             super.destroy(); 
         }
     }
-
     class RadarDisplayPanel extends BasePanel {
         constructor(containerSelector, options = {}) {
             const defaults = {
                 title: 'Radar Display',
                 numCircles: 5,
-                radarSpeed: 10, // RPM (rotations per minute) - Aumentado para mejor demo
-                maxRadarRange: 100, // Max abstract range for x,y coordinates
-                pointSize: 3, // pixels
-                pointHighlightDuration: 500, // milliseconds - Duración del resaltado
-                pointFadeOutDuration: 2500, // milliseconds - Duración del desvanecimiento
-                pointInitialDetectionBoost: 1, // Factor de tamaño al detectar por primera vez (1 = sin boost)
-                pointMinOpacityAfterFade: 0.0, // Opacidad mínima después del desvanecimiento (0 = desaparece)
-                sweepWidthDegrees: 20, // Angular width of the sweep
+                radarSpeed: 10, 
+                maxRadarRange: 100, 
+                pointSize: 3, 
+                pointHighlightDuration: 500, 
+                pointFadeOutDuration: 2500, 
+                pointInitialDetectionBoost: 1, 
+                pointMinOpacityAfterFade: 0.0, 
+                sweepWidthDegrees: 20, 
                 particleEffectType: '6',
                 particleEffectStates: ['critical', 'warning', 'normal'],
                 enableScanlineHalo: true,
@@ -1223,8 +1292,8 @@ const DynamicSciFiDashboardKit = (function() {
             super(containerSelector, { ...defaults, ...options }, DSDK_CLASSES.RADAR_DISPLAY_PANEL);
             if (!this.dom.panel) return;
 
-            this.points = []; // { id, x, y, data, canvasX, canvasY, angle, distance, detectedAt }
-            this.currentSweepAngle = 0; // radians
+            this.points = []; 
+            this.currentSweepAngle = 0; 
             this.lastTimestamp = 0;
             this.animationFrameId = null;
 
@@ -1272,7 +1341,23 @@ const DynamicSciFiDashboardKit = (function() {
         
         _getStylePropertyValue(propName) {
             if (!this.dom.panel) return '';
-            return getComputedStyle(this.dom.panel).getPropertyValue(propName).trim();
+            // Ensure in browser environment and panel is in DOM for getComputedStyle
+            if (typeof window !== 'undefined' && this.dom.panel.isConnected) {
+                return getComputedStyle(this.dom.panel).getPropertyValue(propName).trim();
+            }
+            // Fallback for non-browser or detached panel (e.g., during setup)
+            // This part is tricky as CSS vars are dynamic. Provide known fallbacks.
+            const fallbacks = {
+                '--dsdk-current-radar-grid-color': 'rgba(0, 229, 229, 0.3)',
+                '--dsdk-radar-grid-line-width': '0.5',
+                '--dsdk-radar-grid-dash': '2,3',
+                '--dsdk-radar-outer-circle-line-width': '1.5',
+                '--dsdk-current-radar-sweep-color': 'rgba(0, 229, 229, 0.25)',
+                '--dsdk-radar-sweep-opacity': '0.25',
+                '--dsdk-current-radar-point-color': '#e0e0e0',
+                '--dsdk-radar-point-highlight-color': '#FFFFFF'
+            };
+            return fallbacks[propName] || '';
         }
 
         _animationLoop(timestamp) {
@@ -1341,7 +1426,7 @@ const DynamicSciFiDashboardKit = (function() {
         _drawRadarSweep(width, height) {
             const centerX = width / 2;
             const centerY = height / 2;
-            const outerContinuousRadius = Math.min(width, height) / 2 * 0.92; // Sweep hasta el círculo exterior
+            const outerContinuousRadius = Math.min(width, height) / 2 * 0.92; 
             const sweepColor = this._getStylePropertyValue('--dsdk-current-radar-sweep-color') || 'rgba(0, 229, 229, 0.25)';
             const sweepOpacity = parseFloat(this._getStylePropertyValue('--dsdk-radar-sweep-opacity')) || 0.25;
 
@@ -1361,7 +1446,7 @@ const DynamicSciFiDashboardKit = (function() {
             this.ctx.beginPath();
             this.ctx.moveTo(centerX, centerY);
             this.ctx.arc(
-                centerX, centerY, outerContinuousRadius, // Usar el radio del círculo exterior
+                centerX, centerY, outerContinuousRadius, 
                 this.currentSweepAngle - sweepWidthRadians / 2,
                 this.currentSweepAngle + sweepWidthRadians / 2
             );
@@ -1413,7 +1498,7 @@ const DynamicSciFiDashboardKit = (function() {
                 if (timeSinceDetectionMs <= this.config.pointHighlightDuration) {
                     currentOpacity = 1.0;
                     colorToUse = pointHighlightColor;
-                    const highlightProgress = timeSinceDetectionMs / this.config.pointHighlightDuration; // 0 to 1
+                    const highlightProgress = timeSinceDetectionMs / this.config.pointHighlightDuration; 
                     if (this.config.pointInitialDetectionBoost > 1) {
                          const pulseFactor = 1 + (this.config.pointInitialDetectionBoost - 1) * Math.sin(highlightProgress * Math.PI);
                          currentPointSize = this.config.pointSize * pulseFactor;
@@ -1423,13 +1508,13 @@ const DynamicSciFiDashboardKit = (function() {
                 } else {
                     const timeIntoFadeMs = timeSinceDetectionMs - this.config.pointHighlightDuration;
                     if (timeIntoFadeMs < this.config.pointFadeOutDuration) {
-                        const fadeProgress = timeIntoFadeMs / this.config.pointFadeOutDuration; // 0 to 1
+                        const fadeProgress = timeIntoFadeMs / this.config.pointFadeOutDuration; 
                         currentOpacity = 1.0 - fadeProgress;
                         currentOpacity = Math.max(this.config.pointMinOpacityAfterFade, currentOpacity);
                     } else {
                         currentOpacity = this.config.pointMinOpacityAfterFade;
                     }
-                    currentPointSize = this.config.pointSize; // Size normalizes after highlight
+                    currentPointSize = this.config.pointSize; 
                 }
 
                 if (currentOpacity <= 0 && this.config.pointMinOpacityAfterFade <=0) {
@@ -1455,7 +1540,7 @@ const DynamicSciFiDashboardKit = (function() {
             const centerY = height / 2;
             
             const outerContinuousRadius = Math.min(width, height) / 2 * 0.92;
-            const maxCanvasRadius = outerContinuousRadius * 0.95; // Points map within the grid area
+            const maxCanvasRadius = outerContinuousRadius * 0.95; 
 
             const normalizedX = x / this.config.maxRadarRange;
             const normalizedY = y / this.config.maxRadarRange;
@@ -1502,7 +1587,6 @@ const DynamicSciFiDashboardKit = (function() {
                 if (newY !== undefined) point.y = newY;
                 if (newData !== undefined) point.data = { ...point.data, ...newData };
                 this._updatePointCanvasCoordinates(point);
-                // No reset de detectedAt aquí, para que mantenga su estado de visibilidad/fade
             } else {
                 console.warn(`RadarDisplayPanel: Point with ID "${id}" not found for update.`);
             }
@@ -1541,6 +1625,449 @@ const DynamicSciFiDashboardKit = (function() {
             super.destroy();
         }
     }
+    class TrueIntegrityPulsePanel extends BasePanel {
+        constructor(containerSelector, options = {}) {
+            const defaults = {
+                title: 'System Integrity',
+                initialState: 'normal',
+                barConfigs: [], 
+                minValue: 0,    
+                maxValue: 100,  
+                defaultUnits: '%',
+                enableScanlineHalo: false,
+                particleEffectType: null, 
+                barAnimation: true 
+            };
+            super(containerSelector, { ...defaults, ...options }, DSDK_CLASSES.TRUE_INTEGRITY_PULSE_PANEL);
+            if (!this.dom.panel) return;
+
+            this.barsMap = new Map(); 
+            this._renderContent();
+            this.setBars(this.config.barConfigs); 
+        }
+
+        _renderContent() {
+            if (!this.dom.content) return;
+            this.dom.content.innerHTML = '';
+
+            this.dom.pulseContainer = document.createElement('div');
+            this.dom.pulseContainer.classList.add(DSDK_CLASSES.TRUE_INTEGRITY_PULSE_CONTAINER);
+            this.dom.content.appendChild(this.dom.pulseContainer);
+        }
+
+        _createBarElements(barConfig) {
+            const wrapper = document.createElement('div');
+            wrapper.classList.add(DSDK_CLASSES.TRUE_PULSE_BAR_WRAPPER);
+            if(barConfig.barWidth) wrapper.style.width = barConfig.barWidth;
+
+
+            const labelElement = document.createElement('div');
+            labelElement.classList.add(DSDK_CLASSES.TRUE_PULSE_BAR_LABEL);
+            labelElement.textContent = barConfig.label || barConfig.id; 
+
+            const barElement = document.createElement('div');
+            barElement.classList.add(DSDK_CLASSES.TRUE_PULSE_BAR_ELEMENT);
+            if (this.config.barAnimation) {
+                barElement.classList.add('dsdk-true-pulse-bar-animated');
+            }
+
+            wrapper.appendChild(labelElement); 
+            wrapper.appendChild(barElement);
+
+            return { wrapper, labelElement, barElement };
+        }
+
+        _updateBarView(barId, value, units) {
+            const barData = this.barsMap.get(barId);
+            if (!barData) {
+                console.warn(`TrueIntegrityPulsePanel: Bar with ID "${barId}" not found for update.`);
+                return;
+            }
+
+            const currentConfig = barData.barConfig;
+            const val = (value !== undefined) ? value : currentConfig.currentValue;
+            const unit = units || currentConfig.units || this.config.defaultUnits || '';
+            
+            currentConfig.currentValue = val; 
+            if (units !== undefined) currentConfig.units = units;
+
+
+            barData.labelElement.textContent = `${Math.round(val)}${unit}`;
+            if (currentConfig.label) { 
+                 barData.labelElement.textContent = `${currentConfig.label}: ${Math.round(val)}${unit}`;
+            }
+
+            const minValue = currentConfig.minValue !== undefined ? currentConfig.minValue : this.config.minValue;
+            const maxValue = currentConfig.maxValue !== undefined ? currentConfig.maxValue : this.config.maxValue;
+
+            let percentageHeight = 0;
+            if (maxValue > minValue) {
+                percentageHeight = ((val - minValue) / (maxValue - minValue)) * 100;
+            } else if (val >= maxValue) { 
+                percentageHeight = 100;
+            }
+
+            percentageHeight = Math.max(0, Math.min(100, percentageHeight)); 
+            barData.barElement.style.height = `${percentageHeight}%`;
+        }
+        
+        setBars(barConfigsArray) {
+            if (!Array.isArray(barConfigsArray)) {
+                console.error("TrueIntegrityPulsePanel: setBars expects an array of bar configurations.");
+                return;
+            }
+            
+            this.dom.pulseContainer.innerHTML = '';
+            this.barsMap.clear();
+            this.config.barConfigs = []; 
+
+            barConfigsArray.forEach(bConfig => this.addBar(bConfig, false)); 
+            this.config.barConfigs = [...barConfigsArray]; 
+        }
+
+        addBar(barConfig, rerenderLayout = true) { 
+            if (!barConfig || !barConfig.id) {
+                console.error("TrueIntegrityPulsePanel: Bar configuration must include an 'id'.", barConfig);
+                return;
+            }
+            if (this.barsMap.has(barConfig.id)) {
+                console.warn(`TrueIntegrityPulsePanel: Bar with ID "${barConfig.id}" already exists. Use updateBarValue to modify.`);
+                this.updateBarValue(barConfig.id, barConfig.initialValue, barConfig.units, barConfig.label);
+                return;
+            }
+
+            const completeBarConfig = {
+                minValue: this.config.minValue,
+                maxValue: this.config.maxValue,
+                units: this.config.defaultUnits,
+                ...barConfig,
+                currentValue: barConfig.initialValue !== undefined ? barConfig.initialValue : this.config.minValue
+            };
+
+            const { wrapper, labelElement, barElement } = this._createBarElements(completeBarConfig);
+            
+            this.barsMap.set(completeBarConfig.id, {
+                barConfig: completeBarConfig,
+                wrapperElement: wrapper,
+                labelElement: labelElement,
+                barElement: barElement
+            });
+
+            this.dom.pulseContainer.appendChild(wrapper);
+            this._updateBarView(completeBarConfig.id, completeBarConfig.currentValue);
+            
+            if (!this.config.barConfigs.find(b => b.id === completeBarConfig.id)) {
+                 this.config.barConfigs.push(completeBarConfig);
+            }
+        }
+        
+        removeBar(barId) {
+            const barData = this.barsMap.get(barId);
+            if (barData) {
+                barData.wrapperElement.remove();
+                this.barsMap.delete(barId);
+                this.config.barConfigs = this.config.barConfigs.filter(b => b.id !== barId);
+            } else {
+                console.warn(`TrueIntegrityPulsePanel: Bar with ID "${barId}" not found for removal.`);
+            }
+        }
+
+        updateBarValue(barId, newValue, newUnits, newLabel) {
+            const barData = this.barsMap.get(barId);
+            if (!barData) {
+                console.warn(`TrueIntegrityPulsePanel: Bar with ID "${barId}" not found for update.`);
+                return;
+            }
+            if (newValue !== undefined) barData.barConfig.currentValue = newValue;
+            if (newUnits !== undefined) barData.barConfig.units = newUnits;
+            if (newLabel !== undefined) barData.barConfig.label = newLabel;
+
+            this._updateBarView(barId, barData.barConfig.currentValue, barData.barConfig.units);
+
+            const configIndex = this.config.barConfigs.findIndex(b => b.id === barId);
+            if (configIndex > -1) {
+                if (newValue !== undefined) this.config.barConfigs[configIndex].initialValue = newValue; 
+                if (newUnits !== undefined) this.config.barConfigs[configIndex].units = newUnits;
+                if (newLabel !== undefined) this.config.barConfigs[configIndex].label = newLabel;
+            }
+        }
+        
+        setPanelState(newState) { 
+            super.setPanelState(newState);
+        }
+    }
+
+    // --- CLASE HeatmapPanel MODIFICADA ---
+    class HeatmapPanel extends BasePanel {
+        constructor(containerSelector, options = {}) {
+            const defaults = {
+                title: 'Heatmap Display',
+                rows: 10,
+                cols: 10,
+                cellSpacing: 1,
+                colorScheme: { 
+                    normal: { stops: [ { offset: 0, color: 'rgba(0, 50, 150, 0.7)' }, { offset: 0.5, color: 'rgba(0, 150, 150, 0.8)' }, { offset: 1, color: 'rgba(200, 255, 100, 0.9)' } ], nanColor: 'rgba(30,30,40,0.9)' },
+                    warning: { stops: [ { offset: 0, color: 'rgba(150, 150, 0, 0.7)' }, { offset: 0.5, color: 'rgba(255, 165, 0, 0.8)' }, { offset: 1, color: 'rgba(255, 100, 0, 0.9)' } ], nanColor: 'rgba(50,40,30,0.9)' },
+                    critical: { stops: [ { offset: 0, color: 'rgba(200, 0, 0, 0.7)' }, { offset: 0.5, color: 'rgba(255, 50, 0, 0.8)' }, { offset: 1, color: 'rgba(255, 80, 80, 1.0)' } ], nanColor: 'rgba(70,20,20,0.9)' },
+                    stable: { stops: [ { offset: 0, color: 'rgba(0, 100, 50, 0.7)' }, { offset: 0.5, color: 'rgba(0, 200, 100, 0.8)' }, { offset: 1, color: 'rgba(100, 255, 150, 0.9)' } ], nanColor: 'rgba(30,50,40,0.9)' }
+                },
+                dataRange: null, 
+                particleEffectType: null,
+                enableScanlineHalo: false,
+                // Nuevas opciones para valores en celda
+                showCellValues: false,
+                cellValueFormatter: (value, r, c, units) => {
+                    if (typeof value !== 'number' || isNaN(value)) return '';
+                    return `${value.toFixed(1)}${units || ''}`; // Por defecto, 1 decimal
+                },
+                cellValueUnits: '', 
+                cellValueFontSize: '9px', 
+                cellValueFontFamily: 'var(--dsdk-font-mono, monospace)',
+                cellValueColor: 'var(--dsdk-text-color, #e0e0e0)', // Color fijo por defecto
+                minCellSizeForText: 20, 
+            };
+            super(containerSelector, { ...defaults, ...options }, DSDK_CLASSES.HEATMAP_PANEL);
+            if (!this.dom.panel) return;
+
+            this.gridData = [];
+            this._calculatedDataRange = { min: 0, max: 1 };
+            this.drawQueued = false;
+
+            this._initializeGridData(this.config.rows, this.config.cols);
+            this._renderContent();
+            this._initCanvas();
+            requestAnimationFrame(() => this._drawHeatmap());
+        }
+
+        _renderContent() {
+            if (!this.dom.content) return;
+            this.dom.content.innerHTML = '';
+            this.dom.canvas = document.createElement('canvas');
+            this.dom.canvas.classList.add(DSDK_CLASSES.HEATMAP_CANVAS);
+            this.dom.content.appendChild(this.dom.canvas);
+            this.ctx = this.dom.canvas.getContext('2d');
+        }
+
+        _initCanvas() {
+            if (!this.dom.canvas || !this.ctx) return;
+            const adjustCanvasResolution = () => {
+                if (!this.dom.canvas || !this.dom.content || !this.dom.content.clientWidth || !this.dom.content.clientHeight) {
+                    if (this.dom.panel && this.dom.panel.offsetParent !== null) { requestAnimationFrame(adjustCanvasResolution); }
+                    return;
+                }
+                const dpr = window.devicePixelRatio || 1;
+                this.dom.canvas.width = this.dom.content.clientWidth * dpr;
+                this.dom.canvas.height = this.dom.content.clientHeight * dpr;
+                this.ctx.scale(dpr, dpr);
+                this._drawHeatmap();
+            };
+            requestAnimationFrame(adjustCanvasResolution);
+            this.resizeListener = () => requestAnimationFrame(adjustCanvasResolution);
+            if (typeof window !== 'undefined') { window.addEventListener('resize', this.resizeListener); }
+        }
+        
+        _initializeGridData(rows, cols, defaultValue = 0) {
+            this.gridData = [];
+            for (let r = 0; r < rows; r++) {
+                this.gridData[r] = new Array(cols).fill(defaultValue);
+            }
+            if (!this.config.dataRange) { this._calculateCurrentDataRange(); }
+        }
+
+        _calculateCurrentDataRange() {
+            if (this.gridData.length === 0 || (this.gridData.length > 0 && this.gridData[0].length === 0) ) {
+                this._calculatedDataRange = { min: 0, max: 1 }; return;
+            }
+            let min = Infinity, max = -Infinity, hasNumericData = false;
+            for (let r = 0; r < this.gridData.length; r++) {
+                for (let c = 0; c < this.gridData[r].length; c++) {
+                    const val = this.gridData[r][c];
+                    if (typeof val === 'number' && !isNaN(val)) {
+                        hasNumericData = true;
+                        if (val < min) min = val;
+                        if (val > max) max = val;
+                    }
+                }
+            }
+            this._calculatedDataRange = hasNumericData ? { min, max } : { min: 0, max: 1 };
+        }
+
+        _getColorForValue(value) {
+            const currentSchemeDef = this.config.colorScheme[this.currentState] || this.config.colorScheme.normal;
+            const currentScheme = JSON.parse(JSON.stringify(currentSchemeDef)); 
+
+            if (!currentScheme || !currentScheme.stops || currentScheme.stops.length === 0) return 'rgba(128,128,128,0.5)';
+            if (typeof value !== 'number' || isNaN(value)) return currentScheme.nanColor || 'rgba(50,50,50,0.8)';
+
+            let minVal = this.config.dataRange ? this.config.dataRange.min : this._calculatedDataRange.min;
+            let maxVal = this.config.dataRange ? this.config.dataRange.max : this._calculatedDataRange.max;
+            
+            const stops = currentScheme.stops.slice().sort((a, b) => a.offset - b.offset);
+
+            if (minVal === maxVal) {
+                 const stopForFlat = stops.find(s => s.offset === 0.5) || stops[Math.floor(stops.length / 2)] || stops[0];
+                 return stopForFlat.color;
+            }
+
+            const normalizedValue = (value - minVal) / (maxVal - minVal);
+            const clampedValue = Math.max(0, Math.min(1, normalizedValue));
+
+            if (stops.length === 1) return stops[0].color;
+            if (clampedValue <= stops[0].offset) return stops[0].color;
+            if (clampedValue >= stops[stops.length - 1].offset) return stops[stops.length - 1].color;
+
+            let startStop = stops[0], endStop = stops[stops.length - 1];
+            for (let i = 0; i < stops.length - 1; i++) {
+                if (clampedValue >= stops[i].offset && clampedValue <= stops[i + 1].offset) {
+                    startStop = stops[i]; endStop = stops[i + 1]; break;
+                }
+            }
+            const rangeOffset = endStop.offset - startStop.offset;
+            const factor = rangeOffset === 0 ? 0 : (clampedValue - startStop.offset) / rangeOffset;
+            const c1 = parseColor(startStop.color), c2 = parseColor(endStop.color);
+            return (c1 && c2) ? interpolateColors(c1, c2, factor) : 'rgba(255,0,255,0.8)';
+        }
+        
+        _determineCellValueColor(cellValue, backgroundColorString) {
+            if (typeof this.config.cellValueColor === 'function') {
+                return this.config.cellValueColor(cellValue, backgroundColorString);
+            }
+            if (typeof this.config.cellValueColor === 'string') {
+                // Si es una variable CSS, intentar resolverla si estamos en el navegador
+                if (this.config.cellValueColor.startsWith('var(') && typeof document !== 'undefined' && this.dom.panel.isConnected) {
+                    try {
+                         return getComputedStyle(this.dom.panel).getPropertyValue(this.config.cellValueColor.slice(4,-1)).trim();
+                    } catch(e) { /* Fall through to return the string itself */ }
+                }
+                return this.config.cellValueColor;
+            }
+        
+            // Default contrast logic (fallback if config.cellValueColor is not string/function)
+            const bgColor = parseColor(backgroundColorString);
+            // Convert 0-255 range to 0-1 for luminance calculation
+            const lum = getLuminance(bgColor.r / 255, bgColor.g / 255, bgColor.b / 255);
+            return lum > 0.4 ? '#101018' : '#e0e0e0'; // Simple dark/light choice
+        }
+
+
+        _requestDraw() {
+            if (!this.drawQueued) {
+                this.drawQueued = true;
+                requestAnimationFrame(() => { this._drawHeatmap(); this.drawQueued = false; });
+            }
+        }
+
+        _drawHeatmap() {
+            if (!this.ctx || !this.dom.canvas || !this.dom.content || !this.dom.canvas.width || !this.dom.canvas.height) return;
+
+            const canvasWidth = this.dom.content.clientWidth;
+            const canvasHeight = this.dom.content.clientHeight;
+
+            if (canvasWidth <= 0 || canvasHeight <= 0) return;
+            this.ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+            if (this.gridData.length === 0 || (this.gridData.length > 0 && this.gridData[0].length === 0)) {
+                this.ctx.fillStyle = 'rgba(80,80,80,0.5)';
+                this.ctx.font = `12px ${this.config.cellValueFontFamily}`;
+                this.ctx.textAlign = 'center'; this.ctx.textBaseline = 'middle';
+                this.ctx.fillText('No data', canvasWidth / 2, canvasHeight / 2);
+                return;
+            }
+
+            const numRows = this.gridData.length;
+            const numCols = this.gridData[0].length;
+            
+            const totalHorizontalSpacing = (numCols + 1) * this.config.cellSpacing;
+            const totalVerticalSpacing = (numRows + 1) * this.config.cellSpacing;
+
+            const cellWidth = (canvasWidth - totalHorizontalSpacing) / numCols;
+            const cellHeight = (canvasHeight - totalVerticalSpacing) / numRows;
+
+            if (cellWidth <= 0 || cellHeight <= 0) {
+                 this.ctx.fillStyle = 'rgba(80,30,30,0.7)';
+                 this.ctx.font = `10px ${this.config.cellValueFontFamily}`;
+                 this.ctx.textAlign = 'center'; this.ctx.textBaseline = 'middle';
+                 this.ctx.fillText('Too small / too much spacing', canvasWidth / 2, canvasHeight / 2);
+                 return;
+            }
+
+            for (let r = 0; r < numRows; r++) {
+                for (let c = 0; c < numCols; c++) {
+                    const value = this.gridData[r][c];
+                    const cellBgColor = this._getColorForValue(value);
+
+                    this.ctx.fillStyle = cellBgColor;
+                    const cellX = this.config.cellSpacing + c * (cellWidth + this.config.cellSpacing);
+                    const cellY = this.config.cellSpacing + r * (cellHeight + this.config.cellSpacing);
+                    this.ctx.fillRect(cellX, cellY, cellWidth, cellHeight);
+
+                    if (this.config.showCellValues && cellWidth >= this.config.minCellSizeForText && cellHeight >= this.config.minCellSizeForText) {
+                        const text = this.config.cellValueFormatter(value, r, c, this.config.cellValueUnits);
+                        
+                        this.ctx.font = `${this.config.cellValueFontSize} ${this.config.cellValueFontFamily}`;
+                        this.ctx.fillStyle = this._determineCellValueColor(value, cellBgColor);
+                        this.ctx.textAlign = 'center';
+                        this.ctx.textBaseline = 'middle';
+
+                        const textMetrics = this.ctx.measureText(text);
+                        if (textMetrics.width < cellWidth * 0.9) { // Check if text fits with a small margin
+                            this.ctx.fillText(text, cellX + cellWidth / 2, cellY + cellHeight / 2);
+                        }
+                    }
+                }
+            }
+        }
+
+        setDataGrid(newGridData) {
+            if (!Array.isArray(newGridData)) { console.error('HeatmapPanel: setDataGrid expects a 2D array.'); return; }
+            if (newGridData.length > 0 && !Array.isArray(newGridData[0])) { console.error('HeatmapPanel: setDataGrid expects a 2D array (array of arrays).'); return; }
+            this.gridData = newGridData;
+            this.config.rows = newGridData.length;
+            this.config.cols = newGridData.length > 0 ? newGridData[0].length : 0;
+            if (!this.config.dataRange) { this._calculateCurrentDataRange(); }
+            this._requestDraw();
+        }
+
+        updateCell(rowIndex, colIndex, value) {
+            if (rowIndex >= 0 && rowIndex < this.config.rows && colIndex >= 0 && colIndex < this.config.cols && this.gridData[rowIndex]) {
+                this.gridData[rowIndex][colIndex] = value;
+                if (!this.config.dataRange) { this._calculateCurrentDataRange(); }
+                this._requestDraw();
+            } else { console.warn(`HeatmapPanel: Invalid cell coordinates (${rowIndex}, ${colIndex}) for update.`); }
+        }
+
+        setGridDimensions(rows, cols, defaultValue = 0) {
+            if (typeof rows !== 'number' || rows <= 0 || typeof cols !== 'number' || cols <= 0) {
+                console.error('HeatmapPanel: Invalid dimensions provided to setGridDimensions.'); return;
+            }
+            this.config.rows = rows; this.config.cols = cols;
+            this._initializeGridData(rows, cols, defaultValue);
+            this._requestDraw();
+        }
+
+        setColorScheme(newScheme) {
+            if (typeof newScheme === 'object' && newScheme !== null) {
+                this.config.colorScheme = { ...this.config.colorScheme, ...newScheme };
+                this._requestDraw();
+            } else { console.warn('HeatmapPanel: Invalid color scheme provided.'); }
+        }
+        
+        setCellValueDisplay(options = {}) {
+            if (options.show !== undefined) this.config.showCellValues = !!options.show;
+            if (typeof options.formatter === 'function') this.config.cellValueFormatter = options.formatter;
+            if (typeof options.units === 'string') this.config.cellValueUnits = options.units;
+            if (typeof options.fontSize === 'string') this.config.cellValueFontSize = options.fontSize;
+            if (typeof options.fontFamily === 'string') this.config.cellValueFontFamily = options.fontFamily;
+            if (typeof options.color === 'string' || typeof options.color === 'function') this.config.cellValueColor = options.color;
+            if (typeof options.minSize === 'number') this.config.minCellSizeForText = options.minSize;
+            this._requestDraw();
+        }
+        
+        setPanelState(newState) {
+            super.setPanelState(newState);
+            this._requestDraw(); 
+        }
+    }
 
 
     return {
@@ -1551,6 +2078,8 @@ const DynamicSciFiDashboardKit = (function() {
         HorizontalBarGaugePanel, 
         TrueCanvasGraphPanel,
         RadarDisplayPanel,
+        TrueIntegrityPulsePanel, 
+        HeatmapPanel, 
         DSDK_CLASSES: DSDK_CLASSES 
     };
 })();
